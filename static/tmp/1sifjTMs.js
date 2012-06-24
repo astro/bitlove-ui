@@ -1,0 +1,1 @@
+document.getElementById("h4").innerHTML="This text was added by the Javascript part of the homepage widget."

@@ -1,0 +1,9 @@
+/static StaticR Static getStatic
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ HomeR GET POST
+/new NewR GET
+/top TopR GET
+/top/#Period TopDownloadedR GET

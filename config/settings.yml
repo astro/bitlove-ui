@@ -1,0 +1,19 @@
+Default: &defaults
+  host: "*6"
+  port: 8081
+  approot: "/"
+  copyright: APL2
+
+Development:
+  <<: *defaults
+
+Testing:
+  <<: *defaults
+
+Staging:
+  <<: *defaults
+
+Production:
+  port: 80
+  approot: "http://bitlove.org"
+  <<: *defaults

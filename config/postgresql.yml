@@ -1,0 +1,21 @@
+Default: &defaults
+  user: prittorrent
+  password: 1234
+  host: localhost
+  port: 5432
+  dbname: prittorrent
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  <<: *defaults
+
+Staging:
+  poolsize: 10
+  <<: *defaults
+
+Production:
+  poolsize: 10
+  <<: *defaults
