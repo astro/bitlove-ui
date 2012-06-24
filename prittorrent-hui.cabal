@@ -33,9 +33,9 @@ library
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
-        ghc-options:   -Wall -threaded -O0 -with-rtsopts=-N
+        ghc-options:   -Wall -O0
     else
-        ghc-options:   -Wall -threaded -O2 -with-rtsopts=-N
+        ghc-options:   -Wall -O2
 
     extensions: TemplateHaskell
                 QuasiQuotes
@@ -88,6 +88,7 @@ executable         prittorrent-hui
     if flag(library-only)
         Buildable: False
 
+    ghc-options:       -Wall -threaded -rtsopts -with-rtsopts=-N
     main-is:           ../main.hs
     hs-source-dirs:    dist
     build-depends:     base

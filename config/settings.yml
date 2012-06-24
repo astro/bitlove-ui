@@ -1,7 +1,7 @@
 Default: &defaults
   host: "*6"
   port: 8081
-  approot: "/"
+  approot: ""
   copyright: APL2
 
 Development:
