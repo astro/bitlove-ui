@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, OverloadedStrings #-}
 module Foundation
     ( App (..)
     , Route (..)
@@ -52,6 +52,8 @@ instance PathPiece Period where
       "30" -> Just $ PeriodDays 30
       "all" -> Just $ PeriodAll
       _ -> Nothing
+  toPathPiece (PeriodDays days) = T.pack $ show days
+  toPathPiece PeriodAll = "all"
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
