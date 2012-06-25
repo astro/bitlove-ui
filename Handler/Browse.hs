@@ -30,8 +30,9 @@ getNewR = do
     defaultLayout $ do
         setTitle "Bitlove: New Torrents"
         toWidget [hamlet|
-<h2>New Torrents</h2>
-^{renderDownloads downloads}
+<section class="col">
+  <h2>New Torrents
+  ^{renderDownloads downloads}
 |]
 
 getTopR :: Handler RepHtml
@@ -41,8 +42,9 @@ getTopR = do
     defaultLayout $ do
         setTitle "Bitlove: Popular Torrents"
         toWidget [hamlet|
-<h2>Popular Torrents</h2>
-^{renderDownloads downloads}
+<section class="col">
+  <h2>Popular Torrents
+  ^{renderDownloads downloads}
 |]
 
 getTopDownloadedR :: Period -> Handler RepHtml
@@ -58,7 +60,9 @@ getTopDownloadedR period = do
   defaultLayout $ do
     setTitle "Bitlove: Top Downloaded"
     toWidget [hamlet|
-^{renderDownloads downloads}
+<section class="col">
+  <h2>Top downloaded in #{period_days}
+  ^{renderDownloads downloads}
 |]
 
 renderDownloads downloads = 
@@ -69,7 +73,7 @@ $forall d <- downloads
   <article class="item">
     <div>
       $if not (T.null $ downloadImage d)
-        <img src="" class="logo">
+        <img src="#{downloadImage d}" class="logo">
       <div class="right">
         <p class="published">#{formatDate d}
         <div class="flattr">
