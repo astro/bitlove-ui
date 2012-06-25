@@ -10,6 +10,19 @@ import qualified Model
 import Import
 
 
+getFrontR :: Handler RepHtml
+getFrontR = do
+  downloads <- withDB $
+               Model.mostDownloaded 4 1
+  --let text = $(whamletFile "templates/front.hamlet")
+  defaultLayout $ do
+    setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
+    $(whamletFile "templates/front.hamlet")
+    toWidget [hamlet|
+<section class="col2">
+  ^{renderDownloads downloads}
+|]
+
 getNewR :: Handler RepHtml
 getNewR = do
     downloads <- withDB $

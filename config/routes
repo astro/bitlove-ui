@@ -3,7 +3,7 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ FrontR GET
 /new NewR GET
 /top TopR GET
 /top/#Period TopDownloadedR GET

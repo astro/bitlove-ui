@@ -28,7 +28,6 @@ library
                      Settings
                      Settings.StaticFiles
                      Settings.Development
-                     Handler.Home
                      Handler.Browse
 
     if flag(dev) || flag(library-only)
