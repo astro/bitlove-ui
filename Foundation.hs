@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 module Foundation
     ( App (..)
     , Route (..)
@@ -35,25 +35,13 @@ import Data.Conduit.Pool
 import Control.Monad.Trans.Resource
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import qualified Data.Text as T
+import Data.Text (Text)
+
+import PathPieces
 
 
 type DBPool = Pool PostgreSQL.Connection
 
-
-data Period = PeriodDays Int
-            | PeriodAll
-            deriving (Show, Eq, Read, Ord)
-              
-instance PathPiece Period where
-  fromPathPiece text = 
-    case T.unpack text of
-      "1" -> Just $ PeriodDays 1
-      "7" -> Just $ PeriodDays 7
-      "30" -> Just $ PeriodDays 30
-      "all" -> Just $ PeriodAll
-      _ -> Nothing
-  toPathPiece (PeriodDays days) = T.pack $ show days
-  toPathPiece PeriodAll = "all"
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -89,7 +77,7 @@ mkMessage "App" "messages" "en"
 -- for our application to be in scope. However, the handler functions
 -- usually require access to the AppRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
-mkYesodData "App" $(parseRoutesFile "config/routes")
+mkYesodData "App" $(parseRoutesFileNoCheck "config/routes")
 
 type Form x = Html -> MForm App App (FormResult x, Widget)
 

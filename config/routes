@@ -7,3 +7,6 @@
 /new NewR GET
 /top TopR GET
 /top/#Period TopDownloadedR GET
+
+-- /$user/$slug/*.torrent
+/#Text/#Text/#TorrentName TorrentFileR GET

@@ -87,8 +87,9 @@ $forall d <- downloads
           <a href="">#{downloadUser d}
     <ul class="download">
       <li class="torrent">
-        <a href="" rel="enclosure" data-type=#{downloadType d}>
-          #{downloadName d} #
+        <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
+           rel="enclosure" data-type=#{downloadType d}>
+          Download #
           <span class="size" title="Download size">
             #{humanSize (downloadSize d)}
       <li class="stats">

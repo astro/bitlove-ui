@@ -23,12 +23,14 @@ Flag library-only
 library
     exposed-modules: Application
                      Foundation
+                     PathPieces
                      Import
                      Model
                      Settings
                      Settings.StaticFiles
                      Settings.Development
                      Handler.Browse
+                     Handler.TorrentFile
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

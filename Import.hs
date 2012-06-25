@@ -10,6 +10,7 @@ module Import
 #if __GLASGOW_HASKELL__ < 704
     , (<>)
 #endif
+    , TorrentName (..)
     ) where
 
 import Prelude hiding (writeFile, readFile, head, tail, init, last)
@@ -20,6 +21,7 @@ import Control.Applicative ((<$>), (<*>), pure)
 import Data.Text (Text)
 import Settings.StaticFiles
 import Settings.Development
+import PathPieces
 
 #if __GLASGOW_HASKELL__ < 704
 infixr 5 <>
