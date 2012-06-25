@@ -28,6 +28,7 @@ import Debug.Trace
 import Handler.Browse
 import Handler.TorrentFile
 import Handler.TorrentStats
+import Handler.MapFeed
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see

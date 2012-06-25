@@ -34,6 +34,7 @@ getTorrentStatsR user slug name statsPeriod stats = do
                       "interval" .= interval]
   
       case stats of
+        -- TODO
         StatsDownloads -> do
           downloads <- withDB $
                        Model.get_counter "complete" info_hash start' stop' interval

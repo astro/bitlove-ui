@@ -8,6 +8,7 @@
 /top TopR GET
 /top/#Period TopDownloadedR GET
 
+/#Text/#Text/feed MapFeedR GET
 -- /$user/$slug/*.torrent
 /#Text/#Text/#TorrentName TorrentFileR GET
 
