@@ -1,0 +1,15 @@
+<section class="col1">
+  <p class="about">
+    <b>Bitlove</b> is the fully <b>automatic</b> Podcast download service on <b>P2P speed</b>. We generate a <b>Torrent</b> for all media files of an <b>RSS feed</b> and will <b>seed</b> them all the time.
+  <div class="navtabs">
+    <ul>
+      <li>
+        <a href="/help">Learn more&#x2026;</a>
+  <p class="about">
+    Are You a <b>Podcast Publisher?</b>
+  <div class="navtabs">
+    <ul>
+      <li>
+        <a href="/signup">Sign up</a>
+      <li>
+        <a href="/login">Login</a>
