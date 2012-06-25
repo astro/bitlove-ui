@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE RankNTypes, FlexibleInstances, DeriveDataTypeable, ConstraintKinds, ImpredicativeTypes #-}
 module Model where
 
 import Prelude
@@ -8,19 +8,20 @@ import qualified Data.Text as T
 import Database.HDBC
 import Data.Convertible
 import Data.Time.LocalTime (LocalTime)
-import Data.ByteString (ByteString, pack)
+import Data.ByteString (ByteString, pack, unpack)
+import qualified Data.ByteString.Char8 as BC
 import Data.Data (Typeable)
-import Numeric (readHex)
+import Numeric (readHex, showOct)
+import Data.Char (chr)
 
 
 type Query e = IConnection conn => conn -> IO [e]
 
 query :: (IConnection conn,
-          Convertible arg SqlValue,
           Convertible [SqlValue] e
-         ) => String -> [arg] -> conn -> IO [e]
+         ) => String -> [SqlValue] -> conn -> IO [e]
 query sql args conn = do
-  rows <- quickQuery' conn sql (map toSql args)
+  rows <- quickQuery' conn sql args
   return $ do Right val <- safeConvert `fmap` rows
               return val
 
@@ -38,12 +39,30 @@ fromBytea = unescape . fromSql
           | otherwise = let (hex, text') = T.splitAt 2 text
                             w = fst $ head $ readHex $ T.unpack hex
                         in w:(hexToWords text')
-              
+                           
+toBytea :: ByteString -> SqlValue
+toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . unpack
+  where escape 92 = "\\\\"
+        escape c | c >= 32 && c <= 126 = [chr c]
+        escape c = "\\" ++ oct c
+        oct c = pad 3 '0' $ showOct c ""
+        pad :: Int -> Char -> String -> String
+        pad targetLen padding s
+          | length s >= targetLen = s
+          | otherwise = pad targetLen padding (padding:s)
+                        
 newtype InfoHash = InfoHash ByteString
                  deriving (Show)
                           
+instance Convertible InfoHash SqlValue where
+  safeConvert (InfoHash bs) = Right $ toBytea bs
+
 instance Convertible SqlValue InfoHash where
   safeConvert = Right . InfoHash . fromBytea
+
+-- For selecting just the info_hash column:
+instance Convertible [SqlValue] InfoHash where
+  safeConvert = safeConvert . head
 
 data Download = Download {
   downloadUser :: Text,
@@ -93,16 +112,20 @@ groupDownloads-}
 
 recentDownloads :: Int -> Query Download
 recentDownloads limit =
-  query "SELECT * FROM get_recent_downloads(?)" [limit]
+  query "SELECT * FROM get_recent_downloads(?)" [toSql limit]
 
 popularDownloads :: Int -> Query Download
 popularDownloads limit =
-  query "SELECT * FROM get_popular_downloads(?)" [limit]
+  query "SELECT * FROM get_popular_downloads(?)" [toSql limit]
 
 mostDownloaded :: Int -> Int -> Query Download
 mostDownloaded limit period =
-  query "SELECT * FROM get_most_downloaded(?, ?)" [limit, period]
+  query "SELECT * FROM get_most_downloaded(?, ?)" [toSql limit, toSql period]
 
+
+infoHashByName :: Text -> Text -> Text -> Query InfoHash
+infoHashByName user slug name =
+  query "SELECT \"info_hash\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
 
 data Torrent = Torrent {
   torrentInfoHash :: InfoHash,
@@ -123,5 +146,22 @@ instance Convertible [SqlValue] Torrent where
 
 torrentByName :: Text -> Text -> Text -> Query Torrent
 torrentByName user slug name =
-  query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [user, slug, name]
+  query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
   
+
+data StatsValue = StatsValue LocalTime Double
+                deriving (Show, Typeable)
+
+instance Convertible [SqlValue] StatsValue where
+  safeConvert (time:val:[]) =
+    Right $
+    StatsValue
+    (fromSql time)
+    (fromSql val)
+  safeConvert vals = convError "StatsValue" vals
+  
+get_counter :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
+get_counter kind info_hash start stop interval =
+  query "SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, SUM(\"value\") FROM counters WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
+
+

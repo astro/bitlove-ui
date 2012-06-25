@@ -31,6 +31,7 @@ library
                      Settings.Development
                      Handler.Browse
                      Handler.TorrentFile
+                     Handler.TorrentStats
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

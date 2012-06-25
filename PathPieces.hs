@@ -37,3 +37,27 @@ instance PathPiece TorrentName where
         _ -> Nothing
   toPathPiece (TorrentName name) = name `T.append` ".torrent"
   
+  
+data StatsPeriod = StatsDay
+                 | StatsWeek
+                 | StatsMonth
+                 | StatsYear
+                   deriving (Show, Eq, Read)
+                   
+instance PathPiece StatsPeriod where
+  fromPathPiece "day" = Just StatsDay
+  fromPathPiece "week" = Just StatsWeek
+  fromPathPiece "month" = Just StatsMonth
+  fromPathPiece "year" = Just StatsYear
+  fromPathPiece _ = Nothing
+                   
+data StatsJSON = StatsSwarm
+               | StatsTraffic
+               | StatsDownloads
+                 deriving (Show, Eq, Read)
+
+instance PathPiece StatsJSON where
+  fromPathPiece "swarm.json" = Just StatsSwarm
+  fromPathPiece "traffic.json" = Just StatsTraffic
+  fromPathPiece "downloads.json" = Just StatsDownloads
+  fromPathPiece _ = Nothing

@@ -27,6 +27,7 @@ import Debug.Trace
 -- Don't forget to add new modules to your cabal file!
 import Handler.Browse
 import Handler.TorrentFile
+import Handler.TorrentStats
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see

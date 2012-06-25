@@ -10,3 +10,5 @@
 
 -- /$user/$slug/*.torrent
 /#Text/#Text/#TorrentName TorrentFileR GET
+
+/#Text/#Text/#Text/g/#StatsPeriod/#StatsJSON TorrentStatsR GET
