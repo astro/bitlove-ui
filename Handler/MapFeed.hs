@@ -55,9 +55,10 @@ mapFeed (FeedXml xml) getEnclosureLink =
                    case event of
                      EventBeginElement name@(Name {
                                                nameLocalName = "link",
-                                               nameNamespace = Just xmlnsAtom
+                                               nameNamespace = Just ns
                                              }) attrs 
-                         | (attrs `getAttr` "rel") == "enclosure" ->
+                         | ns == xmlnsAtom &&
+                           (attrs `getAttr` "rel") == "enclosure" ->
                              let href = attrs `getAttr` "href"
                                  attrs' = updateAttr attrs "type" $ Just typeTorrent
                              in EventBeginElement name $
