@@ -10,6 +10,7 @@ import Data.Convertible
 import Data.Time.LocalTime (LocalTime)
 import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
 import Numeric (readHex, showOct)
 import Data.Char (chr)
@@ -172,7 +173,7 @@ user_feed feed slug =
   query "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
   [toSql feed, toSql slug]
 
-newtype FeedXml = FeedXml Text
+newtype FeedXml = FeedXml LBC.ByteString
 
 instance Convertible [SqlValue] FeedXml where
   safeConvert = Right . FeedXml . fromSql . head

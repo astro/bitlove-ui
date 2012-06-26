@@ -45,8 +45,7 @@ type Attrs = [(Name, [Content])]
   
 mapFeed :: FeedXml -> (Text -> Maybe Text) -> Source (ResourceT IO) (Flush Builder)
 mapFeed (FeedXml xml) getEnclosureLink =
-  yield xml $=
-  parseText def =$=
+  parseLBS def xml $=
   mapEnclosures =$=
   renderBuilder def =$=
   CL.map Chunk
