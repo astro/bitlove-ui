@@ -34,6 +34,7 @@ getNewR = do
 <section class="col">
   <h2>New Torrents
   ^{renderDownloads downloads}
+^{filterScript}
 |]
 
 getTopR :: Handler RepHtml
@@ -46,6 +47,7 @@ getTopR = do
 <section class="col">
   <h2>Popular Torrents
   ^{renderDownloads downloads}
+^{filterScript}
 |]
 
 getTopDownloadedR :: Period -> Handler RepHtml
@@ -64,6 +66,7 @@ getTopDownloadedR period = do
 <section class="col">
   <h2>Top downloaded in #{period_days}
   ^{renderDownloads downloads}
+^{filterScript}
 |]
 
 getUserR :: Text -> Handler RepHtml
@@ -141,6 +144,11 @@ $forall item <- Model.groupDownloads downloads
             <dt>#{downloadDownloaded d}
             <dd>Downloads
 |]
+
+filterScript = [hamlet|
+<script src="/static/filter.js" type="text/javascript">
+    |]
+
 
 humanSize = humanSize' "KMGT" ""
   where humanSize' units unit n

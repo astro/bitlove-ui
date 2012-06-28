@@ -60,4 +60,3 @@ $doctype 5
     <script src="/static/jquery-1.7.1.min.js" type="text/javascript">
     <script src="/static/jquery.flot.js" type="text/javascript">
     <script src="/static/graphs.js" type="text/javascript">
-    <script src="/static/filter.js" type="text/javascript">
