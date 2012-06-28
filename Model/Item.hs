@@ -3,6 +3,7 @@ module Model.Item where
 import Prelude
 import qualified Data.Text as T
 import Data.Time
+import Data.List (partition)
 
 import Model.Download
 
@@ -40,8 +41,7 @@ groupDownloads (d@(Download {
             in ((not $ T.null homepage') && homepage == homepage') ||
                ((not $ T.null title') && title == title') ||
                (id' == id)
-        (similar, ds') = break (not . isSimilar) ds
-        downloads = d:similar
+        (similar, ds') = partition isSimilar ds
     in (Item { itemUser = user,
                itemSlug = downloadSlug d,
                itemFeed = downloadFeed d,
@@ -54,5 +54,5 @@ groupDownloads (d@(Download {
                itemHomepage = downloadHomepage d,
                itemPayment = downloadPayment d,
                itemImage = downloadImage d,
-               itemDownloads = downloads
+               itemDownloads = similar
              }) : (groupDownloads ds')
