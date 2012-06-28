@@ -154,12 +154,24 @@ getTopRssR = getTop
 getTopAtomR :: Handler RepAtom
 getTopAtomR = getTop
 
-getFeedDownloads :: RepFeed a => Text -> Text -> Handler a
-getFeedDownloads user feed = 
-    withDB $ undefined
+getUserDownloads :: RepFeed a => Text -> Handler a
+getUserDownloads user = do
+    (details, downloads) <- withDB $ \db -> do
+      details <- Model.userDetailsByName user db
+      downloads <- Model.userDownloads 20 user db
+      return (details, downloads)
+    case details of
+      [] ->
+        notFound
+      (details':_) ->
+          renderFeed' Parameters {
+                                pTitle = user `T.append` " on Bitlove",
+                                pLink = UserR user,
+                                pImage = userImage details'
+                              } downloads
     
-getFeedDownloadsRssR :: Text -> Text -> Handler RepRss
-getFeedDownloadsRssR = getFeedDownloads
+getUserDownloadsRssR :: Text -> Handler RepRss
+getUserDownloadsRssR = getUserDownloads
 
-getFeedDownloadsAtomR :: Text -> Text -> Handler RepAtom
-getFeedDownloadsAtomR = getFeedDownloads
+getUserDownloadsAtomR :: Text -> Handler RepAtom
+getUserDownloadsAtomR = getUserDownloads

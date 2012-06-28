@@ -29,6 +29,7 @@ library
                      Model.Query
                      Model.Item
                      Model.Download
+                     Model.User
                      Utils
                      Settings
                      Settings.StaticFiles
@@ -96,6 +97,7 @@ library
                  , xml-conduit                   >= 0.7.0.3    && < 0.8
                  , xml-types                     >= 0.3.1      && < 0.4
                  , blaze-builder                 >= 0.3.1.0    && < 0.4
+                 , blaze-markup                  >= 0.5.1.0    && < 0.6
 
 executable         prittorrent-hui
     if flag(library-only)

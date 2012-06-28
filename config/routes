@@ -12,9 +12,10 @@
 /top.atom TopAtomR GET
 /top/#Period TopDownloadedR GET
 
+/#Text UserR GET
 /#Text/#Text/feed MapFeedR GET
-/#Text/#Text/downloads.rss FeedDownloadsRssR GET
-/#Text/#Text/downloads.atom FeedDownloadsAtomR GET
+/#Text/downloads.rss UserDownloadsRssR GET
+/#Text/downloads.atom UserDownloadsAtomR GET
 -- /$user/$slug/*.torrent
 /#Text/#Text/#TorrentName TorrentFileR GET
 

@@ -16,9 +16,13 @@ module Model (
   recentDownloads,
   popularDownloads,
   mostDownloaded,
+  userDownloads,
   -- Model.Item
   Item (..),
-  groupDownloads
+  groupDownloads,
+  -- Model.User
+  UserDetails (..),
+  userDetailsByName
   ) where
 
 import Prelude
@@ -33,6 +37,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 import Model.Query
 import Model.Download
 import Model.Item
+import Model.User
                         
 
 infoHashByName :: Text -> Text -> Text -> Query InfoHash

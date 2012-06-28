@@ -5,6 +5,7 @@ import qualified Data.Text as T
 import Data.Maybe
 import Data.Time.Format
 import System.Locale
+import Text.Blaze (toMarkup)
 
 import qualified Model
 import Import
@@ -62,6 +63,37 @@ getTopDownloadedR period = do
     toWidget [hamlet|
 <section class="col">
   <h2>Top downloaded in #{period_days}
+  ^{renderDownloads downloads}
+|]
+
+getUserR :: Text -> Handler RepHtml
+getUserR user = do
+    (details, downloads) <- withDB $ \db -> do
+      details <- Model.userDetailsByName user db
+      downloads <- Model.userDownloads 20 user db
+      return (details, downloads)
+    case details of
+      [] ->
+        notFound
+      (details':_) ->
+        defaultLayout $ do
+          setTitle $ toMarkup $ user `T.append` " on Bitlove"
+          toWidget [hamlet|
+<header class="user">
+  <div class="meta">
+    $if not (T.null $ userImage details')
+        <img class="logo"
+             src=#{userImage details'}>
+    <div class="title">
+      <h2>#{userTitle details'}
+      $if not (T.null $ userHomepage details')
+          <p class="homepage">
+            <a rel="me"
+               href=#{userHomepage details'}>#{userHomepage details'}
+<section class="col1">
+  <h2>Feeds
+<section class="col2">
+  <h2>Recent Torrents
   ^{renderDownloads downloads}
 |]
 

@@ -81,3 +81,6 @@ mostDownloaded :: Int -> Int -> Query Download
 mostDownloaded limit period =
   query "SELECT * FROM get_most_downloaded(?, ?)" [toSql limit, toSql period]
 
+userDownloads :: Int -> Text -> Query Download
+userDownloads limit user =
+  query "SELECT * FROM get_user_recent_downloads(?, ?)" [toSql limit, toSql user]
