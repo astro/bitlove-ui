@@ -42,6 +42,7 @@ groupDownloads (d@(Download {
                ((not $ T.null title') && title == title') ||
                (id' == id)
         (similar, ds') = partition isSimilar ds
+        downloads = d:similar
     in (Item { itemUser = user,
                itemSlug = downloadSlug d,
                itemFeed = downloadFeed d,
@@ -54,5 +55,5 @@ groupDownloads (d@(Download {
                itemHomepage = downloadHomepage d,
                itemPayment = downloadPayment d,
                itemImage = downloadImage d,
-               itemDownloads = similar
+               itemDownloads = downloads
              }) : (groupDownloads ds')
