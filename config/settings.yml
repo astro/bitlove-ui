@@ -5,6 +5,7 @@ Default: &defaults
   copyright: APL2
 
 Development:
+  approot: "http://localhost:8081"
   <<: *defaults
 
 Testing:

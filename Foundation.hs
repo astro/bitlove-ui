@@ -112,7 +112,8 @@ instance Yesod App where
     -- a separate domain. Please see the staticRoot setting in Settings.hs
     urlRenderOverride y (StaticR s) =
         Just $ uncurry (joinPath y (Settings.staticRoot $ settings y)) $ renderRoute s
-    urlRenderOverride _ _ = Nothing
+    urlRenderOverride y s =
+        Just $ uncurry (joinPath y "") $ renderRoute s
 
     -- The page to be redirected to when authentication is required.
     --authRoute _ = Just $ AuthR LoginR

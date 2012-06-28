@@ -120,7 +120,7 @@ $forall item <- Model.groupDownloads downloads
           \ in #
           <a href="">#{fromMaybe T.empty $ itemFeedTitle item}
           \ by #
-          <a href="">#{itemUser item}
+          <a href=@{UserR $ itemUser item}>#{itemUser item}
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
