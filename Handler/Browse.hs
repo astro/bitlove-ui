@@ -67,41 +67,47 @@ getTopDownloadedR period = do
 
 renderDownloads downloads = 
   let formatDate = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") .
-                   downloadPublished
+                   itemPublished
+      isOnlyDownload = (== 1) . length . itemDownloads
   in [hamlet|
-$forall d <- downloads
+$forall item <- Model.groupDownloads downloads
   <article class="item">
     <div>
-      $if not (T.null $ downloadImage d)
-        <img src="#{downloadImage d}" class="logo">
+      $if not (T.null $ itemImage item)
+        <img src="#{itemImage item}" class="logo">
       <div class="right">
-        <p class="published">#{formatDate d}
+        <p class="published">#{formatDate item}
         <div class="flattr">
       <div class="title">
         <h3>
-          <a href="">#{downloadTitle d}
+          <a href="">#{itemTitle item}
         <p class="feed">
           \ in #
-          <a href="">#{fromMaybe T.empty $ downloadFeedTitle d}
+          <a href="">#{fromMaybe T.empty $ itemFeedTitle item}
           \ by #
-          <a href="">#{downloadUser d}
-    <ul class="download">
-      <li class="torrent">
-        <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
-           rel="enclosure" data-type=#{downloadType d}>
-          Download #
-          <span class="size" title="Download size">
-            #{humanSize (downloadSize d)}
-      <li class="stats">
-        <dl class="seeders">
-          <dt>#{downloadSeeders d}
-          <dd>Seeders
-        <dl class="leechers">
-          <dt>#{downloadLeechers d}
-          <dd>Leechers
-        <dl class="downloads">
-          <dt>#{downloadDownloaded d}
-          <dd>Downloads
+          <a href="">#{itemUser item}
+    $forall d <- itemDownloads item
+      <ul class="download">
+        <li class="torrent">
+          <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
+             rel="enclosure" data-type=#{downloadType d}>
+            $if isOnlyDownload item
+              <span>Download
+            $else
+              <span>#{downloadName d}
+            \ #
+            <span class="size" title="Download size">
+              #{humanSize (downloadSize d)}
+        <li class="stats">
+          <dl class="seeders">
+            <dt>#{downloadSeeders d}
+            <dd>Seeders
+          <dl class="leechers">
+            <dt>#{downloadLeechers d}
+            <dd>Leechers
+          <dl class="downloads">
+            <dt>#{downloadDownloaded d}
+            <dd>Downloads
 |]
 
 humanSize = humanSize' "KMGT" ""

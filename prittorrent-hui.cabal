@@ -26,6 +26,10 @@ library
                      PathPieces
                      Import
                      Model
+                     Model.Query
+                     Model.Item
+                     Model.Download
+                     Utils
                      Settings
                      Settings.StaticFiles
                      Settings.Development
@@ -33,6 +37,7 @@ library
                      Handler.TorrentFile
                      Handler.TorrentStats
                      Handler.MapFeed
+                     Handler.DownloadFeeds
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

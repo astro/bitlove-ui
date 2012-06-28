@@ -11,6 +11,7 @@ module Import
     , (<>)
 #endif
     , TorrentName (..)
+    , iso8601
     ) where
 
 import Prelude hiding (writeFile, readFile, head, tail, init, last)
@@ -22,6 +23,7 @@ import Data.Text (Text)
 import Settings.StaticFiles
 import Settings.Development
 import PathPieces
+import Utils
 
 #if __GLASGOW_HASKELL__ < 704
 infixr 5 <>

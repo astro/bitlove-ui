@@ -5,10 +5,16 @@
 
 / FrontR GET
 /new NewR GET
+/new.rss NewRssR GET
+/new.atom NewAtomR GET
 /top TopR GET
+/top.rss TopRssR GET
+/top.atom TopAtomR GET
 /top/#Period TopDownloadedR GET
 
 /#Text/#Text/feed MapFeedR GET
+/#Text/#Text/downloads.rss FeedDownloadsRssR GET
+/#Text/#Text/downloads.atom FeedDownloadsAtomR GET
 -- /$user/$slug/*.torrent
 /#Text/#Text/#TorrentName TorrentFileR GET
 
