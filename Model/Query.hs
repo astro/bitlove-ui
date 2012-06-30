@@ -8,8 +8,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
-import Numeric (readHex, showOct)
-import Data.Char (chr)
+import Numeric (readHex, showOct, readOct)
+import Data.Char (chr, ord)
 
 
 type Query e = IConnection conn => conn -> IO [e]
@@ -30,12 +30,17 @@ fromBytea = unescape . fromSql
             ("\\x", hex) ->
               pack $ hexToWords hex
             _ ->
-              error "Cannot unescape hexadecimal BYTEA"
+              pack $ octToWords text
         hexToWords text
           | T.null text = []
           | otherwise = let (hex, text') = T.splitAt 2 text
                             w = fst $ head $ readHex $ T.unpack hex
                         in w:(hexToWords text')
+        octToWords = go . T.unpack
+          where go ('\\':t) = let (oct, t') = splitAt 3 t
+                              in (fst $ head $ readOct oct):(go t')
+                go (c:t) = (fromIntegral $ ord c):(go t)
+                go [] = []
                            
 toBytea :: ByteString -> SqlValue
 toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . unpack
