@@ -30,6 +30,7 @@ library
                      Model.Item
                      Model.Download
                      Model.User
+                     Model.Feed
                      Utils
                      Settings
                      Settings.StaticFiles

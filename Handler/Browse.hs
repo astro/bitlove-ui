@@ -100,6 +100,42 @@ getUserR user = do
   ^{renderDownloads downloads}
 |]
 
+getUserFeedR :: Text -> Text -> Handler RepHtml
+getUserFeedR user slug = do
+  mfd <-
+      withDB $ \db -> do
+        feeds <- Model.userFeedDetails user slug db
+        case feeds of
+          [] ->
+              return Nothing
+          (feed:_) ->
+              (Just . (feed, )) `fmap` 
+              Model.feedDownloads 50 (feedUrl feed) db
+      
+  flip (maybe notFound) mfd $ \(feed, downloads) ->
+      defaultLayout $ do
+        setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+        toWidget [hamlet|
+<section class="col">
+  <header class="feed">
+    <div class="meta">
+      <img src="#{safeLogo (feedImage feed)}"
+           class="logo">
+      <div class="title">
+        <div>
+          <h2>#{feedTitle feed}
+          <span class="publisher">
+            \ by #
+            <a href="@{UserR user}">#{user}
+        $if not (T.null $ feedHomepage feed)
+          <p class="homepage">
+            <a rel="me"
+               href="#{feedHomepage feed}">#{feedHomepage feed}
+
+  ^{renderDownloads downloads}
+    |]
+  
+
 renderDownloads downloads = 
   let formatDate = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") .
                    itemPublished
@@ -144,6 +180,10 @@ $forall item <- Model.groupDownloads downloads
             <dt>#{downloadDownloaded d}
             <dd>Downloads
 |]
+
+safeLogo url
+    | "http" `T.isPrefixOf` url = url
+    | otherwise = "/static/stub.png"
 
 filterScript = [hamlet|
 <script src="/static/filter.js" type="text/javascript">

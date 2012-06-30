@@ -99,3 +99,7 @@ enclosureDownloads :: Text -> Query Download
 enclosureDownloads url =
   query "SELECT * FROM get_enclosure_downloads(?)" [toSql url]
   
+feedDownloads :: Int -> Text -> Query Download
+feedDownloads limit url =
+  query "SELECT * FROM get_recent_downloads(?, ?)" [toSql limit, toSql url]
+  
