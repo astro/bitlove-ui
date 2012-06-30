@@ -8,15 +8,25 @@ import Database.HDBC
 
 import Prelude
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime)
-import Data.ByteString (ByteString)
+import Data.ByteString (ByteString, unpack)
 import Data.Data (Typeable)
+import Numeric (showHex)
 
 
 import Model.Query
 
 newtype InfoHash = InfoHash ByteString
                  deriving (Show)
+                          
+infoHashToHex :: InfoHash -> Text
+infoHashToHex (InfoHash bs) =
+  T.pack $
+  concatMap (\byte ->
+              showHex byte ""
+            ) $
+  unpack bs
                           
 instance Convertible InfoHash SqlValue where
   safeConvert (InfoHash bs) = Right $ toBytea bs
@@ -84,3 +94,8 @@ mostDownloaded limit period =
 userDownloads :: Int -> Text -> Query Download
 userDownloads limit user =
   query "SELECT * FROM get_user_recent_downloads(?, ?)" [toSql limit, toSql user]
+
+enclosureDownloads :: Text -> Query Download
+enclosureDownloads url =
+  query "SELECT * FROM get_enclosure_downloads(?)" [toSql url]
+  

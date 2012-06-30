@@ -30,6 +30,7 @@ import Handler.TorrentFile
 import Handler.TorrentStats
 import Handler.MapFeed
 import Handler.DownloadFeeds
+import Handler.ByEnclosureAPI
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see

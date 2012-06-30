@@ -39,6 +39,7 @@ library
                      Handler.TorrentStats
                      Handler.MapFeed
                      Handler.DownloadFeeds
+                     Handler.ByEnclosureAPI
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT

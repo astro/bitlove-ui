@@ -17,6 +17,7 @@ module Model (
   popularDownloads,
   mostDownloaded,
   userDownloads,
+  enclosureDownloads,
   -- Model.Item
   Item (..),
   groupDownloads,
