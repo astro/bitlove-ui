@@ -11,7 +11,7 @@ import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers
-import Yesod.Logger (Logger, logBS, toProduction)
+import Yesod.Logger (Logger, logBS, toProduction, logString)
 import Network.Wai.Middleware.RequestLogger (logCallback, logCallbackDev)
 import Network.HTTP.Conduit (newManager, def)
 import Data.Conduit.Pool
@@ -59,7 +59,7 @@ makeFoundation conf setLogger = do
               "config/postgresql.yml"
               (appEnv conf)
               parseDBConf
-    pool <- makeDBPool dbconf
+    pool <- makeDBPool dbconf setLogger
     return $ App conf setLogger s pool manager
     
 parseDBConf = return . parse
@@ -76,8 +76,8 @@ parseDBConf = return . parse
             _ ->
               trace ("Cannot parse: " ++ show v) []
     
-makeDBPool :: [(String, String)] -> IO DBPool
-makeDBPool dbconf =
+makeDBPool :: [(String, String)] -> Logger -> IO DBPool
+makeDBPool dbconf logger =
   let dbconf' :: [([Char], [Char])]
       dbconf' = filter (\(k, v) ->
                          k `elem` ["host", "hostaddr",
@@ -89,8 +89,8 @@ makeDBPool dbconf =
                        k ++ "=" ++ v
                      ) dbconf'
   in createPool
-     (connectPostgreSQL dbconf'')
-     HDBC.disconnect
+     (logString logger "connectPostgreSQL" >> connectPostgreSQL dbconf'')
+     (\db -> logString logger "HDBC.disconnect" >> HDBC.disconnect db)
      4 5 4
 
 -- for yesod devel
