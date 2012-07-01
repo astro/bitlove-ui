@@ -6,6 +6,11 @@ import Data.Maybe
 import Data.Time.Format
 import System.Locale
 import Text.Blaze (toMarkup)
+import Network.HTTP.Types (parseQueryText)
+import Text.Blaze
+import Text.Blaze.Html5 hiding (div)
+import Text.Blaze.Html5.Attributes
+import qualified Data.ByteString.Char8 as BC
 
 import qualified Model
 import Import
@@ -153,19 +158,26 @@ getUserFeedR user slug =
     |]
   
 
-renderDownloads downloads showOrigin = 
-  let formatDate = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") .
-                   itemPublished
-      isOnlyDownload = (== 1) . length . itemDownloads
-  in [hamlet|
+renderDownloads downloads showOrigin =
+    [hamlet|
 $forall item <- Model.groupDownloads downloads
+  ^{renderItem item showOrigin}
+      |]
+
+renderItem item showOrigin =
+  let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") $
+             itemPublished item
+      isOnlyDownload = length (itemDownloads item) == 1
+  in [hamlet|
   <article class="item">
     <div>
       $if not (T.null $ itemImage item)
         <img src="#{itemImage item}" class="logo">
       <div class="right">
-        <p class="published">#{formatDate item}
-        <div class="flattr">
+        <p class="published">#{date}
+        $if not (T.null $ itemPayment item)
+          <div class="flattr">
+            #{renderPayment}
       <div class="title">
         <h3>
           <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
@@ -180,7 +192,7 @@ $forall item <- Model.groupDownloads downloads
         <li class="torrent">
           <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
              rel="enclosure" data-type=#{downloadType d}>
-            $if isOnlyDownload item
+            $if isOnlyDownload
               <span>Download
             $else
               <span>#{downloadName d}
@@ -198,6 +210,38 @@ $forall item <- Model.groupDownloads downloads
             <dt>#{downloadDownloaded d}
             <dd>Downloads
 |]
+  where renderPayment
+            | "https://flattr.com/submit/auto?" `T.isPrefixOf` (itemPayment item) =
+                let qs = mapMaybe (\(k, mv) ->
+                                     (k, ) `fmap` mv
+                                  ) $
+                         parseQueryText $
+                         BC.pack $
+                         T.unpack $
+                         snd $
+                         T.break (== '?') $
+                          itemPayment item
+                in foldl (\tag (k, v) ->
+                              let ma | k == "user_id" =
+                                         Just "uid"
+                                     | all (\c ->
+                                                c >= 'a' && c <= 'z'
+                                           ) $ T.unpack k =
+                                       Just k
+                                     | otherwise =
+                                         Nothing
+                              in maybe tag
+                                     (\k' ->
+                                          tag
+                                          ! dataAttribute (textTag $ "flattr-" `T.append` k') (toValue v)
+                                     ) ma
+                         ) (a
+                            ! href (toValue $ itemPayment item)
+                            ! dataAttribute "flattr-url" (toValue $ itemHomepage item)
+                            $ "[Flattr]") qs
+            | otherwise =
+                a ! href (toValue $ itemPayment item) $
+                  "[Support]"
 
 safeLogo url
     | "http" `T.isPrefixOf` url = url
@@ -215,4 +259,3 @@ humanSize = humanSize' "KMGT" ""
           | otherwise = 
             let (unit':units') = units
             in humanSize' units' [unit'] $ n `div` 1024
-               
