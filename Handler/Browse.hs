@@ -21,7 +21,7 @@ getFrontR = do
     $(whamletFile "templates/front.hamlet")
     toWidget [hamlet|
 <section class="col2">
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads True}
 |]
 
 getNewR :: Handler RepHtml
@@ -33,7 +33,7 @@ getNewR = do
         toWidget [hamlet|
 <section class="col">
   <h2>New Torrents
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads True}
 ^{filterScript}
 |]
 
@@ -46,7 +46,7 @@ getTopR = do
         toWidget [hamlet|
 <section class="col">
   <h2>Popular Torrents
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads True}
 ^{filterScript}
 |]
 
@@ -65,7 +65,7 @@ getTopDownloadedR period = do
     toWidget [hamlet|
 <section class="col">
   <h2>Top downloaded in #{period_days}
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads True}
 ^{filterScript}
 |]
 
@@ -114,7 +114,7 @@ getUserR user =
 
 <section class="col2">
   <h2>Recent Torrents
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads False}
       |]
 
 getUserFeedR :: Text -> Text -> Handler RepHtml
@@ -149,11 +149,11 @@ getUserFeedR user slug =
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
 
-  ^{renderDownloads downloads}
+  ^{renderDownloads downloads False}
     |]
   
 
-renderDownloads downloads = 
+renderDownloads downloads showOrigin = 
   let formatDate = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") .
                    itemPublished
       isOnlyDownload = (== 1) . length . itemDownloads
@@ -168,12 +168,13 @@ $forall item <- Model.groupDownloads downloads
         <div class="flattr">
       <div class="title">
         <h3>
-          <a href="">#{itemTitle item}
-        <p class="feed">
-          \ in #
-          <a href="">#{fromMaybe T.empty $ itemFeedTitle item}
-          \ by #
-          <a href=@{UserR $ itemUser item}>#{itemUser item}
+          <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
+        $if showOrigin
+          <p class="feed">
+            \ in #
+            <a href="@{UserFeedR (itemUser item) (itemSlug item)}">#{fromMaybe (itemSlug item) $ itemFeedTitle item}
+            \ by #
+            <a href="@{UserR $ itemUser item}">#{itemUser item}
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
