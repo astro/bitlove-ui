@@ -41,6 +41,7 @@ feedEnclosures url =
   
 data FeedDetails = FeedDetails {
       feedUrl :: Text
+    , feedSlug :: Text
     , feedTitle :: Text
     , feedHomepage :: Text
     , feedImage :: Text
@@ -50,10 +51,11 @@ data FeedDetails = FeedDetails {
     } deriving (Show, Typeable)
                
 instance Convertible [SqlValue] FeedDetails where
-  safeConvert (url:title:homepage:image:public:torrentify:error:[]) =
+  safeConvert (url:slug:title:homepage:image:public:torrentify:error:[]) =
     Right $
     FeedDetails 
     (fromSql url)
+    (fromSql slug)
     (fromSql title) 
     (fromSql homepage) 
     (fromSql image) 
@@ -62,6 +64,15 @@ instance Convertible [SqlValue] FeedDetails where
     (fromSql error)
   safeConvert vals = convError "FeedDetails" vals
 
+userFeeds :: Text -> Bool -> Query FeedDetails
+userFeeds user isOwner =
+  query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
+         (if isOwner
+          then ""
+          else "AND user_feeds.\"public\" ") ++
+         "ORDER BY LOWER(feeds.\"title\") ASC" 
+         ) [toSql user]
+
 userFeedDetails :: Text -> Text -> Query FeedDetails
 userFeedDetails user slug =
-  query "SELECT feeds.\"url\", COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql user, toSql slug]
+  query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]

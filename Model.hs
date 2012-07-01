@@ -27,6 +27,7 @@ module Model (
   feedXml,
   feedEnclosures,
   FeedDetails (..),
+  userFeeds,
   userFeedDetails
   ) where
 

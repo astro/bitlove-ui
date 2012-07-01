@@ -71,30 +71,46 @@ getTopDownloadedR period = do
 
 getUserR :: Text -> Handler RepHtml
 getUserR user = do
-    (details, downloads) <- withDB $ \db -> do
-      details <- Model.userDetailsByName user db
-      downloads <- Model.userDownloads 20 user db
-      return (details, downloads)
-    case details of
-      [] ->
-        notFound
-      (details':_) ->
-        defaultLayout $ do
-          setTitle $ toMarkup $ user `T.append` " on Bitlove"
-          toWidget [hamlet|
+  mdfd <- withDB $ \db -> do
+      detailss <- Model.userDetailsByName user db
+      case detailss of
+        [] ->
+            return Nothing
+        (details:_) -> 
+            do
+              feeds <- Model.userFeeds user False db
+              downloads <- Model.userDownloads 20 user db
+              return $ Just (details, feeds, downloads)
+              
+  flip (maybe notFound) mdfd $ \(details, feeds, downloads) ->
+      defaultLayout $ 
+      do setTitle $ toMarkup $ user `T.append` " on Bitlove"
+         toWidget [hamlet|
 <header class="user">
   <div class="meta">
-    $if not (T.null $ userImage details')
+    $if not (T.null $ userImage details)
         <img class="logo"
-             src=#{userImage details'}>
+             src=#{userImage details}>
     <div class="title">
-      <h2>#{userTitle details'}
-      $if not (T.null $ userHomepage details')
+      <h2>#{userTitle details}
+      $if not (T.null $ userHomepage details)
           <p class="homepage">
             <a rel="me"
-               href=#{userHomepage details'}>#{userHomepage details'}
+               href=#{userHomepage details}>#{userHomepage details}
 <section class="col1">
   <h2>Feeds
+  $forall feed <- feeds
+    <article class="feed">
+      <img class="logo"
+           src="#{safeLogo (feedImage feed)}">
+      <div>
+        <h3>
+          <a href="@{UserFeedR user (feedSlug feed)}">#{feedTitle feed}
+        $if not (T.null $ feedHomepage feed)
+          <p class="homepage">
+            <a rel="me"
+               href="#{feedHomepage feed}">#{feedHomepage feed}
+
 <section class="col2">
   <h2>Recent Torrents
   ^{renderDownloads downloads}
@@ -119,8 +135,8 @@ getUserFeedR user slug = do
 <section class="col">
   <header class="feed">
     <div class="meta">
-      <img src="#{safeLogo (feedImage feed)}"
-           class="logo">
+      <img class="logo"
+           src="#{safeLogo (feedImage feed)}">
       <div class="title">
         <div>
           <h2>#{feedTitle feed}
