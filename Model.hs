@@ -20,6 +20,7 @@ module Model (
   Item (..),
   groupDownloads,
   -- Model.User
+  UserName (..),
   UserDetails (..),
   userDetailsByName,
   -- Model.Feed
@@ -46,7 +47,7 @@ import Model.User
 import Model.Feed
                         
 
-infoHashByName :: Text -> Text -> Text -> Query InfoHash
+infoHashByName :: UserName -> Text -> Text -> Query InfoHash
 infoHashByName user slug name =
   query "SELECT \"info_hash\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
 
@@ -67,7 +68,7 @@ instance Convertible [SqlValue] Torrent where
     (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
 
-torrentByName :: Text -> Text -> Text -> Query Torrent
+torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
   query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
   

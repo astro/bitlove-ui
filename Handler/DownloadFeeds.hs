@@ -154,7 +154,7 @@ getTopRssR = getTop
 getTopAtomR :: Handler RepAtom
 getTopAtomR = getTop
 
-getUserDownloads :: RepFeed a => Text -> Handler a
+getUserDownloads :: RepFeed a => UserName -> Handler a
 getUserDownloads user = do
     (details, downloads) <- withDB $ \db -> do
       details <- Model.userDetailsByName user db
@@ -165,13 +165,13 @@ getUserDownloads user = do
         notFound
       (details':_) ->
           renderFeed' Parameters {
-                                pTitle = user `T.append` " on Bitlove",
+                                pTitle = userName user `T.append` " on Bitlove",
                                 pLink = UserR user,
                                 pImage = userImage details'
                               } downloads
     
-getUserDownloadsRssR :: Text -> Handler RepRss
+getUserDownloadsRssR :: UserName -> Handler RepRss
 getUserDownloadsRssR = getUserDownloads
 
-getUserDownloadsAtomR :: Text -> Handler RepAtom
+getUserDownloadsAtomR :: UserName -> Handler RepAtom
 getUserDownloadsAtomR = getUserDownloads

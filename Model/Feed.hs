@@ -9,14 +9,15 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
 
 import Model.Query
+import Model.User
 
 instance Convertible [SqlValue] Text where
   safeConvert = safeConvert . head
 
-user_feed :: Text -> Text -> Query Text
-user_feed feed slug =
+user_feed :: UserName -> Text -> Query Text
+user_feed user slug =
   query "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
-  [toSql feed, toSql slug]
+  [toSql user, toSql slug]
 
 newtype FeedXml = FeedXml LBC.ByteString
 
@@ -64,7 +65,7 @@ instance Convertible [SqlValue] FeedDetails where
     (fromSql error)
   safeConvert vals = convError "FeedDetails" vals
 
-userFeeds :: Text -> Bool -> Query FeedDetails
+userFeeds :: UserName -> Bool -> Query FeedDetails
 userFeeds user isOwner =
   query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
          (if isOwner
@@ -73,6 +74,6 @@ userFeeds user isOwner =
          "ORDER BY LOWER(feeds.\"title\") ASC" 
          ) [toSql user]
 
-userFeedDetails :: Text -> Text -> Query FeedDetails
+userFeedDetails :: UserName -> Text -> Query FeedDetails
 userFeedDetails user slug =
   query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]

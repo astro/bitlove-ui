@@ -74,7 +74,7 @@ getTopDownloadedR period = do
 ^{filterScript}
 |]
 
-getUserR :: Text -> Handler RepHtml
+getUserR :: UserName -> Handler RepHtml
 getUserR user =
   lookup >>= maybe notFound render
     where lookup =
@@ -90,7 +90,7 @@ getUserR user =
                         return $ Just (details, feeds, downloads)
           render (details, feeds, downloads) =
               defaultLayout $ do 
-                setTitle $ toMarkup $ user `T.append` " on Bitlove"
+                setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
                 toWidget [hamlet|
 <header class="user">
   <div class="meta">
@@ -122,7 +122,7 @@ getUserR user =
   ^{renderDownloads downloads False}
       |]
 
-getUserFeedR :: Text -> Text -> Handler RepHtml
+getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug =
   lookup >>= maybe notFound render
     where lookup = 
@@ -148,7 +148,7 @@ getUserFeedR user slug =
           <h2>#{feedTitle feed}
           <span class="publisher">
             \ by #
-            <a href="@{UserR user}">#{user}
+            <a href="@{UserR user}">#{userName user}
         $if not (T.null $ feedHomepage feed)
           <p class="homepage">
             <a rel="me"
@@ -186,7 +186,7 @@ renderItem item showOrigin =
             \ in #
             <a href="@{UserFeedR (itemUser item) (itemSlug item)}">#{fromMaybe (itemSlug item) $ itemFeedTitle item}
             \ by #
-            <a href="@{UserR $ itemUser item}">#{itemUser item}
+            <a href="@{UserR $ itemUser item}">#{userName $ itemUser item}
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">

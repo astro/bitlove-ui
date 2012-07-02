@@ -11,7 +11,7 @@ import PathPieces
 import qualified Model as Model
 
 
-getTorrentStatsR :: Text -> Text -> Text -> StatsPeriod -> StatsJSON -> Handler RepJson
+getTorrentStatsR :: UserName -> Text -> Text -> StatsPeriod -> StatsJSON -> Handler RepJson
 getTorrentStatsR user slug name statsPeriod stats = do
   info_hashes <- withDB $
                  Model.infoHashByName user slug name

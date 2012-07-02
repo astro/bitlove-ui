@@ -13,7 +13,7 @@ newtype RepTorrent = RepTorrent Content
 instance HasReps RepTorrent where
   chooseRep (RepTorrent content) _ = return (typeTorrent, content)
 
-getTorrentFileR :: Text -> Text -> TorrentName -> Handler RepTorrent
+getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
 getTorrentFileR user slug (TorrentName name) = do
   torrents <- withDB $
               Model.torrentByName user slug name

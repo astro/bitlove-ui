@@ -5,6 +5,8 @@ import Prelude
 import Yesod (PathPiece (..))
 import qualified Data.Text as T
 
+import Model.User
+
 data Period = PeriodDays Int
             | PeriodAll
             deriving (Show, Eq, Read, Ord)
@@ -61,3 +63,9 @@ instance PathPiece StatsJSON where
   fromPathPiece "traffic.json" = Just StatsTraffic
   fromPathPiece "downloads.json" = Just StatsDownloads
   fromPathPiece _ = Nothing
+
+
+instance PathPiece UserName where
+  fromPathPiece = Just . UserName
+  toPathPiece (UserName t) = t
+  

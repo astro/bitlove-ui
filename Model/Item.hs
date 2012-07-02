@@ -6,10 +6,11 @@ import Data.Time
 import Data.List (partition)
 
 import Model.Download
+import Model.User
 
 
 data Item = Item {
-      itemUser :: T.Text,
+      itemUser :: UserName,
       itemSlug :: T.Text,
       itemFeed :: T.Text,
       itemId :: T.Text,

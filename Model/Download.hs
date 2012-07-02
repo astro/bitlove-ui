@@ -16,6 +16,7 @@ import Numeric (showHex)
 
 
 import Model.Query
+import Model.User
 
 newtype InfoHash = InfoHash ByteString
                  deriving (Show)
@@ -39,7 +40,7 @@ instance Convertible [SqlValue] InfoHash where
   safeConvert = safeConvert . head
 
 data Download = Download {
-  downloadUser :: Text,
+  downloadUser :: UserName,
   downloadSlug :: Text,
   downloadFeed :: Text,
   downloadItem :: Text,
@@ -91,7 +92,7 @@ mostDownloaded :: Int -> Int -> Query Download
 mostDownloaded limit period =
   query "SELECT * FROM get_most_downloaded(?, ?)" [toSql limit, toSql period]
 
-userDownloads :: Int -> Text -> Query Download
+userDownloads :: Int -> UserName -> Query Download
 userDownloads limit user =
   query "SELECT * FROM get_user_recent_downloads(?, ?)" [toSql limit, toSql user]
 

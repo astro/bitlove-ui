@@ -16,7 +16,7 @@ import Data.Maybe
 import qualified Model
 import Import hiding (Content)
 
-getMapFeedR :: Text -> Text -> Handler RepXml
+getMapFeedR :: UserName -> Text -> Handler RepXml
 getMapFeedR user slug = do
   urlRender <- getUrlRender
   m_data <- withDB $ \db -> do
