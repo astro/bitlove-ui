@@ -20,7 +20,7 @@ getMapFeedR :: UserName -> Text -> Handler RepXml
 getMapFeedR user slug = do
   urlRender <- getUrlRender
   m_data <- withDB $ \db -> do
-    urls <- Model.user_feed user slug db
+    urls <- Model.userFeed user slug db
     case urls of
       (url:_) -> do
         xml:_ <- Model.feedXml url db

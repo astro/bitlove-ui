@@ -7,7 +7,6 @@ module Model (
   StatsValue (..),
   -- TODO: move, camelCase
   get_counter,
-  user_feed,
   -- Model.Download
   Download (..),
   recentDownloads,
@@ -28,6 +27,7 @@ module Model (
   feedXml,
   feedEnclosures,
   FeedDetails (..),
+  userFeed,
   userFeeds,
   userFeedDetails
   ) where

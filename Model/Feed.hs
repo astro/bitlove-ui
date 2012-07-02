@@ -14,8 +14,8 @@ import Model.User
 instance Convertible [SqlValue] Text where
   safeConvert = safeConvert . head
 
-user_feed :: UserName -> Text -> Query Text
-user_feed user slug =
+userFeed :: UserName -> Text -> Query Text
+userFeed user slug =
   query "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
   [toSql user, toSql slug]
 
