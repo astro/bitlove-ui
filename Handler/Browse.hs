@@ -210,8 +210,10 @@ renderItem item showOrigin =
             <dt>#{downloadDownloaded d}
             <dd>Downloads
 |]
-  where renderPayment
-            | "https://flattr.com/submit/auto?" `T.isPrefixOf` (itemPayment item) =
+  where payment = itemPayment item
+        homepage = itemHomepage item
+        renderPayment
+            | "https://flattr.com/submit/auto?" `T.isPrefixOf` payment =
                 let qs = mapMaybe (\(k, mv) ->
                                      (k, ) `fmap` mv
                                   ) $
@@ -220,7 +222,7 @@ renderItem item showOrigin =
                          T.unpack $
                          snd $
                          T.break (== '?') $
-                          itemPayment item
+                          payment
                 in foldl (\tag (k, v) ->
                               let ma | k == "user_id" =
                                          Just "uid"
@@ -236,11 +238,21 @@ renderItem item showOrigin =
                                           ! dataAttribute (textTag $ "flattr-" `T.append` k') (toValue v)
                                      ) ma
                          ) (a
-                            ! href (toValue $ itemPayment item)
-                            ! dataAttribute "flattr-url" (toValue $ itemHomepage item)
+                            ! class_ "FlattrButton"
+                            ! rel "payment"
+                            ! href (toValue payment)
+                            ! dataAttribute "flattr-url" (toValue homepage)
                             $ "[Flattr]") qs
+            | "http://flattr.com/" `T.isPrefixOf` payment ||
+              "https://flattr.com/" `T.isPrefixOf` payment =
+                a ! class_ "FlattrButton"
+                  ! rel "payment"
+                  ! href (toValue payment)
+                  ! dataAttribute "flattr-url" (toValue homepage) $
+                  "[Flattr]"
             | otherwise =
-                a ! href (toValue $ itemPayment item) $
+                a ! rel "payment"
+                  ! href (toValue payment) $
                   "[Support]"
 
 safeLogo url
