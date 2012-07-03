@@ -36,6 +36,13 @@ $doctype 5
           <a href="/directory">Directory
     <div class="content">
       ^{pageBody pc}
+    $maybe user <- msu
+        <nav id="navbar">
+          <p>
+            Logged in as #
+            <a href="@{UserR user}">#{userName user}
+          <p>
+            <a href="@{LogoutR}">Logout
     <footer>
       <div>
         <p>Twitter:
