@@ -7,6 +7,10 @@ import Data.Data (Typeable)
 import Data.Text (Text, pack)
 import Database.HDBC
 import Model.Query
+import Data.ByteString (ByteString)
+import Data.Aeson
+
+import Utils
 
 
 newtype UserName = UserName { userName :: Text }
@@ -46,7 +50,31 @@ userDetailsByName user =
     query "SELECT COALESCE(\"title\", ''), COALESCE(\"image\", ''), COALESCE(\"homepage\", '') FROM users WHERE \"name\"=$1"
     [toSql user]
 
-data UserSalt = UserSalt Text Text
+
+newtype Salt = Salt { unSalt :: ByteString }
+
+instance Convertible Salt SqlValue where
+    safeConvert = safeConvert . unSalt
+             
+instance Convertible SqlValue Salt where
+    safeConvert = Right . Salt . fromBytea
+
+instance ToJSON Salt where
+    toJSON = toJSON . toHex . unSalt
+
+newtype Salted = Salted { unSalted :: ByteString }
+
+instance Convertible Salted SqlValue where
+    safeConvert = safeConvert . unSalted
+             
+instance Convertible SqlValue Salted where
+    safeConvert = Right . Salted . fromBytea
+
+instance ToJSON Salted where
+    toJSON = toJSON . toHex . unSalted
+
+
+data UserSalt = UserSalt Salt Salted
 
 instance Convertible [SqlValue] UserSalt where
   safeConvert (salt:salted:[]) =

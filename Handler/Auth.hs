@@ -24,7 +24,7 @@ postLoginR = do
     (Just username, Nothing, Nothing) ->
         do let user = UserName username
            mst <- withDB $ \db -> do
-             salts <- Model.userSalt (Model.UserName username) db
+             salts <- Model.userSalt user db
              case salts of
                [] ->
                  return Nothing
@@ -35,12 +35,19 @@ postLoginR = do
              Nothing ->
                  returnJson ["error" .= ("No such user" :: Text)]
              Just (salt, token) ->
-                 -- TODO: hex!
                  returnJson ["salt" .= salt,
                              "token" .= token
                             ]
     (Nothing, Just hexToken, Just hexResponse) ->
-      undefined
+        do withDB $ \db -> do
+             let token = Token $ fromHex hexToken
+             users <- Model.validateToken "login" token db
+             case users of
+               [] ->
+                 return Nothing
+               user:_ -> do
+                 let user = UserName username
+                 (UserSalt _ salted):_ <- Model.userSalt user db
     _ ->
       returnJson ["error" .= ("Protocol error" :: Text)]
       

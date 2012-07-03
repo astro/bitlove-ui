@@ -8,8 +8,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
-import Numeric (readHex, showOct, readOct)
+import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
+
+import Utils
 
 
 type Query e = IConnection conn => conn -> IO [e]
@@ -28,14 +30,9 @@ fromBytea = unescape . fromSql
         unescape text =
           case T.splitAt 2 text of
             ("\\x", hex) ->
-              pack $ hexToWords hex
+              fromHex hex
             _ ->
               pack $ octToWords text
-        hexToWords text
-          | T.null text = []
-          | otherwise = let (hex, text') = T.splitAt 2 text
-                            w = fst $ head $ readHex $ T.unpack hex
-                        in w:(hexToWords text')
         octToWords = go . T.unpack
           where go ('\\':t) = let (oct, t') = splitAt 3 t
                               in (fst $ head $ readOct oct):(go t')

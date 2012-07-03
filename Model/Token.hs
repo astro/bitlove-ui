@@ -12,6 +12,7 @@ import Data.Aeson
 
 import Model.Query
 import Model.User
+import Utils
 
 
 newtype Token = Token { unToken :: ByteString }
@@ -23,6 +24,9 @@ instance Convertible Token SqlValue where
              
 instance Convertible SqlValue Token where
     safeConvert = Right . Token . fromBytea
+
+instance ToJSON Token where
+    toJSON = toJSON . toHex . unToken
 
 generateToken :: IConnection conn => Text -> UserName -> conn -> IO Token
 generateToken kind user db = do
@@ -38,13 +42,3 @@ validateToken :: Text -> Token -> Query UserName
 validateToken kind token =
   query "DELETE FROM user_tokens WHERE \"kind\"=$1 AND \"token\"=$2 RETURNING \"user\""
   [toSql kind, toSql token]
-  
-instance ToJSON Token where
-    toJSON = toJSON . toHex
-
-toHex :: Token -> Text
-toHex = T.pack . concatMap mapByte . unpack . unToken
-    where mapByte = pad 2 '0' . flip showHex ""
-          pad len padding s
-              | length s < len = pad len padding $ padding:s
-              | otherwise = s
