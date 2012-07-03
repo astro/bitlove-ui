@@ -2,10 +2,18 @@ module Handler.Auth where
 
 import Prelude
 import Yesod
+import Data.Conduit
+import Crypto.Conduit (sinkHmac)
+import Crypto.HMAC (MacKey (..))
+import Crypto.Hash.SHA1
+import Data.ByteString (ByteString)
+import Data.Text.Encoding (encodeUtf8)
+import Data.Serialize (encode)
 
 import Import
 import BitloveAuth
 import qualified Model as Model
+import Model.User
 
 getLoginR :: Handler RepHtml
 getLoginR =
@@ -24,7 +32,7 @@ postLoginR = do
     (Just username, Nothing, Nothing) ->
         do let user = UserName username
            mst <- withDB $ \db -> do
-             salts <- Model.userSalt user db
+             salts <- userSalt user db
              case salts of
                [] ->
                  return Nothing
@@ -39,15 +47,29 @@ postLoginR = do
                              "token" .= token
                             ]
     (Nothing, Just hexToken, Just hexResponse) ->
-        do withDB $ \db -> do
-             let token = Token $ fromHex hexToken
-             users <- Model.validateToken "login" token db
-             case users of
-               [] ->
-                 return Nothing
-               user:_ -> do
-                 let user = UserName username
-                 (UserSalt _ salted):_ <- Model.userSalt user db
+        do r <-
+             withDB $ \db -> do
+               let token = Token $ fromHex hexToken
+               users <- Model.validateToken "login" token db
+               case users of
+                 [] ->
+                     return $ Left "Invalid token"
+                 user:_ -> 
+                     do (UserSalt _ salted):_ <- userSalt user db
+                        let hexSalted = toHex $ unSalted salted
+                        expected <- runResourceT $ hmacSHA1 (unToken token) (encodeUtf8 hexSalted)
+                        case fromHex hexResponse of
+                          response
+                              | response == expected ->
+                                  return $ Right ()
+                          _ ->
+                            return $ Left "Wrong password"
+           case r of
+             Left e ->
+                 returnJson ["error" .= (e :: Text)]
+             Right sid ->
+                 -- TODO
+                 returnJson undefined
     _ ->
       returnJson ["error" .= ("Protocol error" :: Text)]
       
@@ -65,3 +87,12 @@ getLogoutR =
 
 
 returnJson = return . RepJson . toContent . object
+
+
+hmacSHA1 :: ByteString -> ByteString -> ResourceT IO ByteString
+hmacSHA1 keyData msgData = do
+    let key = MacKey keyData
+    d <-
+           yield msgData $$
+                     (sinkHmac key :: Sink ByteString (ResourceT IO) SHA1)
+    return $ encode d

@@ -11,7 +11,7 @@ module Import
     , (<>)
 #endif
     , TorrentName (..)
-    , iso8601
+    , iso8601, fromHex, toHex
     ) where
 
 import Prelude hiding (writeFile, readFile, head, tail, init, last)
