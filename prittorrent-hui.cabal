@@ -23,6 +23,7 @@ Flag library-only
 library
     exposed-modules: Application
                      Foundation
+                     BitloveAuth
                      PathPieces
                      Import
                      Model
@@ -31,10 +32,12 @@ library
                      Model.Download
                      Model.User
                      Model.Feed
+                     Model.Token
                      Utils
                      Settings
                      Settings.StaticFiles
                      Settings.Development
+                     Handler.Auth
                      Handler.Browse
                      Handler.TorrentFile
                      Handler.TorrentStats
@@ -102,6 +105,7 @@ library
                  , blaze-markup                  >= 0.5.1.0    && < 0.6
                  , http-types                    >= 0.6.11     && < 0.7
                  , blaze-html                    >= 0.5.0.0    && < 0.6
+                 , random                        >= 1.0.1.1    && < 1.1
 
 executable         prittorrent-hui
     if flag(library-only)

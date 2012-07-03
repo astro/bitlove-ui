@@ -18,6 +18,10 @@ instance Convertible UserName SqlValue where
 instance Convertible SqlValue UserName where
     safeConvert v = UserName `fmap` safeConvert v
 
+-- | Single record row
+instance Convertible [SqlValue] UserName where
+    safeConvert [v] = UserName `fmap` safeConvert v
+
 instance Read UserName where
     readsPrec _ = (:[]) . (, "") . UserName . pack
   
@@ -38,6 +42,20 @@ instance Convertible [SqlValue] UserDetails where
       (fromSql homepage)
 
 userDetailsByName :: UserName -> Query UserDetails
-userDetailsByName name =
+userDetailsByName user =
     query "SELECT COALESCE(\"title\", ''), COALESCE(\"image\", ''), COALESCE(\"homepage\", '') FROM users WHERE \"name\"=$1"
-    [toSql name]
+    [toSql user]
+
+data UserSalt = UserSalt Text Text
+
+instance Convertible [SqlValue] UserSalt where
+  safeConvert (salt:salted:[]) =
+      Right $
+      UserSalt
+      (fromSql salt)
+      (fromSql salted)
+
+userSalt :: UserName -> Query UserSalt
+userSalt user =
+    query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [toSql user]
+    

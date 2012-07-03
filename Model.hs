@@ -7,6 +7,7 @@ module Model (
   StatsValue (..),
   -- TODO: move, camelCase
   get_counter,
+  -- TODO: get_gauge and use
   -- Model.Download
   Download (..),
   recentDownloads,
@@ -22,6 +23,8 @@ module Model (
   UserName (..),
   UserDetails (..),
   userDetailsByName,
+  UserSalt (..),
+  userSalt,
   -- Model.Feed
   FeedXml (..),
   feedXml,
@@ -29,7 +32,11 @@ module Model (
   FeedDetails (..),
   userFeed,
   userFeeds,
-  userFeedDetails
+  userFeedDetails,
+  -- Model.Token
+  Token (..),
+  generateToken,
+  validateToken
   ) where
 
 import Prelude
@@ -43,8 +50,9 @@ import qualified Data.ByteString.Char8 as BC
 import Model.Query
 import Model.Download
 import Model.Item
-import Model.User
 import Model.Feed
+import Model.User
+import Model.Token
                         
 
 infoHashByName :: UserName -> Text -> Text -> Query InfoHash

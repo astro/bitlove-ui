@@ -7,7 +7,6 @@ module Application
 
 import Import
 import Settings
-import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers
@@ -22,9 +21,11 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
 import Debug.Trace
 
+import BitloveAuth
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
+import Handler.Auth
 import Handler.Browse
 import Handler.TorrentFile
 import Handler.TorrentStats

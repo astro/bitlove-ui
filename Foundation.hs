@@ -38,6 +38,7 @@ import qualified Data.Text as T
 import Data.Text (Text)
 
 import PathPieces
+import BitloveAuth
 
 
 type DBPool = Pool PostgreSQL.Connection
@@ -97,6 +98,7 @@ instance Yesod App where
     defaultLayout widget = do
         master <- getYesod
         mmsg <- getMessage
+        msu <- sessionUser
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
