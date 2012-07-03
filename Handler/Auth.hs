@@ -41,7 +41,7 @@ postLoginR = do
                     return $ Just (salt, token)
            case mst of
              Nothing ->
-                 returnJson ["error" .= ("No such user" :: Text)]
+                 returnJsonError "No such user"
              Just (salt, token) ->
                  returnJson ["salt" .= salt,
                              "token" .= token
@@ -61,17 +61,20 @@ postLoginR = do
                         case fromHex hexResponse of
                           response
                               | response == expected ->
-                                  return $ Right ()
+                                -- Success!
+                                return $ Right user
                           _ ->
                             return $ Left "Wrong password"
            case r of
-             Left e ->
-                 returnJson ["error" .= (e :: Text)]
-             Right sid ->
-                 -- TODO
-                 returnJson undefined
+             Left msg ->
+                 returnJsonError msg
+             Right user ->
+               do login user
+                  welcomeLink <- ($ UserR user) `fmap`
+                                 getUrlRender
+                  returnJson ["welcome" .= welcomeLink]
     _ ->
-      returnJson ["error" .= ("Protocol error" :: Text)]
+      returnJsonError "Protocol error"
       
 getActivateR :: Handler ()
 getActivateR = undefined
@@ -88,6 +91,9 @@ getLogoutR =
 
 returnJson = return . RepJson . toContent . object
 
+returnJsonError :: Text -> Handler RepJson
+returnJsonError = returnJson . (:[]) . ("error" .=)
+
 
 hmacSHA1 :: ByteString -> ByteString -> ResourceT IO ByteString
 hmacSHA1 keyData msgData = do
@@ -96,3 +102,4 @@ hmacSHA1 keyData msgData = do
            yield msgData $$
                      (sinkHmac key :: Sink ByteString (ResourceT IO) SHA1)
     return $ encode d
+    
