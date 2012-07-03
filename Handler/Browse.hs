@@ -223,6 +223,11 @@ renderItem item showOrigin =
                          snd $
                          T.break (== '?') $
                           payment
+                    qs' = ("popout", "0") :
+                          filter (\(k, v) ->
+                                      k /= "url" &&
+                                      k /= "popout"
+                                 ) qs
                 in foldl (\tag (k, v) ->
                               let ma | k == "user_id" =
                                          Just "uid"
@@ -242,13 +247,14 @@ renderItem item showOrigin =
                             ! rel "payment"
                             ! href (toValue payment)
                             ! dataAttribute "flattr-url" (toValue homepage)
-                            $ "[Flattr]") qs
+                            $ "[Flattr]") qs'
             | "http://flattr.com/" `T.isPrefixOf` payment ||
               "https://flattr.com/" `T.isPrefixOf` payment =
                 a ! class_ "FlattrButton"
                   ! rel "payment"
                   ! href (toValue payment)
-                  ! dataAttribute "flattr-url" (toValue homepage) $
+                  ! dataAttribute "flattr-url" (toValue homepage)
+                  ! dataAttribute "flattr-popout" "0" $
                   "[Flattr]"
             | otherwise =
                 a ! rel "payment"
