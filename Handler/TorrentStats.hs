@@ -43,30 +43,26 @@ getTorrentStatsR user slug name statsPeriod stats = do
                         let q f' = f' info_hash start' stop' interval db
                         in f q
   
-      RepJson `fmap` toContent `fmap` case stats of
+      (RepJson . toContent . object) `fmap` case stats of
         StatsDownloads -> do
-          downloads <- withDB $
-                       Model.get_counter "complete" info_hash start' stop' interval
-          return $
-            object $ ("downloads" .= statsToJson downloads) : baseJson
+          downloads <- withStats ($ Model.get_counter "complete")
+          return $ ("downloads" .= statsToJson downloads) : baseJson
         StatsTraffic -> do
           (down, up, up_seeder) <- withStats $ \q ->
             do down <- q $ Model.get_counter "down"
                up <- q $ Model.get_counter "up"
                up_seeder <- q $ Model.get_counter "up_seeder"
                return (down, up, up_seeder)
-          return $
-            object $ ("down" .= statsToJson down) :
-                     ("up" .= statsToJson up) :
-                     ("up_seeder" .= statsToJson up_seeder) : baseJson
+          return $ ("down" .= statsToJson down) :
+                   ("up" .= statsToJson up) :
+                   ("up_seeder" .= statsToJson up_seeder) : baseJson
         StatsSwarm -> do
           (seeders, leechers) <- withStats $ \q ->
             do seeders <- q $ Model.get_gauge "seeders"
                leechers <- q $ Model.get_gauge "leechers"
                return (seeders, leechers)
-          return $
-            object $ ("seeders" .= statsToJson seeders) :
-                     ("leechers" .= statsToJson leechers) : baseJson
+          return $ ("seeders" .= statsToJson seeders) :
+                   ("leechers" .= statsToJson leechers) : baseJson
 
 
 statsToJson :: [StatsValue] -> Value
