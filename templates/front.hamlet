@@ -10,6 +10,6 @@
   <div class="navtabs">
     <ul>
       <li>
-        <a href="/signup">Sign up</a>
+        <a href="@{SignupR}">Sign up</a>
       <li>
-        <a href="/login">Login</a>
+        <a href="@{LoginR}">Login</a>

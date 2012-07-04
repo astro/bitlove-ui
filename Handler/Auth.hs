@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Handler.Auth where
 
 import Prelude
@@ -9,11 +10,69 @@ import Crypto.Hash.SHA1
 import Data.ByteString (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Serialize (encode)
+import Control.Monad
+import Control.Monad.Error
+import qualified Data.Text as T
 
 import Import
 import BitloveAuth
 import qualified Model as Model
 import Model.User
+
+
+instance Error T.Text where
+    noMsg = T.pack "Error"
+    strMsg = T.pack
+
+getSignupR :: Handler RepHtml
+getSignupR =
+    defaultLayout $ do
+      setTitle "Bitlove: Signup"
+      $(whamletFile "templates/signup.hamlet")
+      
+postSignupR :: Handler RepHtml
+postSignupR = do
+  mUsername <- lookupPostParam "username"
+  mEmail <- lookupPostParam "email"
+  mTos1 <- lookupPostParam "tos-1"
+  mTos2 <- lookupPostParam "tos-2"
+  validation :: Either Text (UserName, Text) <- 
+                runErrorT $ do
+                  username <- 
+                      case mUsername of
+                        Just username | T.length username >= 3 ->
+                            return $ UserName username
+                        _ ->
+                            throwError "Invalid username"
+                  email <-
+                      case mEmail of
+                        Just email | T.any (== '@') email ->
+                            return email
+                        _ ->
+                            throwError "Invalid email address"
+                  case (mTos1, mTos2) of
+                    (Just "tos-1", Just "tos-2") ->
+                        return ()
+                    _ ->
+                        throwError "You need to agree to our terms. We do not wish to get sued."
+                  return (username, email)
+  case validation of
+    Left e ->
+      defaultLayout $ do
+        setTitle "Error"
+        toWidget [hamlet|
+                  <h2>Error
+                  <p>#{e}
+                  <p>
+                    <a href="@{SignupR}">Retry
+                  |]
+    Right (username, email) ->
+      -- TODO: create user, send mail
+      defaultLayout $ do
+        setTitle "Bitlove: Signup"
+        toWidget [hamlet|
+                  TODO
+                  |]
 
 getLoginR :: Handler RepHtml
 getLoginR =

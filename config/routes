@@ -3,6 +3,7 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
+/signup SignupR GET POST
 /login LoginR GET POST
 /activate ActivateR GET POST
 /logout LogoutR GET
