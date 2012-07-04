@@ -7,8 +7,10 @@ module Model (
   StatsValue (..),
   -- TODO: move, camelCase
   get_counter,
-  -- TODO: get_gauge and use
+  get_gauge,
   -- Model.Download
+  InfoHash (..),
+  infoHashToHex,
   Download (..),
   recentDownloads,
   popularDownloads,
@@ -95,3 +97,12 @@ instance Convertible [SqlValue] StatsValue where
 get_counter :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 get_counter kind info_hash start stop interval =
   query "SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, SUM(\"value\") FROM counters WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
+  
+get_gauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
+get_gauge kind info_hash start stop interval =
+  query ("SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, " ++ agg ++ "(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
+  where agg = 
+            case kind of
+                "leechers" -> "AVG"
+                _ -> "MAX"
+                

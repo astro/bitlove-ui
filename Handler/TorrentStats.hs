@@ -5,6 +5,7 @@ import Yesod
 import Data.Time
 import System.Locale
 import qualified Data.Text as T
+import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 
 import Import
 import PathPieces
@@ -32,6 +33,12 @@ getTorrentStatsR user slug name statsPeriod stats = do
           baseJson = ["start" .= iso8601 start',
                       "stop" .= iso8601 stop',
                       "interval" .= interval]
+          withStats :: (((Model.InfoHash -> LocalTime ->
+                           LocalTime -> Integer -> PostgreSQL.Connection
+                          -> IO b) 
+                         -> IO b)
+                        -> IO a)
+                     -> Handler a
           withStats f = withDB $ \db ->
                         let q f' = f' info_hash start' stop' interval db
                         in f q
@@ -52,6 +59,14 @@ getTorrentStatsR user slug name statsPeriod stats = do
             object $ ("down" .= statsToJson down) :
                      ("up" .= statsToJson up) :
                      ("up_seeder" .= statsToJson up_seeder) : baseJson
+        StatsSwarm -> do
+          (seeders, leechers) <- withStats $ \q ->
+            do seeders <- q $ Model.get_gauge "seeders"
+               leechers <- q $ Model.get_gauge "leechers"
+               return (seeders, leechers)
+          return $
+            object $ ("seeders" .= statsToJson seeders) :
+                     ("leechers" .= statsToJson leechers) : baseJson
 
 
 statsToJson :: [StatsValue] -> Value
