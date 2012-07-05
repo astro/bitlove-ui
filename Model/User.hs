@@ -1,14 +1,17 @@
 {-# LANGUAGE FlexibleInstances, DeriveDataTypeable, TupleSections #-}
 module Model.User where
 
-import Prelude (Either (Right), ($), Eq, Ord, Show, fmap, Read (..), (.))
+import Prelude
 import Data.Convertible
 import Data.Data (Typeable)
-import Data.Text (Text, pack)
+import Data.Text (Text)
+import qualified Data.Text as T
 import Database.HDBC
 import Model.Query
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
 import Data.Aeson
+import System.Random
 
 import Utils
 
@@ -27,7 +30,7 @@ instance Convertible [SqlValue] UserName where
     safeConvert [v] = UserName `fmap` safeConvert v
 
 instance Read UserName where
-    readsPrec _ = (:[]) . (, "") . UserName . pack
+    readsPrec _ = (:[]) . (, "") . UserName . T.pack
   
 
 
@@ -54,7 +57,7 @@ userDetailsByName user =
 newtype Salt = Salt { unSalt :: ByteString }
 
 instance Convertible Salt SqlValue where
-    safeConvert = safeConvert . unSalt
+    safeConvert = safeConvert . (T.append "\\x") . toHex . unSalt
              
 instance Convertible SqlValue Salt where
     safeConvert = Right . Salt . fromBytea
@@ -87,3 +90,23 @@ userSalt :: UserName -> Query UserSalt
 userSalt user =
     query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [toSql user]
     
+    
+registerUser :: IConnection conn => 
+                UserName -> Text -> conn -> IO (Maybe Salt)
+registerUser username email db = do
+  r <- quickQuery' db 
+       "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?" 
+       [toSql username]
+  case r of
+    [[v]] | (fromSql v :: Int) < 1 -> do
+           salt <- generateSalt
+           1 <- run db 
+                "INSERT INTO users (\"name\", \"email\", \"salt\") VALUES (?, ?, ?)"
+                [toSql username, toSql email, toSql salt]
+           return $ Just salt
+    _ ->
+        return Nothing
+    
+    where generateSalt =
+              (Salt . B.pack . take 8 . randoms) `fmap`
+              getStdGen

@@ -27,6 +27,7 @@ module Model (
   userDetailsByName,
   UserSalt (..),
   userSalt,
+  registerUser,
   -- Model.Feed
   FeedXml (..),
   feedXml,

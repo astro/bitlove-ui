@@ -11,8 +11,11 @@ import Data.ByteString (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Serialize (encode)
 import Control.Monad
-import Control.Monad.Error
+import Control.Monad.Error hiding (lift)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy.Encoding as TLE
+import Text.Shakespeare.Text (stext)
+import Network.Mail.Mime
 
 import Import
 import BitloveAuth
@@ -30,50 +33,93 @@ getSignupR =
       setTitle "Bitlove: Signup"
       $(whamletFile "templates/signup.hamlet")
       
+data SignupStatus = SignupOk | SignupConflict | SignupError
+      
 postSignupR :: Handler RepHtml
 postSignupR = do
+  -- Validation
   mUsername <- lookupPostParam "username"
+  username <- case mUsername of
+                Just username 
+                    | T.length username >= 3 ->
+                        return $ UserName username
+                _ ->
+                    sendError "Invalid username"
+  
   mEmail <- lookupPostParam "email"
+  email <- case mEmail of
+             Just email 
+                 | T.any (== '@') email ->
+                     return email
+             _ ->
+                 sendError "Invalid email address"
   mTos1 <- lookupPostParam "tos-1"
   mTos2 <- lookupPostParam "tos-2"
-  validation :: Either Text (UserName, Text) <- 
-                runErrorT $ do
-                  username <- 
-                      case mUsername of
-                        Just username | T.length username >= 3 ->
-                            return $ UserName username
-                        _ ->
-                            throwError "Invalid username"
-                  email <-
-                      case mEmail of
-                        Just email | T.any (== '@') email ->
-                            return email
-                        _ ->
-                            throwError "Invalid email address"
-                  case (mTos1, mTos2) of
-                    (Just "tos-1", Just "tos-2") ->
-                        return ()
-                    _ ->
-                        throwError "You need to agree to our terms. We do not wish to get sued."
-                  return (username, email)
-  case validation of
-    Left e ->
-      defaultLayout $ do
-        setTitle "Error"
-        toWidget [hamlet|
-                  <h2>Error
-                  <p>#{e}
-                  <p>
-                    <a href="@{SignupR}">Retry
-                  |]
-    Right (username, email) ->
-      -- TODO: create user, send mail
-      defaultLayout $ do
-        setTitle "Bitlove: Signup"
-        toWidget [hamlet|
-                  TODO
-                  |]
+  case (mTos1, mTos2) of
+    (Just "tos-1", Just "tos-2") ->
+        return ()
+    _ ->
+        sendError "You need to agree to our terms. We do not wish to get sued."
 
+  -- create user
+  errorOrToken <- withDB $ \db ->
+       do mSalt <- Model.registerUser username email db
+          case mSalt of
+            Nothing ->
+              return $ Left "A user of that name already exists."
+            Just _ ->
+              Right `fmap` Model.generateToken "activate" username db
+
+  case errorOrToken of
+    Left e ->
+        sendError e
+    Right token ->
+        lift $ renderSendMail $ makeMail email token
+  -- TODO: unregister if failed
+      
+  defaultLayout $ do
+                setTitle "Bitlove: Signup"
+                toWidget [hamlet|
+                          <h2>Account activation pending
+                          <p>Please check your mail to activate your account.
+                          |]
+    where sendError :: Text -> Handler a
+          sendError e = defaultLayout (do
+                                        setTitle "Error"
+                                        toWidget [hamlet|
+                                                  <h2>Error
+                                                  <p>#{e}
+                                                  <p>
+                                                    <a href="@{SignupR}">Retry
+                                                  |]
+                                      ) >>= 
+                        sendResponse
+
+                
+          makeMail email token = 
+              Mail {
+                mailFrom = Address Nothing "mail@bitlove.org",
+                mailTo = [Address Nothing email],
+                mailHeaders = [("Subject", "Welcome to Bitlove")],
+                mailParts = [[Part {
+                                 partType = "text/plain",
+                                 partEncoding = None,
+                                 partFilename = Nothing,
+                                 partContent = TLE.encodeUtf8
+                                               [stext|
+Welcome to Bitlove!
+
+To complete signup visit the following link:
+\    https://bitlove.org/@{ActivateR token}
+    
+Thanks for sharing
+\    The Bitlove Team
+
+                                                     |]
+                              }]]
+              }
+  
+  
 getLoginR :: Handler RepHtml
 getLoginR =
     defaultLayout $ do
