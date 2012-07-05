@@ -33,6 +33,7 @@ import Text.Hamlet (hamletFile)
 import Control.Applicative
 import Data.Conduit.Pool
 import Control.Monad.Trans.Resource
+import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import qualified Data.Text as T
 import Data.Text (Text)
@@ -139,7 +140,7 @@ withDB f = do
     -- TODO: use takeResourceCheck, catch f
     db <- takeResource pool
     a <- lift $ lift $
-         f $ mrValue db
+         HDBC.withTransaction (mrValue db) f
     mrReuse db True
     mrRelease db
     return a
