@@ -131,6 +131,7 @@ getUserR user =
   ^{renderDownloads downloads False}
       |]
 
+-- TODO: show private feeds
 getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug =
   lookup >>= maybe notFound render
@@ -242,7 +243,6 @@ renderItem item showOrigin =
                           payment
                     qs' = ("popout", "0") :
                           filter (\(k, v) ->
-                                      k /= "url" &&
                                       k /= "popout"
                                  ) qs
                 in foldl (\tag (k, v) ->
@@ -263,7 +263,6 @@ renderItem item showOrigin =
                             ! class_ "FlattrButton"
                             ! rel "payment"
                             ! href (toValue payment)
-                            ! dataAttribute "flattr-url" (toValue homepage)
                             $ "[Flattr]") qs'
             | "http://flattr.com/" `T.isPrefixOf` payment ||
               "https://flattr.com/" `T.isPrefixOf` payment =
