@@ -9,6 +9,7 @@ import Control.Monad
 import Import
 import Model.Download
 
+-- TODO: Access-Control-Allow-Origin: *
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
   urls <- map snd `fmap`

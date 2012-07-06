@@ -16,7 +16,7 @@ import Utils
 
 
 newtype Token = Token { unToken :: ByteString }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Read, Eq, Ord)
 
 
 instance Convertible Token SqlValue where
@@ -27,6 +27,7 @@ instance Convertible SqlValue Token where
 
 instance ToJSON Token where
     toJSON = toJSON . toHex . unToken
+    
 
 generateToken :: IConnection conn => Text -> UserName -> conn -> IO Token
 generateToken kind user db = do
@@ -35,7 +36,7 @@ generateToken kind user db = do
   return token
   
 makeRandomToken :: IO Token
-makeRandomToken = (Token . pack . take 32 . randoms) `fmap`
+makeRandomToken = (Token . pack . take 16 . randoms) `fmap`
                   getStdGen
 
 validateToken :: Text -> Token -> Query UserName

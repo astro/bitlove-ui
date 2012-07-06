@@ -5,7 +5,9 @@ import Prelude
 import Yesod (PathPiece (..))
 import qualified Data.Text as T
 
+import Utils
 import Model.User
+import Model.Token
 
 data Period = PeriodDays Int
             | PeriodAll
@@ -68,4 +70,9 @@ instance PathPiece StatsJSON where
 instance PathPiece UserName where
   fromPathPiece = Just . UserName
   toPathPiece (UserName t) = t
+  
+  
+instance PathPiece Token where
+  fromPathPiece = Just . Token . fromHex
+  toPathPiece = toHex . unToken
   

@@ -16,6 +16,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
+import qualified Data.ByteString.Lazy.Char8 as LBC
+import qualified Control.Exception as E
 
 import Import
 import BitloveAuth
@@ -70,19 +72,42 @@ postSignupR = do
             Just _ ->
               Right `fmap` Model.generateToken "activate" username db
 
-  case errorOrToken of
-    Left e ->
-        sendError e
-    Right token ->
-        lift $ renderSendMail $ makeMail email token
-  -- TODO: unregister if failed
-      
-  defaultLayout $ do
-                setTitle "Bitlove: Signup"
-                toWidget [hamlet|
-                          <h2>Account activation pending
-                          <p>Please check your mail to activate your account.
-                          |]
+  sent <-
+      case errorOrToken of
+        Left e ->
+            sendError e
+        Right token ->
+            do activateLink <- ("https://bitlove.org" `T.append`) `fmap`
+                               ($ ActivateR token) `fmap`
+                               getUrlRender
+               sendMail email "Welcome to Bitlove" $
+                        TLE.encodeUtf8 [stext|
+Welcome to Bitlove!
+
+To complete signup visit the following link:
+    #{activateLink}
+
+Thanks for sharing
+    The Bitlove Team
+    |]
+
+  case sent of
+    True ->
+        defaultLayout $ do
+              setTitle "Bitlove: Signup"
+              toWidget [hamlet|
+                        <h2>Account activation pending
+                        <p>Please check your mail to activate your account.
+                        |]
+    False ->
+        -- TODO: unregister & rm token
+        defaultLayout $ do
+              setTitle "Error"
+              toWidget [hamlet|
+                        <h2>Sorry
+                        <p>Sending mail failed. Please #
+                          <a href="mailto:mail@bitlove.org">contact support!
+                        |]
     where sendError :: Text -> Handler a
           sendError e = defaultLayout (do
                                         setTitle "Error"
@@ -94,31 +119,6 @@ postSignupR = do
                                                   |]
                                       ) >>= 
                         sendResponse
-
-                
-          makeMail email token = 
-              Mail {
-                mailFrom = Address Nothing "mail@bitlove.org",
-                mailTo = [Address Nothing email],
-                mailHeaders = [("Subject", "Welcome to Bitlove")],
-                mailParts = [[Part {
-                                 partType = "text/plain",
-                                 partEncoding = None,
-                                 partFilename = Nothing,
-                                 partContent = TLE.encodeUtf8
-                                               [stext|
-Welcome to Bitlove!
-
-To complete signup visit the following link:
-\    https://bitlove.org/@{ActivateR token}
-    
-Thanks for sharing
-\    The Bitlove Team
-
-                                                     |]
-                              }]]
-              }
-  
   
 getLoginR :: Handler RepHtml
 getLoginR =
@@ -181,10 +181,10 @@ postLoginR = do
     _ ->
       returnJsonError "Protocol error"
       
-getActivateR :: Handler ()
+getActivateR :: Token -> Handler ()
 getActivateR = undefined
 
-postActivateR :: Handler ()
+postActivateR :: Token -> Handler ()
 postActivateR = undefined
 
 getLogoutR :: Handler ()
@@ -193,6 +193,29 @@ getLogoutR =
   (($ LoginR) `fmap` getUrlRender) >>=
   redirect
 
+
+-- returns whether this was successful
+sendMail :: Text -> Text -> LBC.ByteString -> Handler Bool
+sendMail to subject body =
+    liftIO $
+    E.catch (send >> return True) $
+    \(E.ErrorCall _) -> return False
+  where send =
+            renderSendMail
+            Mail {
+              mailFrom = Address Nothing "mail@bitlove.org",
+              mailTo = [Address Nothing to],
+              mailCc = [],
+              mailBcc = [],
+              mailHeaders = [("Subject", subject)],
+              mailParts = [[Part {
+                              partType = "text/plain",
+                              partEncoding = None,
+                              partFilename = Nothing,
+                              partHeaders = [],
+                              partContent = body
+                            }]]
+            }
 
 returnJson = return . RepJson . toContent . object
 

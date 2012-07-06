@@ -5,7 +5,7 @@
 
 /signup SignupR GET POST
 /login LoginR GET POST
-/activate ActivateR GET POST
+/activate/#Token ActivateR GET POST
 /logout LogoutR GET
 
 /by-enclosure.json ByEnclosureJson GET
