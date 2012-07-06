@@ -14,6 +14,7 @@ import qualified Data.ByteString.Char8 as BC
 
 import qualified Model
 import Import
+import BitloveAuth
 
 
 getFrontR :: Handler RepHtml
@@ -89,9 +90,17 @@ getUserR user =
                         downloads <- Model.userDownloads 20 user db
                         return $ Just (details, feeds, downloads)
           render (details, feeds, downloads) =
-              defaultLayout $ do 
-                setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
-                toWidget [hamlet|
+              do msu <- sessionUser
+                 defaultLayout $ do 
+                   setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
+                   case msu of
+                     Nothing -> 
+                         return ()
+                     Just user' | user == user' ->
+                         toWidgetHead [hamlet|
+                                       <script src="/static/edit-user.js" type="text/javascript" async>
+                                       |]
+                   toWidget [hamlet|
 <header class="user">
   <div class="meta">
     $if not (T.null $ userImage details)
@@ -135,9 +144,17 @@ getUserFeedR user slug =
                       (Just . (feed, )) `fmap` 
                       Model.feedDownloads 50 (feedUrl feed) db
           render (feed, downloads) =
-              defaultLayout $ do
-                setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
-                toWidget [hamlet|
+              do msu <- sessionUser
+                 defaultLayout $ do
+                   setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+                   case msu of
+                     Nothing -> 
+                         return ()
+                     Just user' | user == user' ->
+                         toWidgetHead [hamlet|
+                                       <script src="/static/edit-feed.js" type="text/javascript" async>
+                                       |]
+                   toWidget [hamlet|
 <section class="col">
   <header class="feed">
     <div class="meta">

@@ -39,6 +39,7 @@ library
                      Settings.Development
                      Handler.Auth
                      Handler.Browse
+                     Handler.Edit
                      Handler.TorrentFile
                      Handler.TorrentStats
                      Handler.MapFeed

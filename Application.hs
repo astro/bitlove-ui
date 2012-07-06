@@ -27,6 +27,7 @@ import BitloveAuth
 -- Don't forget to add new modules to your cabal file!
 import Handler.Auth
 import Handler.Browse
+import Handler.Edit
 import Handler.TorrentFile
 import Handler.TorrentStats
 import Handler.MapFeed

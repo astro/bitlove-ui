@@ -53,7 +53,13 @@ userDetailsByName user =
     query "SELECT COALESCE(\"title\", ''), COALESCE(\"image\", ''), COALESCE(\"homepage\", '') FROM users WHERE \"name\"=$1"
     [toSql user]
 
-
+setUserDetails :: IConnection conn => 
+                  UserName -> UserDetails -> conn -> IO ()
+setUserDetails user details db = do
+  1 <- run db "UPDATE users SET \"title\"=?, \"image\"=?, \"homepage\"=? WHERE \"name\"=?"
+       [toSql $ userTitle details, toSql $ userImage details, toSql $ userHomepage details, toSql user]
+  return ()
+  
 newtype Salt = Salt { unSalt :: ByteString }
 
 instance Convertible Salt SqlValue where

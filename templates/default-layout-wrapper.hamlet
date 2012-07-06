@@ -7,6 +7,7 @@ $doctype 5
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
     <link rel="alternate" type="application/rss+xml" title="Downloads (RSS)" href="http://bitlove.org/new.rss"/>
     <link rel="alternate" type="application/atom+xml" title="Downloads (ATOM)" href="http://bitlove.org/new.atom"/>
+    <script src="/static/jquery-1.7.1.min.js" type="text/javascript" async>
     ^{pageHead pc}
   <body>
     <header class="site">
@@ -64,6 +65,5 @@ $doctype 5
         <p>Bitlove.org is IPv6-ready!
         <p>Hire a <a href="mailto:astro@spaceboyz.net">backend hacker
     <script src="https://api.flattr.com/js/0.6/load.js?mode=auto&amp;popout=0&amp;button=compact" type="text/javascript">
-    <script src="/static/jquery-1.7.1.min.js" type="text/javascript">
-    <script src="/static/jquery.flot.js" type="text/javascript">
-    <script src="/static/graphs.js" type="text/javascript">
+    <script src="/static/jquery.flot.js" type="text/javascript" async>
+    <script src="/static/graphs.js" type="text/javascript" async>

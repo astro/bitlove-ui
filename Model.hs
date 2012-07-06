@@ -25,6 +25,7 @@ module Model (
   UserName (..),
   UserDetails (..),
   userDetailsByName,
+  setUserDetails,
   UserSalt (..),
   userSalt,
   setUserSalted,
