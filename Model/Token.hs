@@ -41,5 +41,11 @@ makeRandomToken = (Token . pack . take 16 . randoms) `fmap`
 
 validateToken :: Text -> Token -> Query UserName
 validateToken kind token =
-  query "DELETE FROM user_tokens WHERE \"kind\"=$1 AND \"token\"=$2 RETURNING \"user\""
+  query "DELETE FROM user_tokens WHERE \"kind\"=? AND \"token\"=? RETURNING \"user\""
   [toSql kind, toSql token]
+
+peekToken :: Text -> Token -> Query UserName
+peekToken kind token =
+  query "SELECT \"user\" FROM user_tokens WHERE \"kind\"=? AND \"token\"=?"
+  [toSql kind, toSql token]
+  

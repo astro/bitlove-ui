@@ -27,6 +27,7 @@ module Model (
   userDetailsByName,
   UserSalt (..),
   userSalt,
+  setUserSalted,
   registerUser,
   -- Model.Feed
   FeedXml (..),
@@ -39,7 +40,8 @@ module Model (
   -- Model.Token
   Token (..),
   generateToken,
-  validateToken
+  validateToken,
+  peekToken
   ) where
 
 import Prelude

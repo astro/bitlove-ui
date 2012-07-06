@@ -68,7 +68,7 @@ instance ToJSON Salt where
 newtype Salted = Salted { unSalted :: ByteString }
 
 instance Convertible Salted SqlValue where
-    safeConvert = safeConvert . unSalted
+    safeConvert = safeConvert . (T.append "\\x") . toHex . unSalted
              
 instance Convertible SqlValue Salted where
     safeConvert = Right . Salted . fromBytea
@@ -90,7 +90,14 @@ userSalt :: UserName -> Query UserSalt
 userSalt user =
     query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [toSql user]
     
-    
+setUserSalted :: IConnection conn => 
+                 UserName -> Salted -> conn -> IO ()
+setUserSalted user salted db = do
+  1 <- run db
+       "UPDATE users SET \"salted\"=? WHERE \"name\"=?"
+       [toSql salted, toSql user]
+  return ()
+                 
 registerUser :: IConnection conn => 
                 UserName -> Text -> conn -> IO (Maybe Salt)
 registerUser username email db = do

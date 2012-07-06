@@ -181,11 +181,54 @@ postLoginR = do
     _ ->
       returnJsonError "Protocol error"
       
-getActivateR :: Token -> Handler ()
-getActivateR = undefined
+getActivateR :: Token -> Handler RepHtml
+getActivateR token = do
+  mSalt <-
+      withDB $ \db ->
+      do users <- Model.peekToken "activate" token db
+         case users of
+           [] ->
+             return Nothing
+           user:_ ->
+               do (Model.UserSalt salt _):_ <- Model.userSalt user db
+                  return $ Just salt
+               
+  case mSalt of
+    Nothing ->
+        defaultLayout $ do
+                       setTitle "Huh?"
+                       toWidget [hamlet|
+                                 <h2>Error
+                                 <p>Invalid activation token
+                                 |]
+    Just salt ->
+        do let hexToken = toHex $ unToken token
+               hexSalt = toHex $ unSalt salt
+           defaultLayout $ do
+                       setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
+                       $(whamletFile "templates/activate.hamlet")
 
-postActivateR :: Token -> Handler ()
-postActivateR = undefined
+postActivateR :: Token -> Handler RepJson
+postActivateR token = do
+  Just salted <- (fmap $ Salted . fromHex) `fmap`
+                 lookupPostParam "salted"
+  mUser <- withDB $ \db ->
+    do users <- Model.validateToken "activate" token db
+       case users of
+         [] ->
+             return Nothing
+         user:_ ->
+             do Model.setUserSalted user salted db
+                return $ Just user
+          
+  case mUser of
+    Nothing ->
+      returnJsonError "Invalid activation token"
+    Just user ->
+        login user >>
+        (((:[]) . ("welcome" .=) . ($ UserR user)) `fmap`
+         getUrlRender) >>=
+        returnJson
 
 getLogoutR :: Handler ()
 getLogoutR =
