@@ -39,6 +39,7 @@ module Model (
   userFeed,
   userFeeds,
   userFeedDetails,
+  addUserFeed,
   -- Model.Token
   Token (..),
   generateToken,

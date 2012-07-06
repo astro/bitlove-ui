@@ -77,3 +77,11 @@ userFeeds user isOwner =
 userFeedDetails :: UserName -> Text -> Query FeedDetails
 userFeedDetails user slug =
   query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]
+
+addUserFeed :: IConnection conn => 
+               UserName -> Text -> Text -> conn -> IO Bool
+addUserFeed user slug url db =
+    fmap (fromSql . head . head) $
+    quickQuery' db "SELECT * FROM add_user_feed(?, ?, ?)"
+                    [toSql user, toSql slug, toSql url]
+       

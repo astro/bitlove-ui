@@ -3,7 +3,7 @@ module Handler.Edit where
 import Prelude
 import Import
 import Data.Maybe
-import Data.Text (Text)
+import Data.Text (Text, isPrefixOf)
 
 import qualified Model as Model
 import BitloveAuth
@@ -42,4 +42,22 @@ postUserDetailsR user = do
   return $ RepJson $ toContent $ object ([] :: [(Text, Int)])
 
 putUserFeedR :: UserName -> Text -> Handler RepJson
-putUserFeedR user slug = undefined
+putUserFeedR user slug = do
+  mUrl <- lookupPostParam "url"
+  -- Validate
+  url <- case mUrl of
+           Just url
+               | "http://" `isPrefixOf` url ||
+                 "https://" `isPrefixOf` url ->
+                     return url
+           Nothing ->
+               sendResponse $ RepJson $ toContent $ 
+               object ["error" .= ("Invalid URL" :: Text)]
+      
+  isNew <- withDB $ Model.addUserFeed user slug url
+  
+  link <- ($ UserFeedR user slug) `fmap`
+          getUrlRender
+  return $ RepJson $ toContent $
+         object ["link" .= link]
+
