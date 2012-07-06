@@ -57,7 +57,7 @@ userDetailsByName user =
 newtype Salt = Salt { unSalt :: ByteString }
 
 instance Convertible Salt SqlValue where
-    safeConvert = safeConvert . (T.append "\\x") . toHex . unSalt
+    safeConvert = Right . toBytea . unSalt
              
 instance Convertible SqlValue Salt where
     safeConvert = Right . Salt . fromBytea
@@ -68,7 +68,7 @@ instance ToJSON Salt where
 newtype Salted = Salted { unSalted :: ByteString }
 
 instance Convertible Salted SqlValue where
-    safeConvert = safeConvert . (T.append "\\x") . toHex . unSalted
+    safeConvert = Right . toBytea . unSalted
              
 instance Convertible SqlValue Salted where
     safeConvert = Right . Salted . fromBytea
@@ -117,3 +117,9 @@ registerUser username email db = do
     where generateSalt =
               (Salt . B.pack . take 8 . randoms) `fmap`
               getStdGen
+              
+userByEmail :: Text -> Query UserName
+userByEmail email =
+  query "SELECT \"name\" FROM users WHERE \"email\"=?"
+  [toSql email]
+  

@@ -1,0 +1,10 @@
+<section class="col">
+  <form class="login"
+  	method="POST"
+	enctype="application/x-www-form-urlencoded"
+	action="/reactivate">
+    <h2>Reactivate your account
+    <p>
+      <label for="email">E-Mail:
+      <input id="email" name="email">
+    <input type="submit" value="Ok">

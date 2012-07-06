@@ -18,6 +18,7 @@ import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Control.Exception as E
+import Data.Maybe (fromMaybe)
 
 import Import
 import BitloveAuth
@@ -80,7 +81,7 @@ postSignupR = do
             do activateLink <- ("https://bitlove.org" `T.append`) `fmap`
                                ($ ActivateR token) `fmap`
                                getUrlRender
-               sendMail email "Welcome to Bitlove" $
+               sendMail username email "Welcome to Bitlove" $
                         TLE.encodeUtf8 [stext|
 Welcome to Bitlove!
 
@@ -230,6 +231,64 @@ postActivateR token = do
          getUrlRender) >>=
         returnJson
 
+getReactivateR :: Handler RepHtml
+getReactivateR =
+    defaultLayout $ do
+      setTitle "Bitlove: Recover your password"
+      $(whamletFile "templates/reactivate.hamlet")
+      
+postReactivateR :: Handler RepHtml
+postReactivateR = do
+  email <- fromMaybe "" `fmap`
+           lookupPostParam "email"
+  userTokens <- withDB $ \db ->
+    do users <- Model.userByEmail email db
+       foldM (\userTokens user ->
+               do token <- Model.generateToken "activate" user db
+                  return $ (user, token) : userTokens
+             ) [] users
+            
+  sent <- foldM (\sent (user, token) ->
+                     case sent of
+                       False ->
+                           return False
+                       True  ->
+                           do activateLink <- ("https://bitlove.org" `T.append`) `fmap`
+                                              ($ ActivateR token) `fmap`
+                                              getUrlRender
+                              sendMail user email "Reactivate your Bitlove account" $
+                                       TLE.encodeUtf8 [stext|
+Welcome back to Bitlove!
+
+To reset your account password visit the following link:
+    #{activateLink}
+
+Thanks for sharing
+    The Bitlove Team
+    |]
+                ) True userTokens
+  
+  defaultLayout $ do
+    setTitle "Bitlove: Recover your password"
+    case sent of
+      _ | null userTokens ->
+            toWidget [hamlet|
+                      <h2>Error
+                      <p>No user with that email address was found.
+                      |]
+      False ->
+          toWidget [hamlet|
+                    <h2>Sorry
+                    <p>Sending mail failed. Please #
+                      <a href="mailto:mail@bitlove.org">contact support!
+                    |]
+      True ->
+          toWidget [hamlet|
+                    <h2>Account activation pending
+                    <p>Please check your mail to activate your account.
+                    |]
+      
+    
 getLogoutR :: Handler ()
 getLogoutR =
   logout >>
@@ -238,16 +297,16 @@ getLogoutR =
 
 
 -- returns whether this was successful
-sendMail :: Text -> Text -> LBC.ByteString -> Handler Bool
-sendMail to subject body =
+sendMail :: UserName -> Text -> Text -> LBC.ByteString -> Handler Bool
+sendMail toUser toEmail subject body =
     liftIO $
     E.catch (send >> return True) $
     \(E.ErrorCall _) -> return False
   where send =
             renderSendMail
             Mail {
-              mailFrom = Address Nothing "mail@bitlove.org",
-              mailTo = [Address Nothing to],
+              mailFrom = Address (Just "Bitlove.org") "mail@bitlove.org",
+              mailTo = [Address (Just $ userName toUser) toEmail],
               mailCc = [],
               mailBcc = [],
               mailHeaders = [("Subject", subject)],

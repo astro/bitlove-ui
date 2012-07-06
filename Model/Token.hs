@@ -37,7 +37,7 @@ generateToken kind user db = do
   
 makeRandomToken :: IO Token
 makeRandomToken = (Token . pack . take 16 . randoms) `fmap`
-                  getStdGen
+                  newStdGen
 
 validateToken :: Text -> Token -> Query UserName
 validateToken kind token =

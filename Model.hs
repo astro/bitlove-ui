@@ -29,6 +29,7 @@ module Model (
   userSalt,
   setUserSalted,
   registerUser,
+  userByEmail,
   -- Model.Feed
   FeedXml (..),
   feedXml,
