@@ -94,12 +94,12 @@ getUserR user =
                  defaultLayout $ do 
                    setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
                    case msu of
-                     Nothing -> 
-                         return ()
                      Just user' | user == user' ->
                          toWidgetHead [hamlet|
                                        <script src="/static/edit-user.js" type="text/javascript" async>
                                        |]
+                     _ -> 
+                         return ()
                    toWidget [hamlet|
 <header class="user">
   <div class="meta">
@@ -148,12 +148,12 @@ getUserFeedR user slug =
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
                    case msu of
-                     Nothing -> 
-                         return ()
                      Just user' | user == user' ->
                          toWidgetHead [hamlet|
                                        <script src="/static/edit-feed.js" type="text/javascript" async>
                                        |]
+                     _ -> 
+                         return ()
                    toWidget [hamlet|
 <section class="col">
   <header class="feed">

@@ -6,6 +6,7 @@ import Data.Maybe
 import Data.Text (Text)
 
 import qualified Model as Model
+import BitloveAuth
 
 getUserDetailsR :: UserName -> Handler RepJson
 getUserDetailsR user = do
@@ -22,6 +23,13 @@ getUserDetailsR user = do
 
 postUserDetailsR :: UserName -> Handler RepJson
 postUserDetailsR user = do
+  msu <- sessionUser
+  case msu of
+    Just user' | user == user' ->
+      return ()
+    _ ->
+      permissionDenied "Not your user details"
+  
   title <- fromMaybe (userName user) `fmap` 
            lookupPostParam "title"
   image <- fromMaybe "" `fmap` 
