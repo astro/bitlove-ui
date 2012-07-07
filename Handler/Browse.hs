@@ -11,6 +11,7 @@ import Text.Blaze
 import Text.Blaze.Html5 hiding (div)
 import Text.Blaze.Html5.Attributes
 import qualified Data.ByteString.Char8 as BC
+import Control.Monad
 
 import qualified Model
 import Import
@@ -76,31 +77,22 @@ getTopDownloadedR period = do
 |]
 
 getUserR :: UserName -> Handler RepHtml
-getUserR user =
-  lookup >>= maybe notFound render
-    where lookup =
-              withDB $ \db -> do
-                detailss <- Model.userDetailsByName user db
-                case detailss of
-                  [] ->
-                      return Nothing
-                  (details:_) -> 
-                      do
-                        feeds <- Model.userFeeds user False db
-                        downloads <- Model.userDownloads 20 user db
-                        return $ Just (details, feeds, downloads)
-          render (details, feeds, downloads) =
-              do msu <- sessionUser
-                 defaultLayout $ do 
-                   setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
-                   case msu of
-                     Just user' | user == user' ->
-                         toWidgetHead [hamlet|
-                                       <script src="/static/edit-user.js" type="text/javascript" async>
-                                       |]
-                     _ -> 
-                         return ()
-                   toWidget [hamlet|
+getUserR user = do
+  canEdit <- canEdit user
+  let lookup =
+          withDB $ \db -> do
+                  detailss <- Model.userDetailsByName user db
+                  case detailss of
+                    [] ->
+                        return Nothing
+                    (details:_) -> 
+                        do feeds <- Model.userFeeds user canEdit db
+                           downloads <- Model.userDownloads 20 user db
+                           return $ Just (details, feeds, downloads)
+      render (details, feeds, downloads) =
+          defaultLayout $ do 
+                  setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
+                  toWidget [hamlet|
 <header class="user">
   <div class="meta">
     $if not (T.null $ userImage details)
@@ -125,13 +117,19 @@ getUserR user =
           <p class="homepage">
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
+        $if not (feedPublic feed)
+          <p class="hint">Private
 
 <section class="col2">
   <h2>Recent Torrents
   ^{renderDownloads downloads False}
+$if canEdit
+  <script src="/static/edit-user.js" type="text/javascript" async>
       |]
+  
+  lookup >>= maybe notFound render
+  
 
--- TODO: show private feeds
 getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug =
   lookup >>= maybe notFound render
@@ -145,16 +143,9 @@ getUserFeedR user slug =
                       (Just . (feed, )) `fmap` 
                       Model.feedDownloads 50 (feedUrl feed) db
           render (feed, downloads) =
-              do msu <- sessionUser
+              do canEdit <- canEdit user
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
-                   case msu of
-                     Just user' | user == user' ->
-                         toWidgetHead [hamlet|
-                                       <script src="/static/edit-feed.js" type="text/javascript" async>
-                                       |]
-                     _ -> 
-                         return ()
                    toWidget [hamlet|
 <section class="col">
   <header class="feed">
@@ -171,8 +162,12 @@ getUserFeedR user slug =
           <p class="homepage">
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
+        $if not (feedPublic feed)
+          <p class="hint">Private
 
   ^{renderDownloads downloads False}
+$if canEdit
+  <script src="/static/edit-feed.js" type="text/javascript" async>
     |]
   
 

@@ -4,6 +4,7 @@ import Prelude
 import Import
 import Data.Maybe
 import Data.Text (Text, isPrefixOf)
+import Control.Monad
 
 import qualified Model as Model
 import BitloveAuth
@@ -23,12 +24,9 @@ getUserDetailsR user = do
 
 postUserDetailsR :: UserName -> Handler RepJson
 postUserDetailsR user = do
-  msu <- sessionUser
-  case msu of
-    Just user' | user == user' ->
-      return ()
-    _ ->
-      permissionDenied "Not your user details"
+  canEdit <- canEdit user
+  when (not canEdit) $
+       permissionDenied "Not your user details"
   
   title <- fromMaybe (userName user) `fmap` 
            lookupPostParam "title"
@@ -61,3 +59,20 @@ putUserFeedR user slug = do
   return $ RepJson $ toContent $
          object ["link" .= link]
 
+deleteUserFeedR :: UserName -> Text -> Handler RepJson
+deleteUserFeedR = undefined
+
+getUserFeedDetailsR :: UserName -> Text -> Handler RepJson
+getUserFeedDetailsR user slug = do
+  detailss <- withDB $ Model.userFeedDetails user slug
+  case detailss of
+    [] ->
+      notFound
+    details:_ ->
+      return $ RepJson $ toContent $
+             object [ "public" .= fdPublic details
+                    , "title" .= fdTitle details
+                    ]
+
+postUserFeedDetailsR :: UserName -> Text -> Handler RepJson
+postUserFeedDetailsR = undefined

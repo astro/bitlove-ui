@@ -85,3 +85,22 @@ addUserFeed user slug url db =
     quickQuery' db "SELECT * FROM add_user_feed(?, ?, ?)"
                     [toSql user, toSql slug, toSql url]
        
+data FeedDetails = FeedDetails {
+      fdUrl :: Text,
+      fdPublic :: Bool,
+      fdTitle :: Maybe Text
+    } deriving (Show, Typeable)
+                    
+instance Convertible [SqlValue] FeedDetails where
+  safeConvert (url:public:title:[]) =
+    Right $
+    FeedDetails
+    (fromSql url)
+    (fromSql public)
+    (fromSql title)
+  safeConvert vals = convError "FeedDetails" vals
+
+userFeedDetails :: UserName -> Text -> Query FeedDetails
+userFeedDetails user slug =
+  query "SELECT \"feed\", COALESCE(\"public\", FALSE), \"title\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
+            [toSql user, toSql slug]

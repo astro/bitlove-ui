@@ -18,6 +18,7 @@ LightBox.prototype = {
     }
 };
 
+
 /**
  * Edit feed details
  */

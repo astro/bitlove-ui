@@ -25,9 +25,10 @@
 /#UserName/downloads.rss UserDownloadsRssR GET
 /#UserName/downloads.atom UserDownloadsAtomR GET
 /#UserName/details.json UserDetailsR GET POST
+/#UserName/#Text/details.json UserFeedDetailsR GET POST
 
 -- /$user/$slug/*.torrent
 /#UserName/#Text/#TorrentName TorrentFileR GET
-/#UserName/#Text UserFeedR GET PUT
+/#UserName/#Text UserFeedR GET PUT DELETE
 
 /#UserName/#Text/#Text/g/#StatsPeriod/#StatsJSON TorrentStatsR GET
