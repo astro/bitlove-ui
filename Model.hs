@@ -35,10 +35,10 @@ module Model (
   FeedXml (..),
   feedXml,
   feedEnclosures,
-  FeedDetails (..),
+  FeedInfo (..),
   userFeed,
   userFeeds,
-  userFeedDetails,
+  userFeedInfo,
   addUserFeed,
   -- Model.Token
   Token (..),

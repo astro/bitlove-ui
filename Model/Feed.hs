@@ -40,7 +40,7 @@ feedEnclosures :: Text -> Query (Text, Text)
 feedEnclosures url =
   query "SELECT enclosures.url, torrents.name FROM enclosures JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE enclosures.feed=$1" [toSql url]
   
-data FeedDetails = FeedDetails {
+data FeedInfo = FeedInfo {
       feedUrl :: Text
     , feedSlug :: Text
     , feedTitle :: Text
@@ -51,10 +51,10 @@ data FeedDetails = FeedDetails {
     , feedError :: Maybe Text
     } deriving (Show, Typeable)
                
-instance Convertible [SqlValue] FeedDetails where
+instance Convertible [SqlValue] FeedInfo where
   safeConvert (url:slug:title:homepage:image:public:torrentify:error:[]) =
     Right $
-    FeedDetails 
+    FeedInfo 
     (fromSql url)
     (fromSql slug)
     (fromSql title) 
@@ -63,9 +63,9 @@ instance Convertible [SqlValue] FeedDetails where
     (fromSql public) 
     (fromSql torrentify) 
     (fromSql error)
-  safeConvert vals = convError "FeedDetails" vals
+  safeConvert vals = convError "FeedInfo" vals
 
-userFeeds :: UserName -> Bool -> Query FeedDetails
+userFeeds :: UserName -> Bool -> Query FeedInfo
 userFeeds user isOwner =
   query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
          (if isOwner
@@ -74,8 +74,8 @@ userFeeds user isOwner =
          "ORDER BY LOWER(feeds.\"title\") ASC" 
          ) [toSql user]
 
-userFeedDetails :: UserName -> Text -> Query FeedDetails
-userFeedDetails user slug =
+userFeedInfo :: UserName -> Text -> Query FeedInfo
+userFeedInfo user slug =
   query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]
 
 addUserFeed :: IConnection conn => 

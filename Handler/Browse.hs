@@ -137,7 +137,7 @@ getUserFeedR user slug =
   lookup >>= maybe notFound render
     where lookup = 
               withDB $ \db -> do
-                feeds <- Model.userFeedDetails user slug db
+                feeds <- Model.userFeedInfo user slug db
                 case feeds of
                   [] ->
                       return Nothing
