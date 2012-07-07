@@ -163,7 +163,8 @@ getUserFeedR user slug =
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
         $if not (feedPublic feed)
-          <p class="hint">Private
+          <p class="hint">
+             Private — Not included in directory or public torrent listings
 
   ^{renderDownloads downloads False}
 $if canEdit
