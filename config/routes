@@ -28,7 +28,7 @@
 /#UserName/#Text/details.json UserFeedDetailsR GET POST
 
 -- /$user/$slug/*.torrent
-/#UserName/#Text/#TorrentName TorrentFileR GET
+/#UserName/#Text/#TorrentName TorrentFileR GET DELETE
 /#UserName/#Text UserFeedR GET PUT DELETE
 
 /#UserName/#Text/#Text/g/#StatsPeriod/#StatsJSON TorrentStatsR GET

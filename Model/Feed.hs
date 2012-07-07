@@ -85,22 +85,36 @@ addUserFeed user slug url db =
     quickQuery' db "SELECT * FROM add_user_feed(?, ?, ?)"
                     [toSql user, toSql slug, toSql url]
        
+deleteUserFeed :: IConnection conn => 
+                  UserName -> Text -> conn -> IO Bool
+deleteUserFeed user slug db =
+    (== 1) `fmap`
+    run db "DELETE FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
+        [toSql user, toSql slug]
+                    
 data FeedDetails = FeedDetails {
-      fdUrl :: Text,
       fdPublic :: Bool,
       fdTitle :: Maybe Text
     } deriving (Show, Typeable)
                     
 instance Convertible [SqlValue] FeedDetails where
-  safeConvert (url:public:title:[]) =
+  safeConvert (public:title:[]) =
     Right $
     FeedDetails
-    (fromSql url)
     (fromSql public)
     (fromSql title)
   safeConvert vals = convError "FeedDetails" vals
 
 userFeedDetails :: UserName -> Text -> Query FeedDetails
 userFeedDetails user slug =
-  query "SELECT \"feed\", COALESCE(\"public\", FALSE), \"title\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
+  query "SELECT COALESCE(\"public\", FALSE), \"title\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
             [toSql user, toSql slug]
+            
+setUserFeedDetails :: IConnection conn => 
+                      UserName -> Text -> FeedDetails -> conn -> IO Bool
+setUserFeedDetails user slug details db =
+  (== 1) `fmap`
+  run db "UPDATE user_feeds SET \"public\"=?, \"title\"=? WHERE \"user\"=? AND \"slug\"=?"
+          [toSql $ fdPublic details, toSql $ fdTitle details,
+           toSql user, toSql slug]
+                  

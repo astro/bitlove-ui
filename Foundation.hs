@@ -145,6 +145,7 @@ instance Yesod App where
     isAuthorized (UserDetailsR user) _ = authorizeFor user
     isAuthorized (UserFeedDetailsR user _) _ = authorizeFor user
     isAuthorized (UserFeedR user _) _ = authorizeFor user
+    isAuthorized (TorrentFileR user _ _) _ = authorizeFor user
     -- Forbid by default
     isAuthorized rt True = return $ Unauthorized "Cannot modify this resource"
 

@@ -4,8 +4,9 @@ module Model (
   infoHashByName,
   Torrent (..),
   torrentByName,
-  StatsValue (..),
+  purgeTorrent,
   -- TODO: move, camelCase
+  StatsValue (..),
   get_counter,
   get_gauge,
   -- Model.Download
@@ -40,8 +41,10 @@ module Model (
   userFeeds,
   userFeedInfo,
   addUserFeed,
+  deleteUserFeed,
   FeedDetails (..),
   userFeedDetails,
+  setUserFeedDetails,
   -- Model.Token
   Token (..),
   generateToken,
@@ -90,6 +93,12 @@ torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
   query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
   
+purgeTorrent :: IConnection conn => 
+                UserName -> Text -> Text -> conn -> IO Int
+purgeTorrent user slug name db =
+  (fromSql . head . head) `fmap`
+  quickQuery' db "SELECT * FROM purge_download(?, ?, ?)"
+              [toSql user, toSql slug, toSql name]
 
 data StatsValue = StatsValue LocalTime Double
                 deriving (Show, Typeable)
