@@ -24,10 +24,6 @@ getUserDetailsR user = do
 
 postUserDetailsR :: UserName -> Handler RepJson
 postUserDetailsR user = do
-  canEdit <- canEdit user
-  when (not canEdit) $
-       permissionDenied "Not your user details"
-  
   title <- fromMaybe (userName user) `fmap` 
            lookupPostParam "title"
   image <- fromMaybe "" `fmap` 

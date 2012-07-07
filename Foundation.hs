@@ -132,6 +132,20 @@ instance Yesod App where
 
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
+    
+    isAuthorized (UserR user) True = authorizeFor user
+    isAuthorized (UserDetailsR user) True = authorizeFor user
+    isAuthorized (UserFeedR user _) True = authorizeFor user
+    isAuthorized (UserFeedDetailsR user _) True = authorizeFor user
+    isAuthorized rt True = return $ Unauthorized "Cannot modify this resource"
+    -- Grant any read request
+    isAuthorized rt False = return Authorized
+
+authorizeFor user = do
+  canEdit <- canEdit user
+  return $ if canEdit
+           then Authorized
+           else Unauthorized "Authorization denied"
 
 -- How to run database actions.
 withDB :: (PostgreSQL.Connection -> IO a) -> Handler a
