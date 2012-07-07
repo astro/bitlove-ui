@@ -130,16 +130,23 @@ instance Yesod App where
     -- users receiving stale content.
     addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticDir (StaticR . flip StaticRoute [])
 
+    -- TODO:
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
     
-    isAuthorized (UserR user) True = authorizeFor user
-    isAuthorized (UserDetailsR user) True = authorizeFor user
-    isAuthorized (UserFeedR user _) True = authorizeFor user
-    isAuthorized (UserFeedDetailsR user _) True = authorizeFor user
-    isAuthorized rt True = return $ Unauthorized "Cannot modify this resource"
     -- Grant any read request
     isAuthorized rt False = return Authorized
+    -- Handlers.Auth: for everyone
+    isAuthorized SignupR _ = return Authorized
+    isAuthorized LoginR _ = return Authorized
+    isAuthorized (ActivateR _) _ = return Authorized
+    isAuthorized ReactivateR _ = return Authorized
+    -- Handlers.Edit: for respective owners
+    isAuthorized (UserDetailsR user) _ = authorizeFor user
+    isAuthorized (UserFeedDetailsR user _) _ = authorizeFor user
+    isAuthorized (UserFeedR user _) _ = authorizeFor user
+    -- Forbid by default
+    isAuthorized rt True = return $ Unauthorized "Cannot modify this resource"
 
 authorizeFor user = do
   canEdit <- canEdit user
