@@ -6,6 +6,7 @@ import Data.List (sort)
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Blaze.ByteString.Builder
+import Data.String
 
 
 data BValue = BInt Integer
@@ -13,7 +14,11 @@ data BValue = BInt Integer
             | BList [BValue]
             | BDict [(BValue, BValue)]
               deriving (Show, Eq, Ord)
+                       
+instance IsString BValue where
+    fromString = BString . LBC.pack
 
+  
 toBuilder :: BValue -> Builder
 toBuilder (BString s) = 
     insertLazyByteString s
