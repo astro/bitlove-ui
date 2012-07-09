@@ -58,7 +58,7 @@ instance Convertible [SqlValue] TrackedPeer where
     safeConvert (peerId:addr:port:[]) =
         Right $
         TrackedPeer
-        (fromSql peerId)
+        (fromBytea peerId)
         (fromSql addr)
         (fromSql port)
     safeConvert vals =
@@ -93,7 +93,7 @@ announcePeer tr db =
     case trEvent tr of
       Just "stopped" ->
           run db "DELETE FROM tracked WHERE \"info_hash\"=? AND \"peer_id\"=? RETURNING \"uploaded\", \"downloaded\""
-	    [toSql $ trInfoHash tr, toSql $ trPeerId tr]
+	    [toSql $ trInfoHash tr, toBytea $ trPeerId tr]
           >>
           return ()
       _ ->
@@ -101,6 +101,6 @@ announcePeer tr db =
                  m = toSql . ($ tr)
              _ <-
                  run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
-                 [m trInfoHash, m trHost, m trPort, m trPeerId, 
+                 [m trInfoHash, m trHost, m trPort, toBytea $ trPeerId tr, 
                   m trUploaded, m trDownloaded, m trLeft]
              return ()

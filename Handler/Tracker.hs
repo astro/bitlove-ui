@@ -1,5 +1,7 @@
+{-# LANGUAGE TupleSections #-}
 module Handler.Tracker where
 
+import Prelude (head)
 import Yesod
 import qualified Network.Wai as Wai
 import Data.Maybe
@@ -11,6 +13,8 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 import Network.Socket (SockAddr (..))
 import Data.Word (Word32)
 import Data.Bits
+import System.Random (randomRIO)
+import Debug.Trace
 
 import Import
 import qualified Model as Model
@@ -26,6 +30,8 @@ instance HasReps RepBenc where
                 ContentBuilder (Benc.toBuilder v) Nothing
                )
 
+-- TODO: eliminate set-cookie with session
+
 -- TODO: insert own seeder!
 -- TODO: support key parameter
 getAnnounceR :: Handler RepBenc
@@ -35,11 +41,11 @@ getAnnounceR = do
   let q :: BC.ByteString -> Maybe BC.ByteString
       q = join . (`lookup` query)
       qi :: Read r => BC.ByteString -> Maybe r
-      qi name = do v <- qi name
-                   case readsPrec 0 v of
+      qi name = do v <- q name
+                   case readsPrec 0 $ BC.unpack v of
                      [(r, "")] -> return r
                      _ -> Nothing
-      mTr = TrackerRequest <$>
+      mTr = trace ("query: " ++ show query) $ TrackerRequest <$>
             Model.InfoHash <$> q "info_hash" <*>
             q "peer_id" <*>
             pure addr <*>
@@ -51,12 +57,13 @@ getAnnounceR = do
             pure (maybe False (const True) $ q "compact")
   case mTr of
     Nothing ->
-        return $ RepBenc $
+        trace ("no tr") $ return $ RepBenc $
         Benc.BDict [(Benc.BString "failure",
                      Benc.BString "Invalid tracker request"),
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
     Just tr ->
+        trace ("tr: " ++ show tr) $
         do let isSeeder = trLeft tr == 0
            peers <- withDB $ \db ->
                     getPeers (trInfoHash tr) isSeeder db
@@ -83,14 +90,42 @@ getAnnounceR = do
                             [g peerId addr' port'
                              | TrackedPeer peerId (Peer6 addr') port' <- peers]
                           )
+           interval <- trace ("Peers: " ++ show peers) $ liftIO $ randomRIO (540, 600)
            return $ RepBenc $
                   Benc.BDict [ ("peers", peers4)
                              , ("peers6", peers6)
+                             , ("interval", Benc.BInt interval)
+                               -- TODO: complete, incomplete
                              ]
 
 getScrapeR :: Handler RepBenc
-getScrapeR = undefined
+getScrapeR = do
+  query <- getRawQuery
+  let mInfoHash = InfoHash `fmap` 
+                  (join $ "info_hash" `lookup` query)
+  (infoHash, scrape) <-
+      case mInfoHash of
+        Nothing ->
+            notFound
+        Just infoHash ->
+            ((infoHash, ) . head . (++ [ScrapeInfo 0 0 0 0])) `fmap`
+            withDB (scrape infoHash)
 
+  return $ RepBenc $
+         Benc.BDict 
+         [("host",
+           Benc.BDict 
+           [(Benc.BString $ LBC.fromChunks [unInfoHash infoHash],
+             Benc.BDict 
+             [("incomplete",
+               Benc.BInt $ scrapeLeechers scrape),
+              ("complete",
+               Benc.BInt $ scrapeSeeders scrape),
+              ("downloaded",
+               Benc.BInt $ scrapeDownloaded scrape)]
+            )]
+          )]
+             
 getRawQuery :: Handler [(BC.ByteString, Maybe BC.ByteString)]
 getRawQuery = 
     Wai.queryString `fmap`

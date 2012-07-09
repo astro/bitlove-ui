@@ -18,7 +18,7 @@ import Numeric (showHex)
 import Model.Query
 import Model.User
 
-newtype InfoHash = InfoHash ByteString
+newtype InfoHash = InfoHash { unInfoHash :: ByteString }
                  deriving (Show)
                           
 infoHashToHex :: InfoHash -> Text

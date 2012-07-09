@@ -10,6 +10,7 @@ import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
 import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
+import Debug.Trace
 
 import Utils
 
