@@ -28,14 +28,21 @@ fromBytea :: SqlValue -> ByteString
 fromBytea = unescape . fromSql
   where unescape :: Text -> ByteString
         unescape text =
+          trace ("unescape " ++ show text) $
           case T.splitAt 2 text of
             ("\\x", hex) ->
               fromHex hex
             _ ->
               pack $ octToWords text
         octToWords = go . T.unpack
-          where go ('\\':t) = let (oct, t') = splitAt 3 t
-                              in (fst $ head $ readOct oct):(go t')
+          where go ('\\':c:t)
+                  | c `elem` "\\\"\'\n\r\t" = fromIntegral (ord c) : go t
+                go ('\\':t) = let (oct, t') = splitAt 3 t
+                              in case readOct oct of
+                                [(n, "")] -> 
+                                  n : go t'
+                                _ -> 
+                                  error $ "Cannot read oct " ++ show oct
                 go (c:t) = (fromIntegral $ ord c):(go t)
                 go [] = []
                            
