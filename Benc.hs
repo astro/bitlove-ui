@@ -18,27 +18,31 @@ data BValue = BInt Integer
 instance IsString BValue where
     fromString = BString . LBC.pack
 
+-- FIXME: Builder inserts newlines between each chunk?
   
 toBuilder :: BValue -> Builder
 toBuilder (BString s) = 
-    insertLazyByteString s
+    mconcat [ fromByteString $ BC.pack $ show $ LBC.length s
+            , fromByteString ":"
+            , fromLazyByteString s
+            ]
 toBuilder (BInt i) = 
-    mconcat [ insertByteString "i"
-            , insertByteString $ BC.pack $ show i
-            , insertByteString "e"
+    mconcat [ fromByteString "i"
+            , fromByteString $ BC.pack $ show i
+            , fromByteString "e"
             ]
 toBuilder (BList xs) = 
-    mconcat [ insertByteString "l"
+    mconcat [ fromByteString "l"
             , mconcat $ map toBuilder xs
-            , insertByteString "e"
+            , fromByteString "e"
             ]
 toBuilder (BDict xs) =
     let xs' = sort xs
-    in mconcat [ insertByteString "d"
+    in mconcat [ fromByteString "d"
                , mconcat $
                  map (\(k, v) ->
                           toBuilder k `mappend`
                           toBuilder v
                      ) xs'
-               , insertByteString "e"
+               , fromByteString "e"
                ]
