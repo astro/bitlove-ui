@@ -47,7 +47,7 @@ getAnnounceR = do
                      _ -> Nothing
       mTr = trace ("query: " ++ show query) $ TrackerRequest <$>
             Model.InfoHash <$> q "info_hash" <*>
-            q "peer_id" <*>
+            (PeerId <$> q "peer_id") <*>
             pure addr <*>
             qi "port" <*>
             qi "uploaded" <*>
@@ -85,10 +85,10 @@ getAnnounceR = do
                                            ("port", Benc.BInt $ fromIntegral port')]
                        in ( Benc.BList $
                             [g peerId addr' port'
-                             | TrackedPeer peerId (Peer4 addr') port' <- peers]
+                             | TrackedPeer (PeerId peerId) (Peer4 addr') port' <- peers]
                           , Benc.BList $
                             [g peerId addr' port'
-                             | TrackedPeer peerId (Peer6 addr') port' <- peers]
+                             | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
                           )
            interval <- trace ("Peers: " ++ show peers) $ liftIO $ randomRIO (540, 600)
            return $ RepBenc $

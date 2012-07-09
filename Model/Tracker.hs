@@ -33,6 +33,16 @@ scrape infoHash =
   [toSql infoHash]
 
 
+
+data PeerId = PeerId { unPeerId :: BC.ByteString }
+              deriving (Show, Typeable)
+
+instance Convertible SqlValue PeerId where
+    safeConvert = Right . PeerId . fromBytea
+    
+instance Convertible PeerId SqlValue where
+    safeConvert = Right . toBytea . unPeerId
+
 data PeerAddress = Peer4 BC.ByteString
                  | Peer6 BC.ByteString
                    deriving (Show, Read, Typeable, Eq, Ord)
@@ -51,14 +61,14 @@ instance Convertible SqlValue PeerAddress where
                   | otherwise =
                       convError "PeerAddress" addr
 
-data TrackedPeer = TrackedPeer BC.ByteString PeerAddress Int
+data TrackedPeer = TrackedPeer PeerId PeerAddress Int
                    deriving (Show, Typeable)
                             
 instance Convertible [SqlValue] TrackedPeer where
     safeConvert (peerId:addr:port:[]) =
         Right $
         TrackedPeer
-        (fromBytea peerId)
+        (fromSql peerId)
         (fromSql addr)
         (fromSql port)
     safeConvert vals =
@@ -77,7 +87,7 @@ getPeers infoHash onlyLeechers =
 
 data TrackerRequest = TrackerRequest {
       trInfoHash :: InfoHash,
-      trPeerId :: BC.ByteString,
+      trPeerId :: PeerId,
       trHost :: PeerAddress,
       trPort :: Int,
       trUploaded :: Integer,
@@ -93,7 +103,7 @@ announcePeer tr db =
     case trEvent tr of
       Just "stopped" ->
           run db "DELETE FROM tracked WHERE \"info_hash\"=? AND \"peer_id\"=? RETURNING \"uploaded\", \"downloaded\""
-	    [toSql $ trInfoHash tr, toBytea $ trPeerId tr]
+	    [toSql $ trInfoHash tr, toSql $ trPeerId tr]
           >>
           return ()
       _ ->
@@ -101,6 +111,6 @@ announcePeer tr db =
                  m = toSql . ($ tr)
              _ <-
                  run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
-                 [m trInfoHash, m trHost, m trPort, toBytea $ trPeerId tr, 
+                 [m trInfoHash, m trHost, m trPort, m trPeerId, 
                   m trUploaded, m trDownloaded, m trLeft]
              return ()
