@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 module Handler.Tracker where
 
-import Prelude (head)
+import Prelude
 import Yesod
 import qualified Network.Wai as Wai
 import Data.Maybe
@@ -16,10 +16,26 @@ import Data.Bits
 import System.Random (randomRIO)
 import Debug.Trace
 
-import Import
+import Foundation (DBPool, HasDB (getDBPool), withDB)
 import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
+
+data TrackerApp = TrackerApp
+    { trackerDBPool :: DBPool }
+
+mkYesod "TrackerApp" [parseRoutes|
+                      /announce AnnounceR GET
+                      /scrape ScrapeR GET
+                      |]
+
+instance Yesod TrackerApp where
+    makeSessionBackend _ = return Nothing
+
+instance HasDB TrackerApp where
+    getDBPool = trackerDBPool <$> getYesod
+
+makeTrackerApp = TrackerApp
 
 
 newtype RepBenc = RepBenc Benc.BValue
@@ -29,8 +45,6 @@ instance HasReps RepBenc where
         return ("application/x-bittorrent",
                 ContentBuilder (Benc.toBuilder v) Nothing
                )
-
--- TODO: eliminate set-cookie with session
 
 -- TODO: insert own seeder!
 -- TODO: support key parameter
@@ -101,7 +115,7 @@ getAnnounceR = do
 getScrapeR :: Handler RepBenc
 getScrapeR = do
   query <- getRawQuery
-  let mInfoHash = InfoHash `fmap` 
+  let mInfoHash = Model.InfoHash `fmap` 
                   (join $ "info_hash" `lookup` query)
   (infoHash, scrape) <-
       case mInfoHash of
@@ -115,7 +129,7 @@ getScrapeR = do
          Benc.BDict 
          [("host",
            Benc.BDict 
-           [(Benc.BString $ LBC.fromChunks [unInfoHash infoHash],
+           [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
              Benc.BDict 
              [("incomplete",
                Benc.BInt $ scrapeLeechers scrape),

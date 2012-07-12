@@ -1,13 +1,13 @@
 {-# LANGUAGE RankNTypes #-}
 module Foundation
-    ( App (..)
+    ( UIApp (..)
     , Route (..)
-    , AppMessage (..)
-    , resourcesApp
+    , UIAppMessage (..)
+    , resourcesUIApp
     , Handler
     , Widget
     , Form
-    , withDB, DBPool
+    , withDB, DBPool, HasDB (..)
     , Period (..)
     --, maybeAuth
     --, requireAuth
@@ -49,16 +49,20 @@ type DBPool = Pool PostgreSQL.Connection
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
-data App = App
+data UIApp = UIApp
     { settings :: AppConfig DefaultEnv Extra
     , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
-    , dbPool :: DBPool -- ^ Database connection pool.
+    , uiDBPool :: DBPool -- ^ Database connection pool.
     , httpManager :: Manager
     }
 
+data TrackerApp = TrackerApp
+    { trackerDBPool :: DBPool
+    }
+
 -- Set up i18n messages. See the message folder.
-mkMessage "App" "messages" "en"
+mkMessage "UIApp" "messages" "en"
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -79,13 +83,13 @@ mkMessage "App" "messages" "en"
 -- for our application to be in scope. However, the handler functions
 -- usually require access to the AppRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
-mkYesodData "App" $(parseRoutesFileNoCheck "config/routes")
+mkYesodData "UIApp" $(parseRoutesFileNoCheck "config/routes")
 
-type Form x = Html -> MForm App App (FormResult x, Widget)
+type Form x = Html -> MForm UIApp UIApp (FormResult x, Widget)
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
-instance Yesod App where
+instance Yesod UIApp where
     approot = ApprootMaster $ appRoot . settings
 
     {-
@@ -155,10 +159,16 @@ authorizeFor user = do
            then Authorized
            else Unauthorized "Authorization denied"
 
+class HasDB y where
+    getDBPool :: GHandler y' y DBPool
+  
+instance HasDB UIApp where
+    getDBPool = uiDBPool <$> getYesod
+  
 -- How to run database actions.
-withDB :: (PostgreSQL.Connection -> IO a) -> Handler a
+withDB :: HasDB y => (PostgreSQL.Connection -> IO a) -> GHandler y' y a
 withDB f = do
-    pool <- dbPool <$> getYesod
+    pool <- getDBPool
     -- TODO: use takeResourceCheck, catch f
     db <- takeResource pool
     a <- lift $ lift $
@@ -170,7 +180,7 @@ withDB f = do
   
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
-instance RenderMessage App FormMessage where
+instance RenderMessage UIApp FormMessage where
     renderMessage _ _ = defaultFormMessage
 
 -- Note: previous versions of the scaffolding included a deliver function to
@@ -179,3 +189,7 @@ instance RenderMessage App FormMessage where
 -- wiki:
 --
 -- https://github.com/yesodweb/yesod/wiki/Sending-email
+
+
+
+  

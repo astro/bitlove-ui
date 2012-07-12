@@ -3,9 +3,6 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/announce AnnounceR GET
-/scrape ScrapeR GET
-
 /signup SignupR GET POST
 /login LoginR GET POST
 /activate/#Token ActivateR GET POST

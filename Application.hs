@@ -2,7 +2,7 @@
 module Application
     ( makeApplication
     , getApplicationDev
-    , makeFoundation
+    , makeUIFoundation
     ) where
 
 import Import
@@ -19,7 +19,8 @@ import Database.HDBC.PostgreSQL
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
-import Debug.Trace
+import qualified Network.Wai as Wai
+import Network.HTTP.Types (Status (Status))
 
 import BitloveAuth
 
@@ -38,7 +39,7 @@ import Handler.Tracker
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see
 -- the comments there for more details.
-mkYesodDispatch "App" resourcesApp
+mkYesodDispatch "UIApp" resourcesUIApp
 
 -- This function allocates resources (such as a database connection pool),
 -- performs initialization and creates a WAI application. This is also the
@@ -46,16 +47,34 @@ mkYesodDispatch "App" resourcesApp
 -- migrations handled by Yesod.
 makeApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
 makeApplication conf logger = do
-    foundation <- makeFoundation conf setLogger
-    app <- toWaiAppPlain foundation
-    return $ logWare app
+    foundation <- makeUIFoundation conf setLogger
+    tracker <- toWaiAppPlain $ makeTrackerApp $ uiDBPool foundation
+    ui <- toWaiAppPlain foundation
+    return $ logWare $ anyApp [tracker, ui]
   where
     setLogger = if development then logger else toProduction logger
     logWare   = if development then logCallbackDev (logBS setLogger)
                                else logCallback    (logBS setLogger)
+    anyApp [app] = 
+        app
+    anyApp (app:apps) = 
+        \req -> app req >>= \res ->
+        let tryNext =
+                case res of
+                  Wai.ResponseFile (Status 404 _) _ _ _ ->
+                      True
+                  Wai.ResponseBuilder (Status 404 _) _ _ ->
+                      True
+                  Wai.ResponseSource (Status 404 _) _ _ ->
+                      True
+                  _ ->
+                      False
+        in if tryNext
+           then anyApp apps req
+           else return res
 
-makeFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO App
-makeFoundation conf setLogger = do
+makeUIFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO UIApp
+makeUIFoundation conf setLogger = do
     manager <- newManager def
     s <- staticSite
     dbconf <- withYamlEnvironment 
@@ -63,7 +82,7 @@ makeFoundation conf setLogger = do
               (appEnv conf)
               parseDBConf
     pool <- makeDBPool dbconf setLogger
-    return $ App conf setLogger s pool manager
+    return $ UIApp conf setLogger s pool manager
     
 parseDBConf = return . parse
   where parse (Aeson.Object o) = do
@@ -77,7 +96,7 @@ parseDBConf = return . parse
             (Aeson.Number n) ->
               return (k', show n)
             _ ->
-              trace ("Cannot parse: " ++ show v) []
+              error ("Cannot parse: " ++ show v)
     
 makeDBPool :: [(String, String)] -> Logger -> IO DBPool
 makeDBPool dbconf logger =

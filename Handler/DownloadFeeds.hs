@@ -25,7 +25,7 @@ torrentLink d = TorrentFileR
 data FeedParameters = Parameters {
       pTitle :: T.Text,
       pImage :: T.Text,
-      pLink :: Route App
+      pLink :: Route UIApp
     }
 
 class RepFeed c where
