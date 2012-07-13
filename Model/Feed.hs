@@ -52,7 +52,7 @@ data FeedInfo = FeedInfo {
     } deriving (Show, Typeable)
                
 instance Convertible [SqlValue] FeedInfo where
-  safeConvert (url:slug:title:homepage:image:public:torrentify:error:[]) =
+  safeConvert (url:slug:title:homepage:image:public:torrentify:error_text:[]) =
     Right $
     FeedInfo 
     (fromSql url)
@@ -62,7 +62,7 @@ instance Convertible [SqlValue] FeedInfo where
     (fromSql image) 
     (fromSql public) 
     (fromSql torrentify) 
-    (fromSql error)
+    (fromSql error_text)
   safeConvert vals = convError "FeedInfo" vals
 
 userFeeds :: UserName -> Bool -> Query FeedInfo

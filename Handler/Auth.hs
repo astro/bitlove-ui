@@ -11,7 +11,6 @@ import Data.ByteString (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Serialize (encode)
 import Control.Monad
-import Control.Monad.Error hiding (lift)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import Text.Shakespeare.Text (stext)
@@ -19,16 +18,13 @@ import Network.Mail.Mime
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Control.Exception as E
 import Data.Maybe (fromMaybe)
+import Data.Aeson (ToJSON)
 
 import Import
 import BitloveAuth
 import qualified Model as Model
 import Model.User
 
-
-instance Error T.Text where
-    noMsg = T.pack "Error"
-    strMsg = T.pack
 
 getSignupR :: Handler RepHtml
 getSignupR =
@@ -319,6 +315,9 @@ sendMail toUser toEmail subject body =
                             }]]
             }
 
+returnJson :: forall (m :: * -> *) a.
+              (Monad m, ToJSON a) =>
+              [(Text, a)] -> m RepJson
 returnJson = return . RepJson . toContent . object
 
 returnJsonError :: Text -> Handler RepJson

@@ -3,7 +3,6 @@ module Handler.TorrentStats where
 
 import Yesod
 import Data.Time
-import System.Locale
 import qualified Data.Text as T
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 

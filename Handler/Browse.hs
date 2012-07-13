@@ -1,15 +1,14 @@
-{-# LANGUAGE TupleSections, OverloadedStrings #-}
+{-# LANGUAGE TupleSections, RankNTypes #-}
 module Handler.Browse where
 
 import qualified Data.Text as T
 import Data.Maybe
 import Data.Time.Format
 import System.Locale
-import Text.Blaze (toMarkup)
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
-import Text.Blaze.Html5 hiding (div)
-import Text.Blaze.Html5.Attributes
+import Text.Blaze.Html5 hiding (div, details)
+import Text.Blaze.Html5.Attributes hiding (item)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 
@@ -59,34 +58,34 @@ getTopR = do
 
 getTopDownloadedR :: Period -> Handler RepHtml
 getTopDownloadedR period = do
-  let (p, period_days) = 
+  let (period_days, period_title) = 
         case period of
           PeriodDays 1 -> (1, "1 day")
           PeriodDays days -> (days, show days ++ " days")
           PeriodAll -> (10000, "all time")
   downloads <- withDB $
-               Model.mostDownloaded 10 p
+               Model.mostDownloaded 10 period_days
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitle "Bitlove: Top Downloaded"
     toWidget [hamlet|
 <section class="col">
-  <h2>Top downloaded in #{period_days}
+  <h2>Top downloaded in #{period_title}
   ^{renderDownloads downloads True}
 ^{filterScript}
 |]
 
 getUserR :: UserName -> Handler RepHtml
 getUserR user = do
-  canEdit <- canEdit user
-  let lookup =
+  canEdit' <- canEdit user
+  let fetch =
           withDB $ \db -> do
                   detailss <- Model.userDetailsByName user db
                   case detailss of
                     [] ->
                         return Nothing
                     (details:_) -> 
-                        do feeds <- Model.userFeeds user canEdit db
+                        do feeds <- Model.userFeeds user canEdit' db
                            downloads <- Model.userDownloads 20 user db
                            return $ Just (details, feeds, downloads)
       render (details, feeds, downloads) =
@@ -123,17 +122,17 @@ getUserR user = do
 <section class="col2">
   <h2>Recent Torrents
   ^{renderDownloads downloads False}
-$if canEdit
+$if canEdit'
   <script src="/static/edit-user.js" type="text/javascript" async>
       |]
   
-  lookup >>= maybe notFound render
+  fetch >>= maybe notFound render
   
 
 getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug =
-  lookup >>= maybe notFound render
-    where lookup = 
+  fetch >>= maybe notFound render
+    where fetch = 
               withDB $ \db -> do
                 feeds <- Model.userFeedInfo user slug db
                 case feeds of
@@ -143,7 +142,7 @@ getUserFeedR user slug =
                       (Just . (feed, )) `fmap` 
                       Model.feedDownloads 50 (feedUrl feed) db
           render (feed, downloads) =
-              do canEdit <- canEdit user
+              do canEdit' <- canEdit user
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
                    toWidget [hamlet|
@@ -167,10 +166,9 @@ getUserFeedR user slug =
              Private — Not included in directory or public torrent listings
 
   ^{renderDownloads downloads False}
-$if canEdit
+$if canEdit'
   <script src="/static/edit-feed.js" type="text/javascript" async>
     |]
-  
 
 renderDownloads downloads showOrigin =
     [hamlet|
@@ -238,9 +236,7 @@ renderItem item showOrigin =
                          T.break (== '?') $
                           payment
                     qs' = ("popout", "0") :
-                          filter (\(k, v) ->
-                                      k /= "popout"
-                                 ) qs
+                          filter ((/= "popout") . fst) qs
                 in foldl (\tag (k, v) ->
                               let ma | k == "user_id" =
                                          Just "uid"
@@ -273,15 +269,17 @@ renderItem item showOrigin =
                   ! href (toValue payment) $
                   "[Support]"
 
+safeLogo :: Text -> Text
 safeLogo url
     | "http" `T.isPrefixOf` url = url
     | otherwise = "/static/stub.png"
 
+filterScript :: t -> Markup
 filterScript = [hamlet|
 <script src="/static/filter.js" type="text/javascript">
     |]
 
-
+humanSize :: (Integral a, Show a) => a -> [Char]
 humanSize = humanSize' "KMGT" ""
   where humanSize' units unit n
           | n < 1024 || null units = 

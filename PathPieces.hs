@@ -54,6 +54,10 @@ instance PathPiece StatsPeriod where
   fromPathPiece "month" = Just StatsMonth
   fromPathPiece "year" = Just StatsYear
   fromPathPiece _ = Nothing
+  toPathPiece StatsDay = "day"
+  toPathPiece StatsWeek = "week"
+  toPathPiece StatsMonth = "month"
+  toPathPiece StatsYear = "year"
                    
 data StatsJSON = StatsSwarm
                | StatsTraffic
@@ -61,11 +65,13 @@ data StatsJSON = StatsSwarm
                  deriving (Show, Eq, Read)
 
 instance PathPiece StatsJSON where
-  fromPathPiece "swarm.json" = Just StatsSwarm
-  fromPathPiece "traffic.json" = Just StatsTraffic
-  fromPathPiece "downloads.json" = Just StatsDownloads
-  fromPathPiece _ = Nothing
-
+    fromPathPiece "swarm.json" = Just StatsSwarm
+    fromPathPiece "traffic.json" = Just StatsTraffic
+    fromPathPiece "downloads.json" = Just StatsDownloads
+    fromPathPiece _ = Nothing
+    toPathPiece StatsSwarm = "swarm.json"
+    toPathPiece StatsTraffic = "traffic.json"
+    toPathPiece StatsDownloads = "downloads.json"
 
 instance PathPiece UserName where
   fromPathPiece = Just . UserName

@@ -3,9 +3,6 @@ module Handler.DownloadFeeds where
 -- TODO: absolute links!
 
 import qualified Data.Text as T
-import Data.Maybe
-import Data.Time.Format
-import System.Locale
 
 import qualified Model
 import Import
@@ -17,6 +14,7 @@ typeTorrent = "application/x-bittorrent"
 nsAtom :: T.Text
 nsAtom = "http://www.w3.org/2005/Atom"
 
+torrentLink :: Download -> Route UIApp
 torrentLink d = TorrentFileR 
                 (downloadUser d) 
                 (downloadSlug d) 

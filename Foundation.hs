@@ -24,18 +24,14 @@ import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
-import Settings.StaticFiles
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Jasmine (minifym)
-import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Control.Applicative
 import Data.Conduit.Pool
-import Control.Monad.Trans.Resource
 import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
-import qualified Data.Text as T
 import Data.Text (Text)
 
 import PathPieces
@@ -139,7 +135,7 @@ instance Yesod UIApp where
     jsLoader _ = BottomOfBody
     
     -- Grant any read request
-    isAuthorized rt False = return Authorized
+    isAuthorized _ False = return Authorized
     -- Handlers.Auth: for everyone
     isAuthorized SignupR _ = return Authorized
     isAuthorized LoginR _ = return Authorized
@@ -151,11 +147,12 @@ instance Yesod UIApp where
     isAuthorized (UserFeedR user _) _ = authorizeFor user
     isAuthorized (TorrentFileR user _ _) _ = authorizeFor user
     -- Forbid by default
-    isAuthorized rt True = return $ Unauthorized "Cannot modify this resource"
+    isAuthorized _ True = return $ Unauthorized "Cannot modify this resource"
 
+authorizeFor :: UserName -> GHandler y' UIApp AuthResult
 authorizeFor user = do
-  canEdit <- canEdit user
-  return $ if canEdit
+  canEdit' <- canEdit user
+  return $ if canEdit'
            then Authorized
            else Unauthorized "Authorization denied"
 

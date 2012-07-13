@@ -7,15 +7,12 @@ import qualified Data.Text as T
 import Control.Monad
 
 import Import
-import Model.Download
 
 -- TODO: Access-Control-Allow-Origin: *
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
   urls <- map snd `fmap`
-          filter (\(k, v) ->
-                   "url" `T.isPrefixOf` k
-                 ) `fmap`
+          filter (("url" `T.isPrefixOf`) . fst) `fmap`
           reqGetParams `fmap` 
           getRequest
   urlDownloads <- withDB $ \db ->
@@ -44,6 +41,7 @@ getByEnclosureJson = do
                                , "downloaded" .= downloadDownloaded d
                                , "sources" .= sources
                                ]
+          downloadToJson [] = error "This never occurs"
           sourceToJson d = do
                        do torrentLink' <- torrentLink d
                           permaLink' <- permaLink d
@@ -59,6 +57,7 @@ getByEnclosureJson = do
                                   , "feed.title" .= downloadFeedTitle d
                                   ]
 
+torrentLink :: Download -> GHandler y' UIApp Text
 torrentLink d = 
     ($ TorrentFileR 
            (downloadUser d) 
@@ -67,6 +66,7 @@ torrentLink d =
     ) `fmap`
     getUrlRender
 
+permaLink :: Download -> GHandler y' UIApp Text
 permaLink d =
     ((`T.append` (downloadItem d)) .
      (`T.append` "#") .

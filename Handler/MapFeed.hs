@@ -2,14 +2,12 @@ module Handler.MapFeed where
 
 import Control.Monad
 import qualified Data.Text as T
-import Data.Map (Map)
 import qualified Data.Map as Map
 import Text.XML.Stream.Parse
 import Data.XML.Types
 import Text.XML.Stream.Render
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import qualified Data.ByteString.Lazy.Char8 as LBC
 import Blaze.ByteString.Builder (Builder)
 import Data.Maybe
 
@@ -26,10 +24,10 @@ getMapFeedR user slug = do
         xml:_ <- Model.feedXml url db
         enclosures <- Map.fromList `fmap`
                       Model.feedEnclosures url db
-        let getEnclosureLink url = do 
-                              name <- url `Map.lookup` enclosures
-                              -- TODO: full url!
-                              return $ urlRender $ TorrentFileR user slug (TorrentName name)
+        let getEnclosureLink enclosure = 
+                 -- TODO: full url!
+                (urlRender . TorrentFileR user slug . TorrentName) `fmap`
+                (enclosure `Map.lookup` enclosures)
         return $ Just (xml, getEnclosureLink)
       _ ->
         return Nothing
@@ -71,7 +69,7 @@ mapFeed (FeedXml xml) getEnclosureLink =
                              attrs' = updateAttr attrs "type" $ Just typeTorrent
                          in EventBeginElement name $
                             updateAttr attrs' "url" $ getEnclosureLink url
-                     EventBeginElement name attrs ->
+                     EventBeginElement _ _ ->
                          event
                      _ ->
                          event
@@ -96,5 +94,8 @@ mapFeed (FeedXml xml) getEnclosureLink =
                Just val -> (name, [ContentText val]) : attrs'
                Nothing -> attrs'
 
+typeTorrent :: Text
 typeTorrent = "application/x-bittorrent"
+
+xmlnsAtom :: Text
 xmlnsAtom = "http://www.w3.org/2005/Atom"

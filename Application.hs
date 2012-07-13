@@ -22,7 +22,6 @@ import qualified Data.Text as Text
 import qualified Network.Wai as Wai
 import Network.HTTP.Types (Status (Status))
 
-import BitloveAuth
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
@@ -72,6 +71,10 @@ makeApplication conf logger = do
         in if tryNext
            then anyApp apps req
            else return res
+    anyApp [] =
+        return $ 
+        return $ 
+        Wai.ResponseBuilder (Status 404 "Not found") [] mempty
 
 makeUIFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO UIApp
 makeUIFoundation conf setLogger = do
@@ -84,6 +87,8 @@ makeUIFoundation conf setLogger = do
     pool <- makeDBPool dbconf setLogger
     return $ UIApp conf setLogger s pool manager
     
+parseDBConf :: Monad m =>
+               Value -> m [(String, String)]
 parseDBConf = return . parse
   where parse (Aeson.Object o) = do
           (k, v) <- HashMap.toList o
@@ -97,15 +102,14 @@ parseDBConf = return . parse
               return (k', show n)
             _ ->
               error ("Cannot parse: " ++ show v)
+        parse _ = error "Expected JSON object"
     
 makeDBPool :: [(String, String)] -> Logger -> IO DBPool
 makeDBPool dbconf logger =
   let dbconf' :: [([Char], [Char])]
-      dbconf' = filter (\(k, v) ->
-                         k `elem` ["host", "hostaddr",
-                                   "port", "dbname",
-                                   "user", "password"]
-                       ) dbconf
+      dbconf' = filter ((`elem` ["host", "hostaddr",
+                                 "port", "dbname",
+                                 "user", "password"]) . fst) dbconf
       dbconf'' = unwords $
                  map (\(k, v) ->
                        k ++ "=" ++ v

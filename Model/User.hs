@@ -28,6 +28,7 @@ instance Convertible SqlValue UserName where
 -- | Single record row
 instance Convertible [SqlValue] UserName where
     safeConvert [v] = UserName `fmap` safeConvert v
+    safeConvert vals = convError "UserName" vals
 
 instance Read UserName where
     readsPrec _ = (:[]) . (, "") . UserName . T.pack
@@ -38,7 +39,7 @@ data UserDetails = UserDetails {
       userTitle :: Text,
       userImage :: Text,
       userHomepage :: Text
-    }
+    } deriving (Typeable)
                    
 instance Convertible [SqlValue] UserDetails where
   safeConvert (title:image:homepage:[]) =
@@ -47,6 +48,7 @@ instance Convertible [SqlValue] UserDetails where
       (fromSql title)
       (fromSql image)
       (fromSql homepage)
+  safeConvert vals = convError "UserDetails" vals
 
 userDetailsByName :: UserName -> Query UserDetails
 userDetailsByName user =
@@ -84,6 +86,7 @@ instance ToJSON Salted where
 
 
 data UserSalt = UserSalt Salt Salted
+                deriving (Typeable)
 
 instance Convertible [SqlValue] UserSalt where
   safeConvert (salt:salted:[]) =
@@ -91,6 +94,7 @@ instance Convertible [SqlValue] UserSalt where
       UserSalt
       (fromSql salt)
       (fromSql salted)
+  safeConvert vals = convError "UserSalt" vals
 
 userSalt :: UserName -> Query UserSalt
 userSalt user =

@@ -1,6 +1,6 @@
 module Model.Item where
 
-import Prelude
+import Prelude hiding (id)
 import qualified Data.Text as T
 import Data.Time
 import Data.List (partition)

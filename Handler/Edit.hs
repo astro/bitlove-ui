@@ -3,11 +3,10 @@ module Handler.Edit where
 import Prelude
 import Import
 import Data.Maybe
-import Data.Text (Text, isPrefixOf)
-import Control.Monad
+import qualified Data.Text as T
+import Data.Aeson (ToJSON)
 
 import qualified Model as Model
-import BitloveAuth
 
 getUserDetailsR :: UserName -> Handler RepJson
 getUserDetailsR user = do
@@ -40,14 +39,14 @@ putUserFeedR user slug = do
   -- Validate
   url <- case mUrl of
            Just url
-               | "http://" `isPrefixOf` url ||
-                 "https://" `isPrefixOf` url ->
+               | "http://" `T.isPrefixOf` url ||
+                 "https://" `T.isPrefixOf` url ->
                      return url
-           Nothing ->
+           _ ->
                sendResponse $ RepJson $ toContent $ 
                object ["error" .= ("Invalid URL" :: Text)]
       
-  isNew <- withDB $ Model.addUserFeed user slug url
+  _isNew <- withDB $ Model.addUserFeed user slug url
   
   link <- ($ UserFeedR user slug) `fmap`
           getUrlRender
@@ -55,7 +54,7 @@ putUserFeedR user slug = do
 
 deleteUserFeedR :: UserName -> Text -> Handler RepJson
 deleteUserFeedR user slug = do
-  withDB $ Model.deleteUserFeed user slug
+  _deleted <- withDB $ Model.deleteUserFeed user slug
   link <- ($ UserR user) `fmap`
           getUrlRender
   returnJson ["link" .= link]
@@ -77,12 +76,13 @@ postUserFeedDetailsR user slug = do
             lookupPostParam "public"
   title <- lookupPostParam "title"
   let details = FeedDetails public title
-  withDB $ Model.setUserFeedDetails user slug details
+  _ <- withDB $ Model.setUserFeedDetails user slug details
   returnJson ([] :: [(Text, Int)])
 
 deleteTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepJson
 deleteTorrentFileR user slug (TorrentName name) = do
-  withDB $ Model.purgeTorrent user slug name
+  _ <- withDB $ Model.purgeTorrent user slug name
   returnJson ([] :: [(Text, Int)])
   
+returnJson :: (Monad m, ToJSON a) => [(Text, a)] -> m RepJson
 returnJson = return . RepJson . toContent . object 

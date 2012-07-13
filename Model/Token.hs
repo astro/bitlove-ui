@@ -4,10 +4,8 @@ import Prelude
 import System.Random
 import Data.ByteString hiding (take, concatMap, length)
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Convertible
 import Database.HDBC
-import Numeric (showHex)
 import Data.Aeson
 
 import Model.Query

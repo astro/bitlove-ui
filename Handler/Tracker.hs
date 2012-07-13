@@ -4,7 +4,6 @@ module Handler.Tracker where
 import Prelude
 import Yesod
 import qualified Network.Wai as Wai
-import Data.Maybe
 import Control.Monad
 import Control.Applicative
 import qualified Data.ByteString as B
@@ -35,6 +34,7 @@ instance Yesod TrackerApp where
 instance HasDB TrackerApp where
     getDBPool = trackerDBPool <$> getYesod
 
+makeTrackerApp :: DBPool -> TrackerApp
 makeTrackerApp = TrackerApp
 
 
@@ -117,7 +117,7 @@ getScrapeR = do
   query <- getRawQuery
   let mInfoHash = Model.InfoHash `fmap` 
                   (join $ "info_hash" `lookup` query)
-  (infoHash, scrape) <-
+  (infoHash, scrape') <-
       case mInfoHash of
         Nothing ->
             notFound
@@ -132,11 +132,11 @@ getScrapeR = do
            [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
              Benc.BDict 
              [("incomplete",
-               Benc.BInt $ scrapeLeechers scrape),
+               Benc.BInt $ scrapeLeechers scrape'),
               ("complete",
-               Benc.BInt $ scrapeSeeders scrape),
+               Benc.BInt $ scrapeSeeders scrape'),
               ("downloaded",
-               Benc.BInt $ scrapeDownloaded scrape)]
+               Benc.BInt $ scrapeDownloaded scrape')]
             )]
           )]
              

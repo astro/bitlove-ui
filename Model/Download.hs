@@ -66,7 +66,7 @@ data Download = Download {
 
 instance Convertible [SqlValue] Download where
   safeConvert (user:slug:feed:item:enclosure:
-               feed_title:feed_public:
+               feed_title:_feed_public:
                info_hash:name:size:type_:
                title:lang:summary:published:
                homepage:payment:image:
