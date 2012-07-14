@@ -180,6 +180,13 @@ renderItem item showOrigin =
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") $
              itemPublished item
       isOnlyDownload = length (itemDownloads item) == 1
+      bandwidth d
+          | downloadDownspeed d < 100 * 1024 =
+              Nothing
+          | otherwise =
+              Just $
+              let (n, unit) = humanSize' $ downloadDownspeed d
+              in (n, unit ++ "B/s")
   in [hamlet|
   <article class="item">
     <div>
@@ -212,6 +219,13 @@ renderItem item showOrigin =
             <span class="size" title="Download size">
               #{humanSize (downloadSize d)}
         <li class="stats">
+          $maybe (speed, unit) <- bandwidth d
+              <dl>
+                <dt>
+                  #{speed}
+                  <span class="unit"> #{unit}
+                <dd>Download speed
+                  
           <dl class="seeders">
             <dt>#{downloadSeeders d}
             <dd>Seeders
@@ -279,11 +293,13 @@ filterScript = [hamlet|
 <script src="/static/filter.js" type="text/javascript">
     |]
 
-humanSize :: (Integral a, Show a) => a -> [Char]
-humanSize = humanSize' "KMGT" ""
-  where humanSize' units unit n
-          | n < 1024 || null units = 
-            show n ++ " " ++ unit ++ "B"
-          | otherwise = 
-            let (unit':units') = units
-            in humanSize' units' [unit'] $ n `div` 1024
+humanSize :: (Integral a, Show a) => a -> String
+humanSize n = let (n', unit) = humanSize' n
+              in show n' ++ " " ++ unit ++ "B"
+
+humanSize' :: (Integral a, Show a) => a -> (a, String)
+humanSize' n = foldl (\(n', unit) unit' ->
+                          if n' < 1024
+                          then (n', unit)
+                          else (n' `div` 1024, [unit'])
+                     ) (n, "") "KMGT"
