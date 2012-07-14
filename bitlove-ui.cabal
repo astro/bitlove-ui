@@ -1,4 +1,4 @@
-name:              prittorrent-hui
+name:              bitlove-ui
 version:           0.0.0
 license:           BSD3
 license-file:      LICENSE
@@ -10,7 +10,7 @@ category:          Web
 stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
-homepage:          http://prittorrent-hui.yesodweb.com/
+homepage:          http://bitlove.org/
 
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.
@@ -122,7 +122,7 @@ library
                  , cookie                        >= 0.4.0      && < 0.5
                  , data-default                  >= 0.4.0      && < 0.5
 
-executable         prittorrent-hui
+executable         ui
     if flag(library-only)
         Buildable: False
 
@@ -130,7 +130,7 @@ executable         prittorrent-hui
     main-is:           ../main.hs
     hs-source-dirs:    dist
     build-depends:     base
-                     , prittorrent-hui
+                     , bitlove-ui
                      , yesod-default
 
 test-suite test
@@ -151,7 +151,7 @@ test-suite test
                        FlexibleContexts
 
     build-depends: base
-                 , prittorrent-hui
+                 , bitlove-ui
                  , yesod-test
                  , yesod-default
                  , yesod-core
