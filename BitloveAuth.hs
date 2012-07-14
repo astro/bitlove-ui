@@ -1,9 +1,20 @@
+{-# LANGUAGE TupleSections, RankNTypes #-}
 module BitloveAuth where
 
-import Prelude ((.), return, (>>=), elem, Bool (False), maybe)
+import Prelude
 import Yesod
 import Data.Maybe
+import qualified Data.ByteString.Char8 as BC
+import qualified Network.Wai as Wai
+import Web.Cookie
+import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
+import Blaze.ByteString.Builder (toByteString)
+import qualified Data.Text as T
+import Data.Default
+import Debug.Trace
 
+import Utils
+import Model.Session
 import Model.User
 
 login :: UserName -> GHandler y y' ()
@@ -14,8 +25,70 @@ sessionUser = lookupSession "user" >>=
               return . maybe Nothing (Just . UserName)
       
 canEdit :: UserName -> GHandler sub master Bool
-canEdit user = sessionUser >>=
-               return . maybe False (`elem` [user, UserName "astro"])
+canEdit user = maybe False (`elem` [user, UserName "astro"]) `fmap`
+               sessionUser
   
 logout :: GHandler y y' ()
 logout = deleteSession "user"
+
+
+sessionBackend :: (forall b. (PostgreSQL.Connection -> IO b) -> IO b) -> SessionBackend a
+sessionBackend withDB =
+    -- | App callback
+    SessionBackend $ \app req time ->
+    trace ("req: " ++ show (Wai.requestHeaders req)) $
+    do let mSidCookie =
+               listToMaybe
+               [sid
+                | ("Cookie", headerValue) <- Wai.requestHeaders req,
+                  sid <- maybeToList $ "sid" `lookup` parseCookies headerValue
+               ]
+           mSid 
+             | maybe False isHex mSidCookie = 
+                 (SessionId . fromHex . T.pack . BC.unpack) `fmap`
+                 mSidCookie
+             | otherwise = 
+                 Nothing
+           session :: IO BackendSession
+           session =
+               case mSid of
+                 Nothing ->
+                     return []
+                 Just sid ->
+                     do users <- withDB $ validateSession sid
+                        return $
+                               case users of
+                                 (UserName user):_ ->
+                                     [("user", BC.pack $ T.unpack user)]
+                                 _ ->
+                                     []
+
+       oldSession <- trace ("mSid: " ++ show mSidCookie) $ session
+       let saveSession :: BackendSession -> time -> IO [Header]
+           saveSession newSession time =
+               let mOldUser = "user" `lookup` oldSession
+                   mNewUser = "user" `lookup` newSession
+               in case (mOldUser, mNewUser) of
+                    -- Login
+                    (Nothing, Just user) ->
+                        -- TODO: fmt cookie
+                        ((:[]) . makeCookie .
+                         BC.pack . T.unpack . 
+                         toHex . unSessionId) `fmap`
+                        withDB (createSession $ UserName $ T.pack $
+                                              BC.unpack user)
+                    -- Logout
+                    (Just user, Nothing) ->
+                        do case mSid of
+                             Just sid ->
+                                 withDB $ invalidateSession sid
+                             _ ->
+                                 return ()
+                           return [DeleteCookie "sid" "/"]
+                    _ ->
+                        return []
+       return (oldSession, saveSession)
+    where makeCookie val = AddCookie def
+                           { setCookieName = "sid"
+                           , setCookieValue = val
+                           }

@@ -1,11 +1,13 @@
-module Utils (iso8601, toHex, fromHex) where
+module Utils (iso8601, isHex, toHex, fromHex) where
 
 import Prelude
 import Data.Time
 import System.Locale
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import Numeric (readHex, showHex)
+import Data.Char (isHexDigit)
 
 
 iso8601 :: LocalTime -> String
@@ -17,6 +19,9 @@ iso8601 time =
                      sig:h1:h2:':':m1:m2
                    _ ->
                      "Z"
+
+isHex :: BC.ByteString -> Bool
+isHex = BC.all isHexDigit
 
 toHex :: B.ByteString -> T.Text
 toHex = T.pack . concatMap mapByte . B.unpack

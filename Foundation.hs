@@ -18,6 +18,7 @@ module Foundation
 import Prelude
 import Yesod
 import Yesod.Static
+import Control.Monad.Trans.Resource
 --import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
@@ -96,6 +97,11 @@ instance Yesod UIApp where
         return . Just $ clientSessionBackend key 120
     -}
 
+    makeSessionBackend app =
+      do let withDB' :: Transaction a -> IO a
+             withDB' = runResourceT . withDBPool (uiDBPool app)
+         return $ Just $ sessionBackend withDB'
+
     defaultLayout widget = do
         master <- getYesod
         mmsg <- getMessage
@@ -162,19 +168,23 @@ class HasDB y where
 instance HasDB UIApp where
     getDBPool = uiDBPool <$> getYesod
   
+type Transaction a = PostgreSQL.Connection -> IO a
+    
 -- How to run database actions.
-withDB :: HasDB y => (PostgreSQL.Connection -> IO a) -> GHandler y' y a
+withDB :: HasDB y => Transaction a -> GHandler y' y a
 withDB f = do
     pool <- getDBPool
+    lift $ withDBPool pool f
+    
+withDBPool :: DBPool -> Transaction a -> ResourceT IO a
+withDBPool pool f = do
     -- TODO: use takeResourceCheck, catch f
     db <- takeResource pool
-    a <- lift $ lift $
-         HDBC.withTransaction (mrValue db) f
+    a <- liftIO $ HDBC.withTransaction (mrValue db) f
     mrReuse db True
     mrRelease db
     return a
     
-  
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
 instance RenderMessage UIApp FormMessage where
