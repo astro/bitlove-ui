@@ -185,7 +185,7 @@ renderItem item showOrigin =
               Nothing
           | otherwise =
               Just $
-              let (n, unit) = humanSize' $ downloadDownspeed d
+              let (n, unit) = humanSize' $ fromIntegral $ downloadDownspeed d
               in (n, unit ++ "B/s")
   in [hamlet|
   <article class="item">
@@ -294,12 +294,15 @@ filterScript = [hamlet|
     |]
 
 humanSize :: (Integral a, Show a) => a -> String
-humanSize n = let (n', unit) = humanSize' n
-              in show n' ++ " " ++ unit ++ "B"
+humanSize n = let (n', unit) = humanSize' $ fromIntegral n
+                  ns | n' < 10 = show $
+                                 fromIntegral (truncate $ n' * 10) / 10
+                     | otherwise = show $ truncate n'
+              in ns ++ " " ++ unit ++ "B"
 
-humanSize' :: (Integral a, Show a) => a -> (a, String)
+humanSize' :: Double -> (Double, String)
 humanSize' n = foldl (\(n', unit) unit' ->
                           if n' < 1024
                           then (n', unit)
-                          else (n' `div` 1024, [unit'])
+                          else (n' / 1024, [unit'])
                      ) (n, "") "KMGT"
