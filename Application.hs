@@ -24,6 +24,7 @@ import Network.HTTP.Types (Status (Status))
 import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
+import Data.Monoid
 
 
 -- Import all relevant handler modules here.
@@ -51,7 +52,7 @@ makeApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
 makeApplication conf logger = do
     foundation <- makeUIFoundation conf setLogger
     tracker <- toWaiAppPlain $ makeTrackerApp $ uiDBPool foundation
-    ui <- toWaiAppPlain foundation
+    ui <- enforceVhost `fmap` toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
     setLogger = if development then logger else toProduction logger
@@ -78,6 +79,21 @@ makeApplication conf logger = do
         return $ 
         return $ 
         Wai.ResponseBuilder (Status 404 "Not found") [] mempty
+    enforceVhost :: Wai.Middleware
+    enforceVhost app req =
+        let proceed = app req
+            redirect = return $
+                       Wai.ResponseBuilder (Status 301 "Wrong vhost")
+                       [("Location", "http://bitlove.org/")]
+                       mempty
+        in case "Host" `lookup` Wai.requestHeaders req of
+             Nothing ->
+                 proceed
+             Just vhost
+                 | any (`BC.isPrefixOf` vhost) ["localhost", "bitlove.org", "api.bitlove.org"] ->
+                     proceed
+             Just _ ->
+                 redirect
     measureDuration :: Wai.Middleware
     measureDuration app req =
         do cpu1 <- liftIO getCPUTime
