@@ -8,10 +8,7 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Network.Wai as Wai
 import Web.Cookie
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
-import Blaze.ByteString.Builder (toByteString)
 import qualified Data.Text as T
-import Data.Default
-import Debug.Trace
 
 import Utils
 import Model.Session
@@ -35,8 +32,7 @@ logout = deleteSession "user"
 sessionBackend :: (forall b. (PostgreSQL.Connection -> IO b) -> IO b) -> SessionBackend a
 sessionBackend withDB =
     -- | App callback
-    SessionBackend $ \app req time ->
-    trace ("req: " ++ show (Wai.requestHeaders req)) $
+    SessionBackend $ \_app req _time ->
     do let mSidCookie =
                listToMaybe
                [sid
@@ -63,9 +59,9 @@ sessionBackend withDB =
                                  _ ->
                                      []
 
-       oldSession <- trace ("mSid: " ++ show mSidCookie) $ session
+       oldSession <- session
        let saveSession :: BackendSession -> time -> IO [Header]
-           saveSession newSession time =
+           saveSession newSession _time =
                let mOldUser = "user" `lookup` oldSession
                    mNewUser = "user" `lookup` newSession
                in case (mOldUser, mNewUser) of
