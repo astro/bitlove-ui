@@ -41,6 +41,7 @@ library
                      Settings.Development
                      Handler.Auth
                      Handler.Browse
+                     Handler.Directory
                      Handler.Edit
                      Handler.TorrentFile
                      Handler.TorrentStats

@@ -20,6 +20,9 @@
 /top.atom TopAtomR GET
 /top/#Period TopDownloadedR GET
 
+/directory DirectoryR GET
+/directory.opml DirectoryOpmlR GET
+
 /#UserName UserR GET
 /#UserName/#Text/feed MapFeedR GET
 /#UserName/downloads.rss UserDownloadsRssR GET

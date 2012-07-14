@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RankNTypes #-}
+{-# LANGUAGE TupleSections, ScopedTypeVariables #-}
 module Handler.Browse where
 
 import qualified Data.Text as T
@@ -282,6 +282,23 @@ renderItem item showOrigin =
                 a ! rel "payment"
                   ! href (toValue payment) $
                   "[Support]"
+
+renderFeedsList lists =
+    [hamlet|
+     <dl class="feedslist">
+       $forall list <- lists
+         ^{renderFeedsList' list}
+     |]
+    where renderFeedsList' (title :: Text, feeds) =
+              [hamlet|
+               <dt>#{title}
+               $forall feed <- feeds
+                 <dd>^{renderFeedsList'' feed}
+               |]
+          renderFeedsList'' (title :: Text, route) =
+              [hamlet|
+               <a href="@{route}">#{title}
+               |]
 
 safeLogo :: Text -> Text
 safeLogo url

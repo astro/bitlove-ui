@@ -5,6 +5,8 @@ module Model (
   Torrent (..),
   torrentByName,
   purgeTorrent,
+  DirectoryEntry (..),
+  getDirectory,
   -- TODO: move, camelCase
   StatsValue (..),
   get_counter,
@@ -123,3 +125,32 @@ get_gauge kind info_hash start stop interval =
                 "leechers" -> "AVG"
                 _ -> "MAX"
                 
+
+data DirectoryEntry = DirectoryEntry
+    { dirUser :: UserName
+    , dirUserTitle :: Text
+    , dirUserImage :: Text
+    , dirFeedSlug :: Text
+    , dirFeedTitle :: Text
+    , dirFeedLang :: Text
+    , dirFeedTypes :: Text
+    } deriving (Show, Typeable)
+
+instance Convertible [SqlValue] DirectoryEntry where
+    safeConvert (user:userTitle:userImage:
+                 feedSlug:feedTitle:feedLang:feedTypes:[]) = 
+      Right $
+      DirectoryEntry
+      (fromSql user)
+      (fromSql userTitle)
+      (fromSql userImage)
+      (fromSql feedSlug)
+      (fromSql feedTitle)
+      (fromSql feedLang)
+      (fromSql feedTypes)
+    safeConvert vals = convError "DirectoryEntry" vals
+      
+getDirectory :: Query DirectoryEntry
+getDirectory =
+  query "SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',', '') FROM directory" []
+

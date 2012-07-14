@@ -31,6 +31,7 @@ import Data.Monoid
 -- Don't forget to add new modules to your cabal file!
 import Handler.Auth
 import Handler.Browse
+import Handler.Directory
 import Handler.Edit
 import Handler.TorrentFile
 import Handler.TorrentStats
