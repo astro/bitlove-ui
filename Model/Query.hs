@@ -10,7 +10,6 @@ import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
 import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
-import Debug.Trace
 
 import Utils
 
@@ -29,7 +28,6 @@ fromBytea :: SqlValue -> ByteString
 fromBytea = unescape . fromSql
   where unescape :: Text -> ByteString
         unescape text =
-          trace ("unescape " ++ show text) $
           case T.splitAt 2 text of
             ("\\x", hex) ->
               fromHex hex
