@@ -21,6 +21,9 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
 import qualified Network.Wai as Wai
 import Network.HTTP.Types (Status (Status))
+import System.CPUTime (getCPUTime)
+import Data.Time.Clock (getCurrentTime, diffUTCTime)
+import qualified Data.ByteString.Char8 as BC
 
 
 -- Import all relevant handler modules here.
@@ -49,7 +52,7 @@ makeApplication conf logger = do
     foundation <- makeUIFoundation conf setLogger
     tracker <- toWaiAppPlain $ makeTrackerApp $ uiDBPool foundation
     ui <- toWaiAppPlain foundation
-    return $ logWare $ anyApp [tracker, ui]
+    return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
     setLogger = if development then logger else toProduction logger
     logWare   = if development then logCallbackDev (logBS setLogger)
@@ -75,6 +78,23 @@ makeApplication conf logger = do
         return $ 
         return $ 
         Wai.ResponseBuilder (Status 404 "Not found") [] mempty
+    measureDuration :: Wai.Middleware
+    measureDuration app req =
+        do cpu1 <- liftIO getCPUTime
+           utc1 <- liftIO getCurrentTime
+           res <- app req
+           let res' = res `seq` res
+           cpu2 <- liftIO getCPUTime
+           utc2 <- liftIO getCurrentTime
+           liftIO $ putStrLn $ "[" ++ 
+                    show ((cpu2 - cpu1) `div` 1000000000) ++ 
+                    "ms cpu " ++
+                    show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int) ++
+                    "ms real] " ++
+                    (BC.unpack $ Wai.requestMethod req) ++
+                    " " ++
+                    (BC.unpack $ Wai.rawPathInfo req)
+           return $ res'
 
 makeUIFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO UIApp
 makeUIFoundation conf setLogger = do
