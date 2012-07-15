@@ -31,7 +31,7 @@ getDirectoryR = do
                    <img class="logo"
                         src="#{safeLogo $ Model.dirUserImage $ head es}">
                    <div class="title">
-                     <h2>
+                     <h3>
                        <a href="@{UserR $ Model.dirUser $ head es}">#{Model.dirUserTitle $ head es}
                    <ul class="feeds">
                      $forall e <- es

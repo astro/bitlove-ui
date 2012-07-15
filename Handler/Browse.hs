@@ -35,6 +35,7 @@ getNewR = do
                  Model.recentDownloads 50
     defaultLayout $ do
         setTitle "Bitlove: New Torrents"
+        addFilterScript
         let links = [("Downloads", [("RSS", NewRssR, BC.unpack typeRss),
                                     ("ATOM", NewAtomR, BC.unpack typeAtom)
                                    ])]
@@ -44,7 +45,6 @@ getNewR = do
   <h2>New Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
-^{filterScript}
 |]
 
 getTopR :: Handler RepHtml
@@ -53,6 +53,7 @@ getTopR = do
                  Model.popularDownloads 25
     defaultLayout $ do
         setTitle "Bitlove: Popular Torrents"
+        addFilterScript
         let links = [("Downloads", [("RSS", TopRssR, BC.unpack typeRss),
                                     ("ATOM", TopAtomR, BC.unpack typeAtom)
                                    ])]
@@ -62,7 +63,6 @@ getTopR = do
   <h2>Popular Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
-^{filterScript}
 |]
 
 getTopDownloadedR :: Period -> Handler RepHtml
@@ -77,6 +77,7 @@ getTopDownloadedR period = do
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitle "Bitlove: Top Downloaded"
+    addFilterScript
     let links = [("Downloads", [("RSS", TopDownloadedRssR period, BC.unpack typeRss),
                                 ("ATOM", TopDownloadedAtomR period, BC.unpack typeAtom)
                                ])]
@@ -86,7 +87,6 @@ getTopDownloadedR period = do
   <h2>Top downloaded in #{period_title}
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
-^{filterScript}
 |]
 
 getUserR :: UserName -> Handler RepHtml
@@ -105,6 +105,8 @@ getUserR user = do
       render (details, feeds, downloads) =
           defaultLayout $ do 
                   setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
+                  when canEdit' $
+                       addScript $ StaticR $ StaticRoute ["edit-user.js"] []
                   let links = [("Downloads", [("RSS", UserDownloadsRssR user, BC.unpack typeRss),
                                               ("ATOM", UserDownloadsAtomR user, BC.unpack typeAtom)
                                              ])]
@@ -141,8 +143,6 @@ getUserR user = do
   <h2>Recent Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads False}
-$if canEdit'
-  <script src="/static/edit-user.js" type="text/javascript" async>
       |]
   
   fetch >>= maybe notFound render
@@ -164,6 +164,8 @@ getUserFeedR user slug =
               do canEdit' <- canEdit user
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+                   when canEdit' $
+                        addScript $ StaticR $ StaticRoute ["edit-user.js"] []
                    let links = [("Subscribe",
                                  [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
                                 ("Just Downloads", 
@@ -193,8 +195,6 @@ getUserFeedR user slug =
 
   ^{renderFeedsList links}
   ^{renderDownloads downloads False}
-$if canEdit'
-  <script src="/static/edit-feed.js" type="text/javascript" async>
     |]
 
 renderDownloads downloads showOrigin =
@@ -310,6 +310,9 @@ renderItem item showOrigin =
                   ! href (toValue payment) $
                   "[Support]"
 
+addFilterScript =
+    addScript $ StaticR $ StaticRoute ["filter.js"] []
+
 -- | <link rel="alternate"> to <head>
 addFeedsLinks lists =
     addHamletHead
@@ -347,11 +350,6 @@ safeLogo :: Text -> Text
 safeLogo url
     | "http" `T.isPrefixOf` url = url
     | otherwise = "/static/stub.png"
-
-filterScript :: t -> Markup
-filterScript = [hamlet|
-<script src="/static/filter.js" type="text/javascript">
-    |]
 
 humanSize :: (Integral a, Show a) => a -> String
 humanSize n = let (n', unit) = humanSize' $ fromIntegral n

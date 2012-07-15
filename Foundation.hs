@@ -18,6 +18,7 @@ module Foundation
 import Prelude
 import Yesod
 import Yesod.Static
+import Control.Monad (forM_)
 import Control.Monad.Trans.Resource
 --import Yesod.Auth
 import Yesod.Default.Config
@@ -87,7 +88,7 @@ type Form x = Html -> MForm UIApp UIApp (FormResult x, Widget)
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod UIApp where
-    approot = ApprootMaster $ appRoot . settings
+    approot = ApprootRelative
 
     {-
     -- Store session data on the client in encrypted cookies,
@@ -114,7 +115,10 @@ instance Yesod UIApp where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-            $(widgetFile "default-layout")
+          forM_ ["jquery-1.7.1.min.js", "jquery.flot.js", "graphs.js"] $
+            addScript . StaticR . flip StaticRoute [] . (:[])
+          addScriptRemote "https://api.flattr.com/js/0.6/load.js?mode=auto&popout=0&button=compact"
+          $(widgetFile "default-layout")
         hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- This is done to provide an optimization for serving static files from
