@@ -83,10 +83,10 @@ makeApplication conf logger = do
     enforceVhost :: Wai.Middleware
     enforceVhost app req =
         let proceed = app req
-            redirect = return $
-                       Wai.ResponseBuilder (Status 301 "Wrong vhost")
-                       [("Location", "http://bitlove.org/")]
-                       mempty
+            redirect location = return $
+                                Wai.ResponseBuilder (Status 301 "Wrong vhost")
+                                [("Location", location)]
+                                mempty
         in case "Host" `lookup` Wai.requestHeaders req of
              Nothing ->
                  proceed
@@ -94,7 +94,8 @@ makeApplication conf logger = do
                  | any (`BC.isPrefixOf` vhost) ["localhost", "bitlove.org", "api.bitlove.org"] ->
                      proceed
              Just _ ->
-                 redirect
+                 redirect $ 
+                 "http://bitlove.org" `BC.append` Wai.rawPathInfo req
     measureDuration :: Wai.Middleware
     measureDuration app req =
         do cpu1 <- liftIO getCPUTime
