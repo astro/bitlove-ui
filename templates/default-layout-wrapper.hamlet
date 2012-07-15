@@ -5,8 +5,6 @@ $doctype 5
     <link rel="stylesheet" type="text/css" href="/static/style.css"/>
     <meta name="viewport" content="width=480"/>
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
-    <link rel="alternate" type="application/rss+xml" title="Downloads (RSS)" href="http://bitlove.org/new.rss"/>
-    <link rel="alternate" type="application/atom+xml" title="Downloads (ATOM)" href="http://bitlove.org/new.atom"/>
     <script src="/static/jquery-1.7.1.min.js" type="text/javascript" async>
     ^{pageHead pc}
   <body>

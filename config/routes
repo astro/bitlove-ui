@@ -19,6 +19,8 @@
 /top.rss TopRssR GET
 /top.atom TopAtomR GET
 /top/#Period TopDownloadedR GET
+/top.rss/#Period TopDownloadedRssR GET
+/top.atom/#Period TopDownloadedAtomR GET
 
 /directory DirectoryR GET
 /directory.opml DirectoryOpmlR GET
@@ -29,6 +31,8 @@
 /#UserName/downloads.atom UserDownloadsAtomR GET
 /#UserName/details.json UserDetailsR GET POST
 /#UserName/#Text/details.json UserFeedDetailsR GET POST
+/#UserName/#Text/downloads.rss UserFeedRssR GET
+/#UserName/#Text/downloads.atom UserFeedAtomR GET
 
 -- /$user/$slug/*.torrent
 /#UserName/#Text/#TorrentName TorrentFileR GET DELETE

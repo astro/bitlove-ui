@@ -5,7 +5,7 @@ import qualified Data.ByteString.Char8 as BC
 
 import qualified Model
 import Import
-import Handler.Browse (safeLogo, renderFeedsList)
+import Handler.Browse (safeLogo, renderFeedsList, addFeedsLinks)
 
 
 getDirectoryR :: Handler RepHtml
@@ -14,21 +14,17 @@ getDirectoryR = do
   let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
   defaultLayout $ do
     setTitle "Bitlove: Directory"
-    addHamletHead [hamlet|
-                   <link rel="alternate" 
-                         type="#{BC.unpack typeOpml}" 
-                         href="@{DirectoryOpmlR}">
-                   |]
+    let links = [("Feeds", [("OPML", DirectoryOpmlR, BC.unpack typeOpml)])]
+    addFeedsLinks links
     toWidget [hamlet|
               <h2>Directory of Torrentified Podcasters
-              ^{feedsList}
+              ^{renderFeedsList links}
               <section class="col1">
                 ^{renderEntries dir1}
               <section class="col2">
                 ^{renderEntries dir2}
               |]
-    where feedsList = renderFeedsList [("Feeds:", [("OPML", DirectoryOpmlR)])]
-          renderEntries entries =
+    where renderEntries entries =
               [hamlet|
                $forall es <- entries
                  <article class="meta">

@@ -7,7 +7,7 @@ import Data.Time.Format
 import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
-import Text.Blaze.Html5 hiding (div, details)
+import Text.Blaze.Html5 hiding (div, details, map)
 import Text.Blaze.Html5.Attributes hiding (item)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
@@ -21,7 +21,6 @@ getFrontR :: Handler RepHtml
 getFrontR = do
   downloads <- withDB $
                Model.mostDownloaded 4 1
-  --let text = $(whamletFile "templates/front.hamlet")
   defaultLayout $ do
     setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
     $(whamletFile "templates/front.hamlet")
@@ -36,9 +35,14 @@ getNewR = do
                  Model.recentDownloads 50
     defaultLayout $ do
         setTitle "Bitlove: New Torrents"
+        let links = [("Downloads", [("RSS", NewRssR, BC.unpack typeRss),
+                                    ("ATOM", NewAtomR, BC.unpack typeAtom)
+                                   ])]
+        addFeedsLinks links
         toWidget [hamlet|
 <section class="col">
   <h2>New Torrents
+  ^{renderFeedsList links}
   ^{renderDownloads downloads True}
 ^{filterScript}
 |]
@@ -49,9 +53,14 @@ getTopR = do
                  Model.popularDownloads 25
     defaultLayout $ do
         setTitle "Bitlove: Popular Torrents"
+        let links = [("Downloads", [("RSS", TopRssR, BC.unpack typeRss),
+                                    ("ATOM", TopAtomR, BC.unpack typeAtom)
+                                   ])]
+        addFeedsLinks links
         toWidget [hamlet|
 <section class="col">
   <h2>Popular Torrents
+  ^{renderFeedsList links}
   ^{renderDownloads downloads True}
 ^{filterScript}
 |]
@@ -68,9 +77,14 @@ getTopDownloadedR period = do
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitle "Bitlove: Top Downloaded"
+    let links = [("Downloads", [("RSS", TopDownloadedRssR period, BC.unpack typeRss),
+                                ("ATOM", TopDownloadedAtomR period, BC.unpack typeAtom)
+                               ])]
+    addFeedsLinks links
     toWidget [hamlet|
 <section class="col">
   <h2>Top downloaded in #{period_title}
+  ^{renderFeedsList links}
   ^{renderDownloads downloads True}
 ^{filterScript}
 |]
@@ -91,6 +105,10 @@ getUserR user = do
       render (details, feeds, downloads) =
           defaultLayout $ do 
                   setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
+                  let links = [("Downloads", [("RSS", UserDownloadsRssR user, BC.unpack typeRss),
+                                              ("ATOM", UserDownloadsAtomR user, BC.unpack typeAtom)
+                                             ])]
+                  addFeedsLinks links
                   toWidget [hamlet|
 <header class="user">
   <div class="meta">
@@ -121,6 +139,7 @@ getUserR user = do
 
 <section class="col2">
   <h2>Recent Torrents
+  ^{renderFeedsList links}
   ^{renderDownloads downloads False}
 $if canEdit'
   <script src="/static/edit-user.js" type="text/javascript" async>
@@ -145,6 +164,13 @@ getUserFeedR user slug =
               do canEdit' <- canEdit user
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+                   let links = [("Subscribe",
+                                 [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
+                                ("Just Downloads", 
+                                 [("RSS", UserFeedRssR user slug, BC.unpack typeRss),
+                                  ("ATOM", UserFeedAtomR user slug, BC.unpack typeAtom)
+                                 ])]
+                   addFeedsLinks links
                    toWidget [hamlet|
 <section class="col">
   <header class="feed">
@@ -165,6 +191,7 @@ getUserFeedR user slug =
           <p class="hint">
              Private — Not included in directory or public torrent listings
 
+  ^{renderFeedsList links}
   ^{renderDownloads downloads False}
 $if canEdit'
   <script src="/static/edit-feed.js" type="text/javascript" async>
@@ -283,6 +310,21 @@ renderItem item showOrigin =
                   ! href (toValue payment) $
                   "[Support]"
 
+-- | <link rel="alternate"> to <head>
+addFeedsLinks lists =
+    addHamletHead
+    [hamlet|
+     $forall feed <- concat $ map snd lists
+       ^{addFeedsLink feed}
+     |]
+    where addFeedsLink (title :: Text, route, type_) =
+            [hamlet|
+             <link rel="alternate"
+                   type="#{type_}"
+                   href="http://bitlove.org@{route}"
+                   title="#{title}">
+             |]
+
 renderFeedsList lists =
     [hamlet|
      <dl class="feedslist">
@@ -291,13 +333,14 @@ renderFeedsList lists =
      |]
     where renderFeedsList' (title :: Text, feeds) =
               [hamlet|
-               <dt>#{title}
+               <dt>#{title}:
                $forall feed <- feeds
                  <dd>^{renderFeedsList'' feed}
                |]
-          renderFeedsList'' (title :: Text, route) =
+          renderFeedsList'' (title :: Text, route, type_) =
               [hamlet|
-               <a href="@{route}">#{title}
+               <a href="@{route}"
+                  type=#{type_}>#{title}
                |]
 
 safeLogo :: Text -> Text

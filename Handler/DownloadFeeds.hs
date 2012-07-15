@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TupleSections #-}
 module Handler.DownloadFeeds where
 -- TODO: absolute links!
 
@@ -152,6 +152,26 @@ getTopRssR = getTop
 getTopAtomR :: Handler RepAtom
 getTopAtomR = getTop
 
+getTopDownloaded :: RepFeed a => Period -> Handler a
+getTopDownloaded period = 
+  let (period_days, period_title) = 
+        case period of
+          PeriodDays 1 -> (1, "1 day")
+          PeriodDays days -> (days, T.pack $ show days ++ " days")
+          PeriodAll -> (10000, "all time")
+  in withDB (Model.mostDownloaded 25 period_days) >>=
+         renderFeed' Parameters {
+                           pTitle = "Bitlove: Top Downloaded in " `T.append` period_title,
+                           pLink = TopDownloadedR period,
+                           pImage = ""
+                         }
+         
+getTopDownloadedRssR :: Period -> Handler RepRss
+getTopDownloadedRssR = getTopDownloaded
+
+getTopDownloadedAtomR :: Period -> Handler RepAtom
+getTopDownloadedAtomR = getTopDownloaded
+
 getUserDownloads :: RepFeed a => UserName -> Handler a
 getUserDownloads user = do
     (details, downloads) <- withDB $ \db -> do
@@ -173,3 +193,32 @@ getUserDownloadsRssR = getUserDownloads
 
 getUserDownloadsAtomR :: UserName -> Handler RepAtom
 getUserDownloadsAtomR = getUserDownloads
+
+
+getUserFeed :: RepFeed a => UserName -> Text -> Handler a
+getUserFeed user slug = do
+  mFeedDownloads <- withDB $ \db -> do
+    feeds <- Model.userFeedInfo user slug db
+    case feeds of
+      [] ->
+        return Nothing
+      (feed:_) ->
+        (Just . (feed, )) `fmap` 
+        Model.feedDownloads 50 (feedUrl feed) db
+
+  case mFeedDownloads of
+    Nothing ->
+        notFound
+    Just (feed, downloads) ->
+        renderFeed' Parameters 
+                      { pTitle = feedTitle feed `T.append` " on Bitlove"
+                      , pLink = UserFeedR user slug
+                      , pImage = feedImage feed 
+                      } downloads
+
+getUserFeedRssR :: UserName -> Text -> Handler RepRss
+getUserFeedRssR = getUserFeed
+
+getUserFeedAtomR :: UserName -> Text -> Handler RepAtom
+getUserFeedAtomR = getUserFeed
+
