@@ -9,7 +9,7 @@ import Import
 import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
-import Yesod.Default.Handlers
+import Yesod.Default.Handlers hiding (getFaviconR)
 import Yesod.Logger (Logger, logBS, toProduction, logString)
 import Network.Wai.Middleware.RequestLogger (logCallback, logCallbackDev)
 import Network.HTTP.Conduit (newManager, def)
@@ -167,3 +167,8 @@ getApplicationDev =
     loader = loadConfig (configSettings Development)
         { csParseExtra = parseExtra
         }
+
+getFaviconR :: GHandler sub UIApp ()
+getFaviconR =
+    redirectWith (Status 301 "Over there") $ StaticR $ StaticRoute ["favicon.png"] []
+    
