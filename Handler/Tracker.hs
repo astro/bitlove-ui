@@ -15,7 +15,7 @@ import Data.Bits
 import System.Random (randomRIO)
 import Debug.Trace
 
-import Foundation (DBPool, HasDB (getDBPool), withDB)
+import Foundation (DBPool, HasDB (getDBPool), withDB, Transaction)
 import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
@@ -79,10 +79,12 @@ getAnnounceR = do
     Just tr ->
         trace ("tr: " ++ show tr) $
         do let isSeeder = trLeft tr == 0
-           peers <- withDB $ \db ->
-                    getPeers (trInfoHash tr) isSeeder db
-                    <*
-                    announcePeer tr db
+           (peers, scraped) <- 
+               withDB $ \db ->
+                   do peers <- getPeers (trInfoHash tr) isSeeder db
+                      announcePeer tr db
+                      scraped <- safeScrape (trInfoHash tr) db
+                      return (peers, scraped)
            let (peers4, peers6)
                    | trCompact tr =
                        ( Benc.BString $ LBC.fromChunks $ concat
@@ -109,7 +111,9 @@ getAnnounceR = do
                   Benc.BDict [ ("peers", peers4)
                              , ("peers6", peers6)
                              , ("interval", Benc.BInt interval)
-                               -- TODO: complete, incomplete
+                             , ("complete", Benc.BInt $ scrapeSeeders scraped)
+                             , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
+                             , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
                              ]
 
 getScrapeR :: Handler RepBenc
@@ -117,13 +121,13 @@ getScrapeR = do
   query <- getRawQuery
   let mInfoHash = Model.InfoHash `fmap` 
                   (join $ "info_hash" `lookup` query)
-  (infoHash, scrape') <-
+  (infoHash, scraped) <-
       case mInfoHash of
         Nothing ->
             notFound
         Just infoHash ->
-            ((infoHash, ) . head . (++ [ScrapeInfo 0 0 0 0])) `fmap`
-            withDB (scrape infoHash)
+            (infoHash, ) `fmap`
+            withDB (safeScrape infoHash)
 
   return $ RepBenc $
          Benc.BDict 
@@ -131,15 +135,17 @@ getScrapeR = do
            Benc.BDict 
            [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
              Benc.BDict 
-             [("incomplete",
-               Benc.BInt $ scrapeLeechers scrape'),
-              ("complete",
-               Benc.BInt $ scrapeSeeders scrape'),
-              ("downloaded",
-               Benc.BInt $ scrapeDownloaded scrape')]
+             [("incomplete", Benc.BInt $ scrapeLeechers scraped),
+              ("complete", Benc.BInt $ scrapeSeeders scraped),
+              ("downloaded", Benc.BInt $ scrapeDownloaded scraped)]
             )]
           )]
              
+safeScrape :: Model.InfoHash -> Transaction ScrapeInfo
+safeScrape infoHash db = 
+    (head . (++ [ScrapeInfo 0 0 0 0])) `fmap` 
+    scrape infoHash db
+         
 getRawQuery :: Handler [(BC.ByteString, Maybe BC.ByteString)]
 getRawQuery = 
     Wai.queryString `fmap`

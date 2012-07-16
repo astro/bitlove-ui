@@ -7,7 +7,7 @@ module Foundation
     , Handler
     , Widget
     , Form
-    , withDB, DBPool, HasDB (..)
+    , withDB, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
     --, requireAuth
