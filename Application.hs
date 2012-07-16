@@ -51,8 +51,13 @@ mkYesodDispatch "UIApp" resourcesUIApp
 -- migrations handled by Yesod.
 makeApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
 makeApplication conf logger = do
-    foundation <- makeUIFoundation conf setLogger
-    tracker <- toWaiAppPlain $ makeTrackerApp $ uiDBPool foundation
+    dbconf <- withYamlEnvironment 
+              "config/postgresql.yml"
+              (appEnv conf)
+              parseDBConf
+    pool <- makeDBPool dbconf setLogger
+    foundation <- makeUIFoundation conf pool setLogger
+    tracker <- makeTrackerApp pool >>= toWaiAppPlain
     ui <- enforceVhost `fmap` toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
@@ -114,15 +119,10 @@ makeApplication conf logger = do
                     (BC.unpack $ Wai.rawPathInfo req)
            return $ res'
 
-makeUIFoundation :: AppConfig DefaultEnv Extra -> Logger -> IO UIApp
-makeUIFoundation conf setLogger = do
+makeUIFoundation :: AppConfig DefaultEnv Extra -> DBPool -> Logger -> IO UIApp
+makeUIFoundation conf pool setLogger = do
     manager <- newManager def
     s <- staticSite
-    dbconf <- withYamlEnvironment 
-              "config/postgresql.yml"
-              (appEnv conf)
-              parseDBConf
-    pool <- makeDBPool dbconf setLogger
     return $ UIApp conf setLogger s pool manager
     
 parseDBConf :: Monad m =>

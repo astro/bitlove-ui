@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 module Foundation
     ( UIApp (..)
     , Route (..)
@@ -7,7 +6,7 @@ module Foundation
     , Handler
     , Widget
     , Form
-    , withDB, DBPool, HasDB (..), Transaction
+    , withDB, withDBPool, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
     --, requireAuth

@@ -13,15 +13,17 @@ import Network.Socket (SockAddr (..))
 import Data.Word (Word32)
 import Data.Bits
 import System.Random (randomRIO)
-import Debug.Trace
 
-import Foundation (DBPool, HasDB (getDBPool), withDB, Transaction)
+import Foundation (DBPool, HasDB (getDBPool), withDB, withDBPool, Transaction)
 import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
+import qualified WorkQueue as WQ
 
 data TrackerApp = TrackerApp
-    { trackerDBPool :: DBPool }
+    { trackerDBPool :: DBPool 
+    , trackerQueue :: WQ.Queue
+    }
 
 mkYesod "TrackerApp" [parseRoutes|
                       /announce AnnounceR GET
@@ -34,8 +36,9 @@ instance Yesod TrackerApp where
 instance HasDB TrackerApp where
     getDBPool = trackerDBPool <$> getYesod
 
-makeTrackerApp :: DBPool -> TrackerApp
-makeTrackerApp = TrackerApp
+makeTrackerApp :: DBPool -> IO TrackerApp
+makeTrackerApp pool = 
+    TrackerApp pool `fmap` WQ.makeQueue
 
 
 newtype RepBenc = RepBenc Benc.BValue
@@ -59,7 +62,7 @@ getAnnounceR = do
                    case readsPrec 0 $ BC.unpack v of
                      [(r, "")] -> return r
                      _ -> Nothing
-      mTr = trace ("query: " ++ show query) $ TrackerRequest <$>
+      mTr = TrackerRequest <$>
             Model.InfoHash <$> q "info_hash" <*>
             (PeerId <$> q "peer_id") <*>
             pure addr <*>
@@ -71,20 +74,25 @@ getAnnounceR = do
             pure (maybe False (const True) $ q "compact")
   case mTr of
     Nothing ->
-        trace ("no tr") $ return $ RepBenc $
+        return $ RepBenc $
         Benc.BDict [(Benc.BString "failure",
                      Benc.BString "Invalid tracker request"),
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
     Just tr ->
-        trace ("tr: " ++ show tr) $
         do let isSeeder = trLeft tr == 0
+           -- Read first
            (peers, scraped) <- 
                withDB $ \db ->
                    do peers <- getPeers (trInfoHash tr) isSeeder db
-                      announcePeer tr db
                       scraped <- safeScrape (trInfoHash tr) db
                       return (peers, scraped)
+           -- Write in background
+           q <- trackerQueue `fmap` getYesod
+           pool <- getDBPool
+           liftIO $ WQ.enqueue q $
+             withDBPool pool $ announcePeer tr
+           -- Assemble response
            let (peers4, peers6)
                    | trCompact tr =
                        ( Benc.BString $ LBC.fromChunks $ concat
@@ -106,7 +114,7 @@ getAnnounceR = do
                             [g peerId addr' port'
                              | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
                           )
-           interval <- trace ("Peers: " ++ show peers) $ liftIO $ randomRIO (540, 600)
+           interval <- liftIO $ randomRIO (540, 600)
            return $ RepBenc $
                   Benc.BDict [ ("peers", peers4)
                              , ("peers6", peers6)
@@ -182,4 +190,3 @@ portToByteString p =
   in B.pack [ (p' `shiftR` 8) .&. 0xFF
             , p' .&. 0xFF
             ]
-    

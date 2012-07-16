@@ -50,6 +50,7 @@ library
                      Handler.ByEnclosureAPI
                      Handler.Tracker
                      Benc
+                     WorkQueue
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
