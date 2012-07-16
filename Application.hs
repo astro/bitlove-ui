@@ -155,7 +155,7 @@ makeDBPool dbconf logger =
   in createPool
      (logString logger "connectPostgreSQL" >> connectPostgreSQL dbconf'')
      (\db -> logString logger "HDBC.disconnect" >> HDBC.disconnect db)
-     4 5 4
+     4 60 4
 
 -- for yesod devel
 getApplicationDev :: IO (Int, Application)
