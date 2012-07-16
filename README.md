@@ -3,8 +3,8 @@
 * Wrap reqs:
   * Track GET stats
   * API referrers
-* Filter
 
+* App roots
 * Redir favicon.ico
 * Embedable Widget
 
