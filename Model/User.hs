@@ -7,12 +7,12 @@ import Data.Data (Typeable)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.HDBC
-import Model.Query
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Aeson
 import System.Random
 
+import Model.Query
 import Utils
 
 

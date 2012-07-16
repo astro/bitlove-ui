@@ -44,21 +44,21 @@ getTorrentStatsR user slug name statsPeriod stats = do
   
       (RepJson . toContent . object) `fmap` case stats of
         StatsDownloads -> do
-          downloads <- withStats ($ Model.get_counter "complete")
+          downloads <- withStats ($ Model.getCounter "complete")
           return $ ("downloads" .= statsToJson downloads) : baseJson
         StatsTraffic -> do
           (down, up, up_seeder) <- withStats $ \q ->
-            do down <- q $ Model.get_counter "down"
-               up <- q $ Model.get_counter "up"
-               up_seeder <- q $ Model.get_counter "up_seeder"
+            do down <- q $ Model.getCounter "down"
+               up <- q $ Model.getCounter "up"
+               up_seeder <- q $ Model.getCounter "up_seeder"
                return (down, up, up_seeder)
           return $ ("down" .= statsToJson down) :
                    ("up" .= statsToJson up) :
                    ("up_seeder" .= statsToJson up_seeder) : baseJson
         StatsSwarm -> do
           (seeders, leechers) <- withStats $ \q ->
-            do seeders <- q $ Model.get_gauge "seeders"
-               leechers <- q $ Model.get_gauge "leechers"
+            do seeders <- q $ Model.getGauge "seeders"
+               leechers <- q $ Model.getGauge "leechers"
                return (seeders, leechers)
           return $ ("seeders" .= statsToJson seeders) :
                    ("leechers" .= statsToJson leechers) : baseJson

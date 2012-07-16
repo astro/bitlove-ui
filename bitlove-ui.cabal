@@ -35,7 +35,9 @@ library
                      Model.Token
                      Model.Tracker
                      Model.Session
+                     Model.Stats
                      Utils
+                     Stats
                      Settings
                      Settings.StaticFiles
                      Settings.Development
@@ -123,6 +125,7 @@ library
                  , network                       >= 2.3.0.13   && < 3
                  , cookie                        >= 0.4.0      && < 0.5
                  , data-default                  >= 0.4.0      && < 0.5
+                 , stm                           >= 2.3        && < 3
 
 executable         ui
     if flag(library-only)

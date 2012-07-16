@@ -39,6 +39,7 @@ import Handler.MapFeed
 import Handler.DownloadFeeds
 import Handler.ByEnclosureAPI
 import Handler.Tracker
+import Stats
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see
@@ -58,7 +59,8 @@ makeApplication conf logger = do
     pool <- makeDBPool dbconf setLogger
     foundation <- makeUIFoundation conf pool setLogger
     tracker <- makeTrackerApp pool >>= toWaiAppPlain
-    ui <- enforceVhost `fmap` toWaiAppPlain foundation
+    stats <- statsMiddleware pool
+    ui <- enforceVhost `fmap` stats `fmap` toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
     setLogger = if development then logger else toProduction logger

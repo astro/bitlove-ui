@@ -7,10 +7,11 @@ module Model (
   purgeTorrent,
   DirectoryEntry (..),
   getDirectory,
-  -- TODO: move, camelCase
+  -- Model.Stats
   StatsValue (..),
-  get_counter,
-  get_gauge,
+  getCounter,
+  addCounter,
+  getGauge,
   -- Model.Download
   InfoHash (..),
   infoHashToHex,
@@ -68,7 +69,8 @@ import Model.Item
 import Model.Feed
 import Model.User
 import Model.Token
-                        
+import Model.Stats                        
+
 
 infoHashByName :: UserName -> Text -> Text -> Query InfoHash
 infoHashByName user slug name =
@@ -102,29 +104,6 @@ purgeTorrent user slug name db =
   quickQuery' db "SELECT * FROM purge_download(?, ?, ?)"
               [toSql user, toSql slug, toSql name]
 
-data StatsValue = StatsValue LocalTime Double
-                deriving (Show, Typeable)
-
-instance Convertible [SqlValue] StatsValue where
-  safeConvert (time:val:[]) =
-    Right $
-    StatsValue
-    (fromSql time)
-    (fromSql val)
-  safeConvert vals = convError "StatsValue" vals
-  
-get_counter :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
-get_counter kind info_hash start stop interval =
-  query "SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, SUM(\"value\") FROM counters WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
-  
-get_gauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
-get_gauge kind info_hash start stop interval =
-  query ("SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, " ++ agg ++ "(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
-  where agg = 
-            case kind of
-                "leechers" -> "AVG"
-                _ -> "MAX"
-                
 
 data DirectoryEntry = DirectoryEntry
     { dirUser :: UserName
