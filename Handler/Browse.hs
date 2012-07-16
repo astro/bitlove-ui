@@ -215,7 +215,8 @@ renderItem item showOrigin =
               let (n, unit) = humanSize' $ fromIntegral $ downloadDownspeed d
               in (n, unit ++ "B/s")
   in [hamlet|
-  <article class="item">
+  <article class="item"
+           xml:lang="#{fromMaybe "" $ itemLang item}">
     <div>
       $if not (T.null $ itemImage item)
         <img src="#{itemImage item}" class="logo">
@@ -237,7 +238,8 @@ renderItem item showOrigin =
       <ul class="download">
         <li class="torrent">
           <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
-             rel="enclosure" data-type=#{downloadType d}>
+             rel="enclosure"
+             data-type="#{downloadType d}">
             $if isOnlyDownload
               <span>Download
             $else
