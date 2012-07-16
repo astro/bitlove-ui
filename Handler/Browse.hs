@@ -204,7 +204,7 @@ $forall item <- Model.groupDownloads downloads
       |]
 
 renderItem item showOrigin =
-  let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ " %H:%M") $
+  let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
       isOnlyDownload = length (itemDownloads item) == 1
       bandwidth d
