@@ -1,12 +1,8 @@
 == TODO
 
-* Wrap reqs:
-  * Track GET stats
-  * API referrers
-
-* App roots
 * Redir favicon.ico
 * Embedable Widget
+* grep TODO
 
 * i18n
 * 

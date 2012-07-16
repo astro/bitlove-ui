@@ -16,7 +16,7 @@ import Import hiding (Content)
 
 getMapFeedR :: UserName -> Text -> Handler RepXml
 getMapFeedR user slug = do
-  urlRender <- getUrlRender
+  urlRender <- getFullUrlRender
   m_data <- withDB $ \db -> do
     urls <- Model.userFeed user slug db
     case urls of

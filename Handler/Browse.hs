@@ -316,19 +316,18 @@ addFilterScript =
     addScript $ StaticR $ StaticRoute ["filter.js"] []
 
 -- | <link rel="alternate"> to <head>
-addFeedsLinks lists =
-    addHamletHead
-    [hamlet|
+addFeedsLinks lists = do
+  let addFeedsLink (title :: Text, route, type_) =
+          [hamlet|
+           <link rel="alternate"
+                 type="#{type_}"
+                 href="@{route}"
+                 title="#{title}">
+           |]
+  addHamletHead [hamlet|
      $forall feed <- concat $ map snd lists
        ^{addFeedsLink feed}
-     |]
-    where addFeedsLink (title :: Text, route, type_) =
-            [hamlet|
-             <link rel="alternate"
-                   type="#{type_}"
-                   href="http://bitlove.org@{route}"
-                   title="#{title}">
-             |]
+                 |]
 
 renderFeedsList lists =
     [hamlet|

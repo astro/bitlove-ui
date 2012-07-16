@@ -64,7 +64,7 @@ torrentLink d =
            (downloadSlug d) 
            (TorrentName $ downloadName d)
     ) `fmap`
-    getUrlRender
+    getFullUrlRender
 
 permaLink :: Download -> GHandler y' UIApp Text
 permaLink d =
@@ -72,5 +72,5 @@ permaLink d =
      (`T.append` "#") .
      -- TODO: UserFeedR
      ($ TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName "TODO"))) `fmap`
-    getUrlRender
+    getFullUrlRender
     

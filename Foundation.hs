@@ -6,6 +6,7 @@ module Foundation
     , Handler
     , Widget
     , Form
+    , getFullUrlRender
     , withDB, withDBPool, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
@@ -34,6 +35,7 @@ import Data.Conduit.Pool
 import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import Data.Text (Text)
+import qualified Data.Text as T
 
 import PathPieces
 import BitloveAuth
@@ -163,6 +165,12 @@ authorizeFor user = do
   return $ if canEdit'
            then Authorized
            else Unauthorized "Authorization denied"
+
+-- We want full http://host URLs only in a few cases (feeds, API)
+getFullUrlRender :: GHandler sub UIApp (Route UIApp -> Text)
+getFullUrlRender =
+    do approot <- appRoot <$> settings <$> getYesod
+       ((approot `T.append`) .) <$> getUrlRender
 
 class HasDB y where
     getDBPool :: GHandler y' y DBPool

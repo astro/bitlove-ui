@@ -54,20 +54,21 @@ instance HasReps RepOpml where
 getDirectoryOpmlR :: Handler RepOpml
 getDirectoryOpmlR = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory)
+  url <- getFullUrlRender
   RepOpml `fmap`
          hamletToContent [xhamlet|
 <opml version="2.0">
   <head title="Bitlove.org directory"
-        ownerId="http://bitlove.org@{DirectoryR}">
+        ownerId="#{url DirectoryR}">
   <body>
     $forall es <- dir
       <outline text="#{Model.dirUserTitle $ head es}"
-               htmlUrl="http://bitlove.org@{UserR (Model.dirUser $ head es)}">
+               htmlUrl="#{url $ UserR (Model.dirUser $ head es)}">
         $forall e <- es
           <outline text="#{Model.dirFeedTitle e}"
                    type="rss"
-                   htmlUrl="http://bitlove.org@{UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}"
-                   xmlUrl="http://bitlove.org@{MapFeedR (Model.dirUser e) (Model.dirFeedSlug e)}">
+                   htmlUrl="#{url $ UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}"
+                   xmlUrl="#{url $ MapFeedR (Model.dirUser e) (Model.dirFeedSlug e)}">
                           |]
 
 

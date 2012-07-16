@@ -1,6 +1,5 @@
 {-# LANGUAGE TupleSections #-}
 module Handler.DownloadFeeds where
--- TODO: absolute links!
 
 import qualified Data.Text as T
 
@@ -44,12 +43,13 @@ instance RepFeed RepRss where
   renderFeed params items = do
     let itemLink = "TODO" :: T.Text
         image = pImage params
+    url <- getFullUrlRender
     RepRss `fmap` hamletToContent [xhamlet|
 <rss version="2.0"
      xmlns:atom=#{nsAtom}>
   <channel>
     <title>#{pTitle params}
-    <link>@{pLink params}
+    <link>#{url $ pLink params}
     $if not (T.null image)
       <image>
         <url>#{image}
@@ -68,10 +68,9 @@ instance RepFeed RepRss where
                        >
         $forall d <- itemDownloads item
             <link rel="enclosure"
-                  type=#{typeTorrent}
-                  size=#{downloadSize d}
-                  href=@{torrentLink d}
-                  >
+                  type="#{typeTorrent}"
+                  size="#{downloadSize d}"
+                  href="#{url $ torrentLink d}">
     |]
 
 newtype RepAtom = RepAtom Content
@@ -84,15 +83,16 @@ instance RepFeed RepAtom where
   renderFeed params items = do
     let itemLink = "TODO" :: T.Text
         image = pImage params
+    url <- getFullUrlRender
     RepAtom `fmap` hamletToContent [xhamlet|
 <feed version="1.0"
       xmlns=#{nsAtom}>
     <title>#{pTitle params}
     <link rel="alternate"
           type="text/html"
-          href=@{pLink params}
+          href=#{url $ pLink params}
           >
-    <id>@{pLink params}
+    <id>#{url $ pLink params}
     $if not (T.null image)
         <link rel="icon"
               href=#{image}
@@ -118,7 +118,7 @@ instance RepFeed RepAtom where
             <link rel="enclosure"
                   type=#{typeTorrent}
                   size=#{downloadSize d}
-                  href=@{torrentLink d}
+                  href=#{url $ torrentLink d}
                   >
     |]
 
