@@ -107,6 +107,9 @@ instance Yesod UIApp where
         master <- getYesod
         mmsg <- getMessage
         msu <- sessionUser
+        routeToMaster <- getRouteToMaster
+        mCurrentRoute <- maybe Nothing (Just . routeToMaster) `fmap` 
+                         getCurrentRoute
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and

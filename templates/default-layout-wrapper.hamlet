@@ -5,59 +5,8 @@ $doctype 5
     <link rel="stylesheet" type="text/css" href="/static/style.css"/>
     <meta name="viewport" content="width=480"/>
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
+    $maybe currentRoute <- mCurrentRoute
+      <link rel="bookmark" type="text/html" href="@{currentRoute}">
     ^{pageHead pc}
   <body>
-    <header class="site">
-      <h1>
-        <a href="/">Bitlove
-      <p class="slogan">Peer-to-Peer Love for Your Podcast Downloads
-      <p class="siteflattr">
-        <a class="FlattrButton" style="display:none;" href="http://bitlove.org/" rev="flattr;button:large;">
-          <img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0"/>
-    <nav class="navtabs">
-      <ul>
-        <li>
-          <a href=@{NewR}>New
-        <li class="navtop">
-          <a href=@{TopR}>Top
-          <ul class="navDownloaded">
-            <li>
-              <a href=@{TopDownloadedR (PeriodDays 1)}>1
-            <li>
-              <a href="/top/7">7
-            <li>
-              <a href="/top/30">30
-            <li>
-              <a href="/top/all">∞
-            <li>days
-        <li>
-          <a href="/directory">Directory
-    <div class="content">
-      ^{pageBody pc}
-    $maybe user <- msu
-        <nav id="navbar">
-          <p>
-            Logged in as #
-            <a href="@{UserR user}">#{userName user}
-          <p>
-            <a href="@{LogoutR}">Logout
-    <footer>
-      <div>
-        <p>Twitter:
-        <p>
-          <a href="http://twitter.com/bitlove_org">@bitlove_org
-        <p>Contact:
-        <p>
-          <a href="mailto:mail@bitlove.org">mail@bitlove.org
-      <div>
-        <p>Help:
-        <p>
-          <a href="/help/podcaster">Getting started
-        <p>
-          <a href="/help/podcaster/widget">Widget
-        <p>
-          <a href="/help/podcaster/api">API
-      <div>
-        <p>100% <a href="https://github.com/astro/prittorrent">Open Source
-        <p>Bitlove.org is IPv6-ready!
-        <p>Hire a <a href="mailto:astro@spaceboyz.net">backend hacker
+    ^{pageBody pc}
