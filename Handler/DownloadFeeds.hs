@@ -2,6 +2,7 @@
 module Handler.DownloadFeeds where
 
 import qualified Data.Text as T
+import Data.Maybe
 
 import qualified Model
 import Import
@@ -55,6 +56,10 @@ instance RepFeed RepRss where
       <item>
         <title>#{itemTitle item}
         <link>#{itemLink url item}
+        $if not (T.null $ fromMaybe "" $ itemLang item)
+          <language>#{fromMaybe "" $ itemLang item}
+        $maybe summary <- itemSummary item
+          <description>#{summary}
         <guid isPermaLink="true">#{itemLink url item}
         <pubDate>#{rfc822 (itemPublished item)}
         $if not (T.null $ itemImage item)
@@ -95,6 +100,7 @@ instance RepFeed RepAtom where
               href=#{image}
               >
     $forall item <- items
+      <entry xml:lang="#{fromMaybe "" $ itemLang item}">
         <title>#{itemTitle item}
         <link rel="alternate"
               type="text/html"
@@ -102,6 +108,8 @@ instance RepFeed RepAtom where
               >
         <id>#{itemLink url item}
         <published>#{iso8601 (itemPublished item)}
+        $maybe summary <- itemSummary item
+          <summary>#{summary}
         $if not (T.null $ itemImage item)
             <link rel="icon"
                   href=#{itemImage item}
