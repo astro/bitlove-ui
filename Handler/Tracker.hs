@@ -20,6 +20,15 @@ import Model.Tracker
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
 
+
+-- TODO: make configurable
+ourPeerId = PeerId "-<30000-bitlove.org/"
+ourSeeders = do
+  addr <-  [ Peer4 "\85\10\246\236"
+           , Peer6 "\x2a\x01\x04\xf8\x01\x60\x54\x21\x00\x00\x00\x00\x00\x00\x00\x03"
+           ]
+  return $ TrackedPeer ourPeerId addr 6881
+  
 data TrackerApp = TrackerApp
     { trackerDBPool :: DBPool 
     , trackerQueue :: WQ.Queue
@@ -49,7 +58,6 @@ instance HasReps RepBenc where
                 ContentBuilder (Benc.toBuilder v) Nothing
                )
 
--- TODO: insert own seeder!
 -- TODO: support key parameter
 getAnnounceR :: Handler RepBenc
 getAnnounceR = do
@@ -84,7 +92,7 @@ getAnnounceR = do
            -- Read first
            (peers, scraped) <- 
                withDB $ \db ->
-                   do peers <- getPeers (trInfoHash tr) isSeeder db
+                   do peers <- (ourSeeders ++) `fmap` getPeers (trInfoHash tr) isSeeder db
                       scraped <- safeScrape (trInfoHash tr) db
                       return (peers, scraped)
            -- Write in background
@@ -186,7 +194,8 @@ wordToByteString w =
     
 portToByteString :: Int -> B.ByteString
 portToByteString p =
-  let p' = fromIntegral p
-  in B.pack [ (p' `shiftR` 8) .&. 0xFF
-            , p' .&. 0xFF
-            ]
+  B.pack $
+  map (fromIntegral . (.&. 0xFF)) $
+  [ p `shiftR` 8
+  , p
+  ]
