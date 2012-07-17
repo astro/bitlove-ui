@@ -8,9 +8,11 @@ import Control.Monad
 
 import Import
 
--- TODO: Access-Control-Allow-Origin: *
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
+  -- For CORS:
+  setHeader "Access-Control-Allow-Origin" "*"
+  
   urls <- map snd `fmap`
           filter (("url" `T.isPrefixOf`) . fst) `fmap`
           reqGetParams `fmap` 
