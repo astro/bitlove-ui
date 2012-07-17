@@ -39,6 +39,8 @@ import Handler.MapFeed
 import Handler.DownloadFeeds
 import Handler.ByEnclosureAPI
 import Handler.Tracker
+import Handler.Help
+import Handler.Widget
 import Stats
 
 -- This line actually creates our YesodSite instance. It is the second half

@@ -51,6 +51,8 @@ library
                      Handler.DownloadFeeds
                      Handler.ByEnclosureAPI
                      Handler.Tracker
+                     Handler.Help
+                     Handler.Widget
                      Benc
                      WorkQueue
 
@@ -126,6 +128,7 @@ library
                  , cookie                        >= 0.4.0      && < 0.5
                  , data-default                  >= 0.4.0      && < 0.5
                  , stm                           >= 2.3        && < 3
+                 , file-embed                    >= 0.0.4.4    && < 0.0.5
 
 executable         ui
     if flag(library-only)

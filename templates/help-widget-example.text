@@ -1,0 +1,19 @@
+<script src="http://bitlove.org/widget/base.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+    /* <!-- */
+    /**
+     * You need the url of the episode's enclosure (mp3,
+     * m4a, ... file) that Bitlove torrentified for you.
+     *
+     * This performs an AJAX call to retrieve torrent
+     * information about this file:
+     **/
+    torrentByEnclosure(url, function(info) {
+        if (info) {
+            /* Display in Firebug/Inspector: */
+            console.log("torrent", url, info);
+        }
+    });
+    /* --> */
+</script>

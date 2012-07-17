@@ -1,0 +1,37 @@
+<section class="col">
+  <h2>Getting started
+  <h3>What do I need to publish?
+  <img class="right" src="/static/help-podcaster-feed.png">
+  <dl>
+    <dt>A Podcast Feed (RSS/ATOM)
+    <dd>which tells us what's new, and what to torrentify.
+    <dt>A Web Server
+    <dd>that your users download from. Bitlove downloads from there too.
+    <dt>A Homepage
+    <dd> to point to, to serve your user picture from, to provide more information for users.
+  <h3>How do I sign up?
+  <p>
+    <a href="/signup">You enter your desired username
+    \ and your email address, in case we need to talk to you individually.</p>
+  <img src="/static/activate-account.png">
+  <p>
+    Your account #
+    <b>activation mail</b>
+    \ arrives. Set your new password. Done.
+    <b>Welcome to Bitlove!
+  <p>
+    You now have a user profile page. When you are logged in, you can click the edit button to complete your information. #
+    <b>Click the Add button
+    \ to add a new feed.
+  <img class="right" src="/static/edit.png">
+  <p>
+    We want your consent on content distribution. Only when you are happy with the way your feeds are represented, you #
+    <b>click Edit
+    \ and set your feed #
+    <b>public.
+    \ Now the feed's torrents are listed on your public user profile and in the directory pages.
+  <p>
+    <b>Questions?
+    \ Don't hesitate. Contact #
+    <a href="mailto:mail@bitlove.org">mail@bitlove.org
+    \ today!

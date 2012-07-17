@@ -1,0 +1,11 @@
+<section class="col">
+  <h2>Feeds
+  
+  <h3>Why is feedproxy.google.com on display?
+  <p>Please use your original feed URL for Bitlove. That way, we don't mess with your Google statistics. We also avoid a lot of needless HTTP redirections.
+  
+  <h3>Donation links
+  <p>
+    We use the #
+    <a href="http://developers.flattr.net/feed/">payment link relation
+    \ reference to display alongside your items. You can use any payment processor you like. Only recognized Flattr links are rendered as a button widget.

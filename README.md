@@ -1,8 +1,7 @@
 == TODO
 
-* Redir favicon.ico
 * Embedable Widget
-* grep TODO
+* Help
 
 * i18n
 * 

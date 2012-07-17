@@ -22,6 +22,16 @@
 /top.rss/#Period TopDownloadedRssR GET
 /top.atom/#Period TopDownloadedAtomR GET
 
+/help HelpR GET
+/help/podcaster HelpPodcasterR GET
+/help/podcaster/feeds HelpFeedsR GET
+/help/podcaster/api HelpApiR GET
+/help/podcaster/widget HelpWidgetR GET
+
+-- /widget/base.js
+-- /widget/podpress.js
+-- /widget/powerpress.js
+
 /directory DirectoryR GET
 /directory.opml DirectoryOpmlR GET
 

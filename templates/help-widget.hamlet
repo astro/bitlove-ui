@@ -1,0 +1,36 @@
+<section class="col">
+  <h2>Widgets
+  <p>We provide easy to use JavaScript snippets for browser-side integration. They use the API.
+  
+  <h3>Widget for Podpress
+  <img src="/static/podpress-widget.png">
+  <p>Include the following snippet in your site's template:
+  <pre>&lt;script src="http://bitlove.org/widget/podpress.js" type="text/javascript"&gt;&lt;/script&gt;
+  <p>
+    Make sure you put it after jQuery. Contact #
+    <a href="mailto:mail@bitlove.org">mail@bitlove.org
+    \ if you encounter any problems
+  <p>
+    The button is this image: #
+    <a href="/static/bitlove-button.png"><img src="/static/bitlove-button.png">
+
+  <h3>Widget for Powerpress
+  <img src="/static/powerpress-widget.png">
+  <p>Include the following snippet in your site's template:
+  <pre>&lt;script src="http://bitlove.org/widget/powerpress.js" type="text/javascript"&gt;&lt;/script&gt;
+  <p>
+    Please #
+    <a href="mailto:mail@bitlove.org">contact us
+    \ if you encounter any problems
+  <h3>What else?
+  <p>
+    It's trivial to come up with a snippet. #
+    <a href="mailto:mail@bitlove.org">Tell us
+    \ about your site and rainbows will happen.
+  <h3>Roll your own
+  <p>Start with the following snippet:
+  <pre>#{example}
+  <p>
+    Please #
+    <a href="mailto:mail@bitlove.org">contact us
+    \ if you encounter any problems
