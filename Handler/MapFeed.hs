@@ -16,7 +16,7 @@ import Import hiding (Content)
 
 getMapFeedR :: UserName -> Text -> Handler RepXml
 getMapFeedR user slug = do
-  urlRender <- getFullUrlRender
+  fullUrlRender <- getFullUrlRender
   m_data <- withDB $ \db -> do
     urls <- Model.userFeed user slug db
     case urls of
@@ -25,8 +25,7 @@ getMapFeedR user slug = do
         enclosures <- Map.fromList `fmap`
                       Model.feedEnclosures url db
         let getEnclosureLink enclosure = 
-                 -- TODO: full url!
-                (urlRender . TorrentFileR user slug . TorrentName) `fmap`
+                (fullUrlRender . TorrentFileR user slug . TorrentName) `fmap`
                 (enclosure `Map.lookup` enclosures)
         return $ Just (xml, getEnclosureLink)
       _ ->
