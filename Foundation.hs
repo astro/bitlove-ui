@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Foundation
     ( UIApp (..)
     , Route (..)
@@ -36,6 +37,7 @@ import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Control.Exception as E
 
 import PathPieces
 import BitloveAuth
@@ -188,12 +190,19 @@ withDB f = do
     
 withDBPool :: DBPool -> Transaction a -> ResourceT IO a
 withDBPool pool f = do
-    -- TODO: use takeResourceCheck, catch f
+    -- TODO: use takeResourceCheck
     db <- takeResource pool
-    a <- liftIO $ HDBC.withTransaction (mrValue db) f
-    mrReuse db True
-    mrRelease db
-    return a
+    ea <- liftIO $
+          E.catch (Right <$> HDBC.withTransaction (mrValue db) f)
+          (return . Left)
+    case ea of
+      Left (e :: E.SomeException) ->
+          do mrRelease db
+             E.throw e
+      Right a ->
+          do mrReuse db True
+             mrRelease db
+             return a
     
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
