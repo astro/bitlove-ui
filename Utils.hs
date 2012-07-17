@@ -1,4 +1,4 @@
-module Utils (iso8601, isHex, toHex, fromHex) where
+module Utils (iso8601, rfc822, isHex, toHex, fromHex) where
 
 import Prelude
 import Data.Time
@@ -19,6 +19,9 @@ iso8601 time =
                      sig:h1:h2:':':m1:m2
                    _ ->
                      "Z"
+
+rfc822 :: LocalTime -> String
+rfc822 = formatTime defaultTimeLocale rfc822DateFormat
 
 isHex :: BC.ByteString -> Bool
 isHex = BC.all isHexDigit

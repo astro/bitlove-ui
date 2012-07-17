@@ -38,12 +38,10 @@ instance HasReps RepRss where
     chooseRep (RepRss content) _cts =
       return (typeRss, content)
       
--- TODO: No ISO8601 perhaps
 instance RepFeed RepRss where
   renderFeed params items = do
-    let itemLink = "TODO" :: T.Text
-        image = pImage params
     url <- getFullUrlRender
+    let image = pImage params
     RepRss `fmap` hamletToContent [xhamlet|
 <rss version="2.0"
      xmlns:atom=#{nsAtom}>
@@ -56,9 +54,9 @@ instance RepFeed RepRss where
     $forall item <- items
       <item>
         <title>#{itemTitle item}
-        <link>#{itemLink}
-        <guid isPermaLink="true">#{itemLink}
-        <published>#{iso8601 (itemPublished item)}
+        <link>#{itemLink url item}
+        <guid isPermaLink="true">#{itemLink url item}
+        <pubDate>#{rfc822 (itemPublished item)}
         $if not (T.null $ itemImage item)
             <image>
               <url>#{itemImage item}
@@ -81,8 +79,7 @@ instance HasReps RepAtom where
       
 instance RepFeed RepAtom where
   renderFeed params items = do
-    let itemLink = "TODO" :: T.Text
-        image = pImage params
+    let image = pImage params
     url <- getFullUrlRender
     RepAtom `fmap` hamletToContent [xhamlet|
 <feed version="1.0"
@@ -101,9 +98,9 @@ instance RepFeed RepAtom where
         <title>#{itemTitle item}
         <link rel="alternate"
               type="text/html"
-              href=#{itemLink}
+              href=#{itemLink url item}
               >
-        <id>#{itemLink}
+        <id>#{itemLink url item}
         <published>#{iso8601 (itemPublished item)}
         $if not (T.null $ itemImage item)
             <link rel="icon"
@@ -122,7 +119,10 @@ instance RepFeed RepAtom where
                   >
     |]
 
-
+itemLink urlRender item =
+    urlRender (UserFeedR (itemUser item) (itemSlug item)) `T.append`
+    "#" `T.append`
+    itemId item
 
 getNew :: RepFeed a => Handler a
 getNew = withDB (Model.recentDownloads 25) >>=
