@@ -216,6 +216,7 @@ renderItem item showOrigin =
               in (n, unit ++ "B/s")
   in [hamlet|
   <article class="item"
+           id="#{itemId item}"
            xml:lang="#{fromMaybe "" $ itemLang item}">
     <div>
       $if not (T.null $ itemImage item)
@@ -234,6 +235,9 @@ renderItem item showOrigin =
             <a href="@{UserFeedR (itemUser item) (itemSlug item)}">#{fromMaybe (itemSlug item) $ itemFeedTitle item}
             \ by #
             <a href="@{UserR $ itemUser item}">#{userName $ itemUser item}
+        $else
+           <p class="homepage">
+             <a href="#{itemHomepage item}">#{itemHomepage item}
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
