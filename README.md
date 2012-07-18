@@ -1,7 +1,9 @@
 == TODO
 
-* Embedable Widget
-* Help
+* Validation
+* edit-*.js: trailing /, scroll up
+* Test widget
+* Seeders +1
 
 * i18n
 * 
