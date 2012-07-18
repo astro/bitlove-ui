@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Control.Exception as E
 import Data.Maybe (fromMaybe)
 import Data.Aeson (ToJSON)
+import Data.Char
 
 import Import
 import BitloveAuth
@@ -40,7 +41,7 @@ postSignupR = do
   mUsername <- lookupPostParam "username"
   username <- case mUsername of
                 Just username 
-                    | T.length username >= 3 ->
+                    | validateUsername username ->
                         return $ UserName username
                 _ ->
                     sendError "Invalid username"
@@ -105,7 +106,14 @@ Thanks for sharing
                         <p>Sending mail failed. Please #
                           <a href="mailto:mail@bitlove.org">contact support!
                         |]
-    where sendError :: Text -> Handler a
+    where validateUsername :: Text -> Bool
+          validateUsername name = T.length name >= 3 &&
+                                  all (\c ->
+                                           isAsciiLower c ||
+                                           isDigit c ||
+                                           c `elem` "-_"
+                                      ) (T.unpack name)
+          sendError :: Text -> Handler a
           sendError e = defaultLayout (do
                                         setTitle "Error"
                                         toWidget [hamlet|

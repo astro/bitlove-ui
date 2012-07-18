@@ -5,6 +5,8 @@ import Import
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Aeson (ToJSON)
+import Data.Char
+import Control.Monad (when)
 
 import qualified Model as Model
 
@@ -37,6 +39,9 @@ putUserFeedR :: UserName -> Text -> Handler RepJson
 putUserFeedR user slug = do
   mUrl <- lookupPostParam "url"
   -- Validate
+  when (not $ validateSlug slug) $
+    sendResponse $ RepJson $ toContent $ 
+    object ["error" .= ("Invalid slug" :: Text)]
   url <- case mUrl of
            Just url
                | "http://" `T.isPrefixOf` url ||
@@ -51,6 +56,14 @@ putUserFeedR user slug = do
   link <- ($ UserFeedR user slug) `fmap`
           getUrlRender
   returnJson ["link" .= link]
+    
+    where validateSlug :: Text -> Bool
+          validateSlug slug = T.length slug >= 1 &&
+                              all (\c ->
+                                    isAsciiLower c ||
+                                    isDigit c ||
+                                    c `elem` "-_"
+                                  ) (T.unpack slug)
 
 deleteUserFeedR :: UserName -> Text -> Handler RepJson
 deleteUserFeedR user slug = do
