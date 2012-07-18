@@ -18,6 +18,7 @@ module Foundation
     ) where
 
 import Prelude
+import System.IO (stderr, hPrint)
 import Yesod
 import Yesod.Static
 import Control.Monad (forM_)
@@ -131,6 +132,9 @@ instance Yesod UIApp where
     urlRenderOverride y s =
         Just $ uncurry (joinPath y "") $ renderRoute s
 
+
+    errorHandler = errorHandler'
+
     -- The page to be redirected to when authentication is required.
     --authRoute _ = Just $ AuthR LoginR
 
@@ -173,6 +177,34 @@ getFullUrlRender :: GHandler sub UIApp (Route UIApp -> Text)
 getFullUrlRender =
     do approot <- appRoot <$> settings <$> getYesod
        ((approot `T.append`) .) <$> getUrlRender
+
+
+errorHandler' NotFound =
+  fmap chooseRep $ defaultLayout $ do
+    setTitle "Bitlove: Not found"
+    let img = StaticR $ StaticRoute ["404.jpg"] []
+    toWidget [hamlet|
+              <article>
+                <h2>Not Found
+                <img src="@{img}">
+                <p class="hint">Here's a kitten instead.
+              |]
+errorHandler' (PermissionDenied _) =
+  fmap chooseRep $ defaultLayout $ do
+    setTitle "Bitlove: Permission denied"
+    toWidget [hamlet|
+              <h2>Permission denied
+              |]
+errorHandler' e = do
+  liftIO $ hPrint stderr e
+  fmap chooseRep $ defaultLayout $
+    do setTitle "Bitlove: Error"
+       let img = StaticR $ StaticRoute ["500.jpg"] []
+       toWidget [hamlet|
+                 <article>
+                   <h2>Oops
+                   <img src="@{img}">
+                 |]
 
 class HasDB y where
     getDBPool :: GHandler y' y DBPool

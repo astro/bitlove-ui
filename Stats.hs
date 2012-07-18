@@ -13,22 +13,22 @@ import Control.Monad.Trans (liftIO)
 import qualified Data.Text as T
 import Control.Monad.Trans.Resource (runResourceT)
 
-import Foundation (DBPool, withDBPool)
+import Foundation (DBPool, withDBPool, BitloveEnv)
 import Model.Stats (addCounter)
 import Model.Download (InfoHash (InfoHash))
 
 type Key = (T.Text, BC.ByteString)
 type StatsBuffer = TVar (Map Key (TVar Integer))
 
-statsMiddleware :: DBPool -> IO Wai.Middleware
-statsMiddleware pool = do
+statsMiddleware :: BitloveEnv -> DBPool -> IO Wai.Middleware
+statsMiddleware env pool = do
   tBuf <- newTVarIO $ Map.empty
   return $ \app req ->
-      do liftIO $ countRequest pool tBuf req
+      do liftIO $ countRequest env pool tBuf req
          app req
    
-countRequest :: DBPool -> StatsBuffer -> Wai.Request -> IO ()
-countRequest pool tBuf req
+countRequest :: BitloveEnv -> DBPool -> StatsBuffer -> Wai.Request -> IO ()
+countRequest env pool tBuf req
     | "/static/" `BC.isPrefixOf` Wai.rawPathInfo req =
         -- Ignore static resources
         return ()
@@ -38,8 +38,7 @@ countRequest pool tBuf req
         in increaseCounter pool tBuf ("by-enclosure.json", referrer) 1
     | otherwise =
         -- All others: just method & path
-        let kind | Wai.isSecure req = "ui/https"
-                 | otherwise = "ui/http"
+        let kind = "ui/" `T.append` T.pack (show env)
             info = Wai.requestMethod req `BC.append`
                    " " `BC.append`
                    Wai.rawPathInfo req

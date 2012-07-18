@@ -19,11 +19,12 @@ import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
 import qualified Network.Wai as Wai
-import Network.HTTP.Types (Status (Status))
+import Network.HTTP.Types (Status (Status, statusCode))
 import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
 import Data.Monoid
+import System.IO (stderr)
 
 
 -- Import all relevant handler modules here.
@@ -58,10 +59,11 @@ makeApplication conf logger = do
               "config/postgresql.yml"
               (appEnv conf)
               parseDBConf
+    -- TODO: per tracker/ui?
     pool <- makeDBPool dbconf setLogger
     foundation <- makeUIFoundation conf pool setLogger
     tracker <- makeTrackerApp pool >>= toWaiAppPlain
-    stats <- statsMiddleware pool
+    stats <- statsMiddleware (appEnv conf) pool
     ui <- enforceVhost `fmap` stats `fmap` toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
@@ -113,14 +115,18 @@ makeApplication conf logger = do
            let res' = res `seq` res
            cpu2 <- liftIO getCPUTime
            utc2 <- liftIO getCurrentTime
-           liftIO $ putStrLn $ "[" ++ 
-                    show ((cpu2 - cpu1) `div` 1000000000) ++ 
-                    "ms cpu " ++
-                    show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int) ++
-                    "ms real] " ++
-                    (BC.unpack $ Wai.requestMethod req) ++
-                    " " ++
-                    (BC.unpack $ Wai.rawPathInfo req)
+           liftIO $ BC.hPutStrLn stderr $ BC.concat
+             [ "["
+             , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
+             , "ms cpu "
+             , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
+             , "ms real] "
+             , BC.pack $ show $ statusCode $ Wai.responseStatus res
+             , " "
+             , Wai.requestMethod req
+             , " "
+             , Wai.rawPathInfo req
+             ]
            return $ res'
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> Logger -> IO UIApp
