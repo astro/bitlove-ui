@@ -28,9 +28,9 @@
 /help/podcaster/api HelpApiR GET
 /help/podcaster/widget HelpWidgetR GET
 
--- /widget/base.js
--- /widget/podpress.js
--- /widget/powerpress.js
+/widget/base.js WidgetBaseR GET
+/widget/podpress.js WidgetPodpressR GET
+/widget/powerpress.js WidgetPowerpressR GET
 
 /directory DirectoryR GET
 /directory.opml DirectoryOpmlR GET
