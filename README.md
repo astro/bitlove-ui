@@ -1,10 +1,8 @@
-== TODO
+## TODO
 
-* Validation
-* edit-*.js: trailing /, scroll up
 * Test widget
-* Seeders +1
 
+* edit-*.js: scroll up
 * i18n
 * 
 * <a rel="me|enclosure|bookmark">
