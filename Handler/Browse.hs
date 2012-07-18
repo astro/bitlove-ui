@@ -214,9 +214,11 @@ renderItem item showOrigin =
               Just $
               let (n, unit) = humanSize' $ fromIntegral $
                               downloadDownspeed d
-                  n' :: Double
-                  n' | n < 10 = fromIntegral (truncate $ n * 10) / 10
-                     | otherwise = fromIntegral $ truncate n
+                  n' :: String
+                  n' | n < 10 = 
+                         show (fromIntegral (truncate $ n * 10) / 10 :: Double)
+                     | otherwise = 
+                         show $ truncate n
               in (n', unit ++ "B/s")
       seeders = (+ 1) . downloadSeeders
   in [hamlet|
