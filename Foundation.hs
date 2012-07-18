@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Foundation
-    ( UIApp (..)
+    ( BitloveEnv (..)
+    , UIApp (..)
     , Route (..)
     , UIAppMessage (..)
     , resourcesUIApp
@@ -27,7 +28,7 @@ import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
-import Settings (widgetFile, Extra (..))
+import Settings (widgetFile, Extra (..), BitloveEnv (..))
 import Model
 import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
@@ -51,7 +52,7 @@ type DBPool = Pool PostgreSQL.Connection
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data UIApp = UIApp
-    { settings :: AppConfig DefaultEnv Extra
+    { settings :: AppConfig BitloveEnv Extra
     , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
     , uiDBPool :: DBPool -- ^ Database connection pool.

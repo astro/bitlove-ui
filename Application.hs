@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( makeApplication
-    , getApplicationDev
     , makeUIFoundation
     ) where
 
@@ -43,6 +42,7 @@ import Handler.Help
 import Handler.Widget
 import Stats
 
+
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see
 -- the comments there for more details.
@@ -52,7 +52,7 @@ mkYesodDispatch "UIApp" resourcesUIApp
 -- performs initialization and creates a WAI application. This is also the
 -- place to put your migrate statements to have automatic database
 -- migrations handled by Yesod.
-makeApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
+makeApplication :: AppConfig BitloveEnv Extra -> Logger -> IO Application
 makeApplication conf logger = do
     dbconf <- withYamlEnvironment 
               "config/postgresql.yml"
@@ -123,7 +123,7 @@ makeApplication conf logger = do
                     (BC.unpack $ Wai.rawPathInfo req)
            return $ res'
 
-makeUIFoundation :: AppConfig DefaultEnv Extra -> DBPool -> Logger -> IO UIApp
+makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> Logger -> IO UIApp
 makeUIFoundation conf pool setLogger = do
     manager <- newManager def
     s <- staticSite
@@ -161,14 +161,6 @@ makeDBPool dbconf logger =
      (\db -> logString logger "HDBC.disconnect" >> HDBC.disconnect db)
      4 60 4
 
--- for yesod devel
-getApplicationDev :: IO (Int, Application)
-getApplicationDev =
-    defaultDevelApp loader makeApplication
-  where
-    loader = loadConfig (configSettings Development)
-        { csParseExtra = parseExtra
-        }
 
 getFaviconR :: GHandler sub UIApp ()
 getFaviconR =

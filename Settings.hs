@@ -9,6 +9,7 @@ module Settings
     , staticDir
     , Extra (..)
     , parseExtra
+    , BitloveEnv (..)
     ) where
 
 import Prelude
@@ -20,6 +21,14 @@ import Data.Text (Text)
 import Data.Yaml
 import Control.Applicative
 import Settings.Development
+
+
+data BitloveEnv = Development
+                | Production4 
+                | Production6 
+                | Production4SSL
+                | Production6SSL 
+                deriving (Read, Show, Enum, Bounded)
 
 -- Static setting below. Changing these requires a recompile
 
@@ -57,7 +66,7 @@ data Extra = Extra
     , extraAnalytics :: Maybe Text -- ^ Google Analytics
     } deriving Show
 
-parseExtra :: DefaultEnv -> Object -> Parser Extra
+parseExtra :: BitloveEnv -> Object -> Parser Extra
 parseExtra _ o = Extra
     <$> o .:  "copyright"
     <*> o .:? "analytics"

@@ -16,6 +16,14 @@ Staging:
   poolsize: 10
   <<: *defaults
 
-Production:
-  poolsize: 10
+Production4:
+  <<: *defaults
+
+Production6:
+  <<: *defaults
+
+Production4SSL:
+  <<: *defaults
+
+Production6SSL:
   <<: *defaults

@@ -8,13 +8,14 @@ Development:
   approot: "http://localhost:8081"
   <<: *defaults
 
-Testing:
+Production4:
+  host: "*4"
+  port: 80
+  approot: "http://bitlove.org"
   <<: *defaults
 
-Staging:
-  <<: *defaults
-
-Production:
+Production6:
+  host: "*6"
   port: 80
   approot: "http://bitlove.org"
   <<: *defaults
