@@ -86,9 +86,7 @@ mapFeed (FeedXml xml) getEnclosureLink =
                   toText (ContentEntity e) = T.concat ["&", e, ";"]
         updateAttr :: Attrs -> Name -> Maybe T.Text -> Attrs
         updateAttr attrs name m_val =
-          let attrs' = filter (\(name', _) ->
-                                name /= name'
-                              ) attrs
+          let attrs' = filter ((name /=) . fst) attrs
           in case m_val of
                Just val -> (name, [ContentText val]) : attrs'
                Nothing -> attrs'
