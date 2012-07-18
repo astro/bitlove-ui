@@ -131,5 +131,5 @@ instance Convertible [SqlValue] DirectoryEntry where
       
 getDirectory :: Query DirectoryEntry
 getDirectory =
-  query "SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',', '') FROM directory" []
+  query "SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',') FROM directory" []
 
