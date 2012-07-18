@@ -14,8 +14,24 @@ Production4:
   approot: "http://bitlove.org"
   <<: *defaults
 
+Production4SSL:
+  host: "*4"
+  port: 443
+  approot: "https://bitlove.org"
+  cert: "bitlove_ca.pem"
+  key: "bitlove_privatekey.rsa"
+  <<: *defaults
+
 Production6:
   host: "*6"
   port: 80
   approot: "http://bitlove.org"
+  <<: *defaults
+
+Production6SSL:
+  host: "*6"
+  port: 443
+  approot: "https://bitlove.org"
+  cert: "bitlove_ca.pem"
+  key: "bitlove_privatekey.rsa"
   <<: *defaults

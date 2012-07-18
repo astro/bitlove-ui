@@ -1,10 +1,12 @@
 import Prelude
-import Yesod.Default.Config (AppConfig, loadConfig, configSettings, csParseExtra)
-import Yesod.Default.Main   (defaultMain)
-import Settings             (parseExtra, Extra)
+import Yesod.Default.Config (AppConfig (..), loadConfig, configSettings, csParseExtra)
+import Yesod.Logger (Logger, defaultDevelopmentLogger)
+import Settings
 import Application          (makeApplication)
 import System.Environment (getArgs)
 import Foundation (BitloveEnv)
+import Network.Wai.Handler.Warp (runSettings, defaultSettings, settingsHost, settingsPort)
+import Network.Wai.Handler.WarpTLS (runTLS, TLSSettings (..))
 
 fromArgs :: IO (AppConfig BitloveEnv Settings.Extra)
 fromArgs = do
@@ -21,4 +23,22 @@ fromArgs = do
         error "Missing environment argument"
 
 main :: IO ()
-main = defaultMain fromArgs makeApplication
+main = do 
+  config <- fromArgs 
+  logger <- defaultDevelopmentLogger
+  app <- makeApplication config logger
+  print config
+  let settings = defaultSettings
+                        { settingsPort = appPort config
+                        , settingsHost = appHost config
+                        }
+      extra = appExtra config
+      run = case (extraCert extra, extraKey extra) of
+              (Nothing, Nothing) ->
+                  runSettings
+              (Just cert, Just key) ->
+                  runTLS $ TLSSettings cert key
+              _ ->
+                  error "Specify both cert and key for SSL"
+  run settings app
+  

@@ -98,7 +98,6 @@ library
                  , yaml                          >= 0.7        && < 0.8
                  , http-conduit                  >= 1.4        && < 1.5
                  , directory                     >= 1.1        && < 1.2
-                 , warp                          >= 1.2        && < 1.3
                  , pool-conduit                  >= 0.1.0.2    && < 0.2
                  , HDBC                          >= 2.3.1.1    && < 2.4
                  , HDBC-postgresql               >= 2.3.2.1    && < 2.4
@@ -140,6 +139,9 @@ executable         ui
     build-depends:     base
                      , bitlove-ui
                      , yesod-default
+                     , yesod-core
+                     , warp                  >= 1.2        && < 1.3
+                     , warp-tls              >= 1.2        && < 1.3
 
 test-suite test
     type:              exitcode-stdio-1.0

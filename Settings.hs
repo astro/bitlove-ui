@@ -63,10 +63,12 @@ widgetFile = if development then Yesod.Default.Util.widgetFileReload
 
 data Extra = Extra
     { extraCopyright :: Text
-    , extraAnalytics :: Maybe Text -- ^ Google Analytics
+    , extraCert :: Maybe String
+    , extraKey :: Maybe String
     } deriving Show
 
 parseExtra :: BitloveEnv -> Object -> Parser Extra
 parseExtra _ o = Extra
     <$> o .:  "copyright"
-    <*> o .:? "analytics"
+    <*> o .:? "cert"
+    <*> o .:? "key"
