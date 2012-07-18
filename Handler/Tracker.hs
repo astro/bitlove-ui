@@ -127,7 +127,7 @@ getAnnounceR = do
                   Benc.BDict [ ("peers", peers4)
                              , ("peers6", peers6)
                              , ("interval", Benc.BInt interval)
-                             , ("complete", Benc.BInt $ scrapeSeeders scraped)
+                             , ("complete", Benc.BInt $ scrapeSeeders scraped + 1)
                              , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
                              , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
                              ]
@@ -152,7 +152,7 @@ getScrapeR = do
            [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
              Benc.BDict 
              [("incomplete", Benc.BInt $ scrapeLeechers scraped),
-              ("complete", Benc.BInt $ scrapeSeeders scraped),
+              ("complete", Benc.BInt $ scrapeSeeders scraped + 1),
               ("downloaded", Benc.BInt $ scrapeDownloaded scraped)]
             )]
           )]

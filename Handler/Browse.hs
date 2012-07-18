@@ -214,6 +214,7 @@ renderItem item showOrigin =
               Just $
               let (n, unit) = humanSize' $ fromIntegral $ downloadDownspeed d
               in (n, unit ++ "B/s")
+      seeders = (+ 1) . downloadSeeders
   in [hamlet|
   <article class="item"
            id="#{itemId item}"
@@ -260,7 +261,7 @@ renderItem item showOrigin =
                 <dd>Download speed
                   
           <dl class="seeders">
-            <dt>#{downloadSeeders d}
+            <dt>#{seeders d}
             <dd>Seeders
           <dl class="leechers">
             <dt>#{downloadLeechers d}

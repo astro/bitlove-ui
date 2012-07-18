@@ -36,7 +36,7 @@ getByEnclosureJson = do
                        return $
                         object [ "info_hash" .= infoHashToHex (downloadInfoHash d)
                                , "size" .= downloadSize d
-                               , "seeders" .= downloadSeeders d
+                               , "seeders" .= (downloadSeeders d + 1)
                                , "leechers" .= downloadLeechers d
                                , "upspeed" .= downloadUpspeed d
                                , "downspeed" .= downloadDownspeed d

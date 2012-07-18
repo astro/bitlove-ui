@@ -59,10 +59,13 @@ getTorrentStatsR user slug name statsPeriod stats = do
           (seeders, leechers) <- withStats $ \q ->
             do seeders <- q $ Model.getGauge "seeders"
                leechers <- q $ Model.getGauge "leechers"
-               return (seeders, leechers)
+               return (map cheat seeders, leechers)
           return $ ("seeders" .= statsToJson seeders) :
                    ("leechers" .= statsToJson leechers) : baseJson
 
+  -- Our seeder is actually not included in stats
+  where cheat :: StatsValue -> StatsValue
+        cheat (StatsValue t v) = StatsValue t $ v + 1
 
 statsToJson :: [StatsValue] -> Value
 statsToJson = object .
