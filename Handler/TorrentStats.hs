@@ -24,13 +24,15 @@ getTorrentStatsR user slug name statsPeriod stats = do
                 StatsWeek -> (7 * 24 * 60 * 60, 6 * 60 * 60)
                 StatsMonth -> (30 * 24 * 60 * 60, 24 * 60 * 60)
                 StatsYear -> (365 * 24 * 60 * 60, 7 * 24 * 60 * 60)
-      stop <- lift $ lift $ getCurrentTime
+      stop <- liftIO getCurrentTime
       tz <- liftIO getCurrentTimeZone
       let start = (-period) `addUTCTime` stop
-          stop' = utcToZonedTime tz stop
-          start' = utcToZonedTime tz start
-          baseJson = ["start" .= iso8601 start',
-                      "stop" .= iso8601 stop',
+          zonedStop = utcToZonedTime tz stop
+          zonedStart = utcToZonedTime tz start
+          localStart = utcToLocalTime tz start
+          localStop = utcToLocalTime tz stop
+          baseJson = ["start" .= iso8601 zonedStart,
+                      "stop" .= iso8601 zonedStop,
                       "interval" .= interval]
           withStats :: (((Model.InfoHash -> LocalTime -> LocalTime -> 
                           Integer -> PostgreSQL.Connection
@@ -40,8 +42,7 @@ getTorrentStatsR user slug name statsPeriod stats = do
                      -> Handler a
           withStats f = withDB $ \db ->
                         let q f' = f' info_hash 
-                                   (utcToLocalTime tz start)
-                                   (utcToLocalTime tz stop) 
+                                   localStart localStop
                                    interval db
                         in f q
   
@@ -62,7 +63,27 @@ getTorrentStatsR user slug name statsPeriod stats = do
           (seeders, leechers) <- withStats $ \q ->
             do seeders <- q $ Model.getGauge "seeders"
                leechers <- q $ Model.getGauge "leechers"
-               return (map cheat seeders, leechers)
+               let completeGauge vs =
+                       completeGauge' $
+                       case vs of
+                         -- First beyond start?
+                         (StatsValue t value):_
+                             | t > localStart && 
+                               value > 0 ->
+                                 let t' = utcToLocalTime tz $
+                                          (fromIntegral $ -interval) `addUTCTime` (localTimeToUTC tz t)
+                                 in (StatsValue t' 0):vs
+                         _ ->
+                           vs
+                   -- empty gauge
+                   completeGauge' [] = []
+                   -- last before stop?
+                   completeGauge' [v@(StatsValue t value)]
+                       | t < localStop = [v, StatsValue localStop value]
+                   -- traverse till last (above case)
+                   completeGauge' (v:vs) = v:(completeGauge' vs)
+               return (completeGauge $ map cheat seeders,
+                       completeGauge $ leechers)
           return $ ("seeders" .= statsToJson tz seeders) :
                    ("leechers" .= statsToJson tz leechers) : baseJson
 
