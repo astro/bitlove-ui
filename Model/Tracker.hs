@@ -115,5 +115,5 @@ announcePeer tr db =
                  run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
                  [m trInfoHash, m trHost, m trPort, m trPeerId, 
                   m trUploaded, m trDownloaded, m trLeft]
-             when (trEvent tr == Just "complete") $
+             when (trEvent tr == Just "completed") $
                   addCounter "complete" (trInfoHash tr) 1 db
