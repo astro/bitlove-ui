@@ -10,7 +10,6 @@ import Control.Monad (when)
 
 import Model.Query
 import Model.Download
-import Model.Stats
 
 data ScrapeInfo = ScrapeInfo {
       scrapeLeechers :: Integer,
@@ -115,5 +114,12 @@ announcePeer tr db =
                  run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
                  [m trInfoHash, m trHost, m trPort, m trPeerId, 
                   m trUploaded, m trDownloaded, m trLeft]
-             when (trEvent tr == Just "completed") $
-                  addCounter "complete" (trInfoHash tr) 1 db
+             return ()
+             
+updateScraped :: IConnection conn => 
+                 InfoHash -> conn -> IO ()
+updateScraped infoHash db =
+  do _ <-
+         run db "SELECT * FROM update_scraped(?)" [toSql infoHash]
+     return ()
+     

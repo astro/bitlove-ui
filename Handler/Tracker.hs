@@ -17,6 +17,7 @@ import System.Random (randomRIO)
 import Foundation (DBPool, HasDB (getDBPool), withDB, withDBPool, Transaction)
 import qualified Model as Model
 import Model.Tracker
+import Model.Stats
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
 
@@ -31,7 +32,8 @@ ourSeeders = do
   
 data TrackerApp = TrackerApp
     { trackerDBPool :: DBPool 
-    , trackerQueue :: WQ.Queue
+    , trackerAnnounceQueue :: WQ.Queue
+    , trackerScrapeQueue :: WQ.Queue
     }
 
 mkYesod "TrackerApp" [parseRoutes|
@@ -46,8 +48,10 @@ instance HasDB TrackerApp where
     getDBPool = trackerDBPool <$> getYesod
 
 makeTrackerApp :: DBPool -> IO TrackerApp
-makeTrackerApp pool = 
-    TrackerApp pool `fmap` WQ.makeQueue
+makeTrackerApp pool =
+    do aq <- WQ.makeQueue
+       sq <- WQ.makeQueue
+       return $ TrackerApp pool aq sq
 
 
 newtype RepBenc = RepBenc Benc.BValue
@@ -96,10 +100,16 @@ getAnnounceR = do
                       scraped <- safeScrape (trInfoHash tr) db
                       return (peers, scraped)
            -- Write in background
-           q <- trackerQueue `fmap` getYesod
+           aQ <- trackerAnnounceQueue `fmap` getYesod
+           sQ <- trackerScrapeQueue `fmap` getYesod
            pool <- getDBPool
-           liftIO $ WQ.enqueue q $
-             withDBPool pool $ announcePeer tr
+           liftIO $ WQ.enqueue aQ $
+                  do withDBPool pool $ \db ->
+                         do announcePeer tr db
+                            when (trEvent tr == Just "completed") $
+                                 addCounter "complete" (trInfoHash tr) 1 db
+                     liftIO $ WQ.enqueue sQ $
+                       withDBPool pool $ updateScraped $ trInfoHash tr
            -- Assemble response
            let (peers4, peers6)
                    | trCompact tr =
