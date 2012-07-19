@@ -221,6 +221,9 @@ renderItem item showOrigin =
                          show $ truncate n
               in (n', unit ++ "B/s")
       seeders = (+ 1) . downloadSeeders
+      types = map downloadType $ itemDownloads item
+      countType t = length $ filter (== t) types
+      isOnlyType = (== 1) . countType
   in [hamlet|
   <article class="item"
            id="#{itemId item}"
@@ -248,11 +251,12 @@ renderItem item showOrigin =
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
-          <a href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
+          <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
+             title="Download #{downloadName d} with BitTorrent"
              rel="enclosure"
              data-type="#{downloadType d}">
-            $if isOnlyDownload
-              <span>Download
+            $if isOnlyType (downloadType d)
+              <span>#{downloadLabel d}
             $else
               <span>#{downloadName d}
             \ #
@@ -376,3 +380,30 @@ humanSize' n = foldl (\(n', unit) unit' ->
                           then (n', unit)
                           else (n' / 1024, [unit'])
                      ) (n, "") "KMGT"
+
+downloadLabel :: Download -> Text
+downloadLabel d =
+    case downloadType d `lookup` byType of
+      Just label -> label
+      Nothing -> downloadName d
+      
+    where byType = [ ("audio/mpeg", "MP3")
+                   , ("audio/ogg", "OGG")
+                   , ("video/mp4", "MP4")
+                   , ("audio/x-m4a", "M4A")
+                   , ("application/ogg", "OGG")
+                   , ("video/x-m4v", "M4V")
+                   , ("audio/mp3", "MP3")
+                   , ("video/quicktime", "MOV")
+                   , ("audio/mp4", "M4A")
+                   , ("audio/x-mp3", "MP3")
+                   , ("audio/m4a", "M4A")
+                   , ("video/webm", "WebM")
+                   , ("application/pdf", "PDF")
+                   , ("video/ogg", "OGV")
+                   , ("application/x-bittorrent", "Torrent")
+                   , ("video/x-mp4", "MP4")
+                   , ("video/x-flv", "FLV")
+                   , ("text/html", "HTML")
+                   , ("audio-mp4a-latm", "M4A")
+                   ]
