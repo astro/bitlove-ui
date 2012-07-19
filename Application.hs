@@ -25,6 +25,7 @@ import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
 import Data.Monoid
 import System.IO (stderr)
+import Network.Wai.Middleware.Autohead
 
 
 -- Import all relevant handler modules here.
@@ -64,7 +65,8 @@ makeApplication conf logger = do
     foundation <- makeUIFoundation conf pool setLogger
     tracker <- makeTrackerApp pool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) pool
-    ui <- enforceVhost `fmap` stats `fmap` toWaiAppPlain foundation
+    ui <- (enforceVhost . stats . autohead) `fmap` 
+          toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
   where
     setLogger = if development then logger else toProduction logger
