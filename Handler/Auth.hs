@@ -231,7 +231,13 @@ postActivateR token = do
         returnJsonError "Invalid activation token"
     Just user ->
         do login user
+           {-
            welcomeLink <- ($ UserR user) `fmap`
+                          getUrlRender
+            -}
+           -- Somehow, browsers ignore the cookie of this XHR
+           -- response. Redirect to login for now:
+           welcomeLink <- ($ LoginR) `fmap`
                           getUrlRender
            returnJson ["welcome" .= welcomeLink]
 
