@@ -6,9 +6,11 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BC
+import Control.Monad (when)
 
 import Model.Query
 import Model.Download
+import Model.Stats
 
 data ScrapeInfo = ScrapeInfo {
       scrapeLeechers :: Integer,
@@ -113,4 +115,5 @@ announcePeer tr db =
                  run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
                  [m trInfoHash, m trHost, m trPort, m trPeerId, 
                   m trUploaded, m trDownloaded, m trLeft]
-             return ()
+             when (trEvent tr == Just "complete") $
+                  addCounter "complete" (trInfoHash tr) 1 db
