@@ -1,11 +1,9 @@
 ## TODO
 
-* Graphs: If first interval is inside range, deliver as 0, if last, prolong
-* Test widget
-
 * edit-*.js: scroll up
 * i18n
-* 
+* Search
+* Per-item pages
 * <a rel="me|enclosure|bookmark">
 * MapFeed content-type
 * URL longener?
