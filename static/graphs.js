@@ -70,19 +70,29 @@ Graph.prototype.setData = function(response) {
 	delete this.plot;
     }
 
+    if (response.up && response.up_seeder) {
+	/* Stack up on top of up_seeder */
+	for(var k in response.up) {
+	    var v = response.up[k];
+	    if (v) {
+		var base = response.up_seeder[k] || 0;
+		response.up[k] = [base + v, base];
+	    }
+	}
+    }
+
     /* Prepare data */
     var i;
     var data = [];
     var type = this.type;
     var interval = response.interval * 1000;
-    for(var name in response) {
-	if (name == 'interval' || name == 'start' || name == 'stop')
-	    continue;
+    ["downloads", "down", "up_seeder", "up", "leechers", "seeders"].forEach(function(name) {
+	if (!response.hasOwnProperty(name))
+	    return;
 
 	var line = response[name];
 	var d = Object.keys(line).sort().map(function(k) {
-	    var v = line[k];
-	    return [timeToMS(k), v];
+	    return [timeToMS(k)].concat(line[k]);
 	});
 
 	var label = name;
@@ -144,7 +154,7 @@ Graph.prototype.setData = function(response) {
 	}
 
 	data.push(series);
-    }
+    });
 
     var tickFormatter = (type != 'traffic') ?
 	function(value) {
@@ -184,6 +194,8 @@ Graph.prototype.setData = function(response) {
 	    });
 	    floater = $('<div class="floater" style="left: ' + o.left + 'px; top: ' + (o.top - 16) + 'px;"></div>');
 	    var v = item.datapoint[1];
+	    if (item.datapoint[2])
+		v -= item.datapoint[2];
 	    floater.text(type == 'traffic' ? humanSize(v) : v);
 	    placeholder.prepend(floater);
         }
