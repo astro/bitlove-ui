@@ -6,7 +6,7 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Database.HDBC
 import Data.Text (Text)
-import Data.Time.LocalTime (LocalTime)
+import Data.Time (LocalTime)
 
 import Model.Query
 import Model.Download (InfoHash)

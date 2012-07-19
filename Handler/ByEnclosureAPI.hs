@@ -5,6 +5,7 @@ import Prelude
 import Yesod
 import qualified Data.Text as T
 import Control.Monad
+import Data.Time
 
 import Import
 
@@ -47,12 +48,16 @@ getByEnclosureJson = do
           sourceToJson d = do
                        do torrentLink' <- torrentLink d
                           permaLink' <- permaLink d
+                          tz <- liftIO getCurrentTimeZone
                           return $
                            object [ "torrent" .= torrentLink'
                                   , "permalink" .= permaLink'
                                   , "item.id" .= downloadItem d
                                   , "item.title" .= downloadTitle d
-                                  , "item.published" .= iso8601 (downloadPublished d)
+                                  , "item.published" .=
+                                                     iso8601
+                                                     (localTimeToZonedTime tz $
+                                                      downloadPublished d)
                                   , "item.homepage" .= downloadHomepage d
                                   , "item.payment" .= downloadPayment d
                                   , "item.image" .= downloadImage d

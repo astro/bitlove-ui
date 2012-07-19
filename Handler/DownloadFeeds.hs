@@ -3,6 +3,7 @@ module Handler.DownloadFeeds where
 
 import qualified Data.Text as T
 import Data.Maybe
+import Data.Time (getCurrentTimeZone)
 
 import qualified Model
 import Import
@@ -86,6 +87,7 @@ instance RepFeed RepAtom where
   renderFeed params items = do
     let image = pImage params
     url <- getFullUrlRender
+    tz <- liftIO getCurrentTimeZone
     RepAtom `fmap` hamletToContent [xhamlet|
 <feed version="1.0"
       xmlns=#{nsAtom}>
@@ -107,7 +109,7 @@ instance RepFeed RepAtom where
               href=#{itemLink url item}
               >
         <id>#{itemLink url item}
-        <published>#{iso8601 (itemPublished item)}
+        <published>#{iso8601 $ localTimeToZonedTime tz $ itemPublished item}
         $maybe summary <- itemSummary item
           <summary>#{summary}
         $if not (T.null $ itemImage item)

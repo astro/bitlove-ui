@@ -1,4 +1,6 @@
-module Utils (iso8601, rfc822, isHex, toHex, fromHex) where
+module Utils ( iso8601, rfc822, localTimeToZonedTime
+             , isHex, toHex, fromHex
+             ) where
 
 import Prelude
 import Data.Time
@@ -7,21 +9,27 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import Numeric (readHex, showHex)
-import Data.Char (isHexDigit)
+import Data.Char (isHexDigit, isDigit)
 
 
-iso8601 :: LocalTime -> String
+iso8601 :: ZonedTime -> String
 iso8601 time =
     formatTime defaultTimeLocale (iso8601DateFormat $ Just "%H:%M:%S") time ++
     zone
     where zone = case formatTime defaultTimeLocale "%z" time of
-                   (sig:h1:h2:m1:m2) ->
-                     sig:h1:h2:':':m1:m2
+                   (sig:digits@(h1:h2:m1:m2))
+                     | sig `elem` "+-" &&
+                       all isDigit digits ->
+                         sig:h1:h2:':':m1:m2
                    _ ->
                      "Z"
 
 rfc822 :: LocalTime -> String
 rfc822 = formatTime defaultTimeLocale rfc822DateFormat
+
+localTimeToZonedTime :: TimeZone -> LocalTime -> ZonedTime
+localTimeToZonedTime tz =
+    utcToZonedTime tz . localTimeToUTC tz
 
 isHex :: BC.ByteString -> Bool
 isHex = BC.all isHexDigit

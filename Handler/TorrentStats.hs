@@ -25,50 +25,54 @@ getTorrentStatsR user slug name statsPeriod stats = do
                 StatsMonth -> (30 * 24 * 60 * 60, 24 * 60 * 60)
                 StatsYear -> (365 * 24 * 60 * 60, 7 * 24 * 60 * 60)
       stop <- lift $ lift $ getCurrentTime
-      timezone <- lift $ lift $ getCurrentTimeZone
+      tz <- liftIO getCurrentTimeZone
       let start = (-period) `addUTCTime` stop
-          stop' = utcToLocalTime timezone stop
-          start' = utcToLocalTime timezone start
+          stop' = utcToZonedTime tz stop
+          start' = utcToZonedTime tz start
           baseJson = ["start" .= iso8601 start',
                       "stop" .= iso8601 stop',
                       "interval" .= interval]
-          withStats :: (((Model.InfoHash -> LocalTime ->
-                           LocalTime -> Integer -> PostgreSQL.Connection
+          withStats :: (((Model.InfoHash -> LocalTime -> LocalTime -> 
+                          Integer -> PostgreSQL.Connection
                           -> IO b) 
                          -> IO b)
                         -> IO a)
                      -> Handler a
           withStats f = withDB $ \db ->
-                        let q f' = f' info_hash start' stop' interval db
+                        let q f' = f' info_hash 
+                                   (utcToLocalTime tz start)
+                                   (utcToLocalTime tz stop) 
+                                   interval db
                         in f q
   
       (RepJson . toContent . object) `fmap` case stats of
         StatsDownloads -> do
           downloads <- withStats ($ Model.getCounter "complete")
-          return $ ("downloads" .= statsToJson downloads) : baseJson
+          return $ ("downloads" .= statsToJson tz downloads) : baseJson
         StatsTraffic -> do
           (down, up, up_seeder) <- withStats $ \q ->
             do down <- q $ Model.getCounter "down"
                up <- q $ Model.getCounter "up"
                up_seeder <- q $ Model.getCounter "up_seeder"
                return (down, up, up_seeder)
-          return $ ("down" .= statsToJson down) :
-                   ("up" .= statsToJson up) :
-                   ("up_seeder" .= statsToJson up_seeder) : baseJson
+          return $ ("down" .= statsToJson tz down) :
+                   ("up" .= statsToJson tz up) :
+                   ("up_seeder" .= statsToJson tz up_seeder) : baseJson
         StatsSwarm -> do
           (seeders, leechers) <- withStats $ \q ->
             do seeders <- q $ Model.getGauge "seeders"
                leechers <- q $ Model.getGauge "leechers"
                return (map cheat seeders, leechers)
-          return $ ("seeders" .= statsToJson seeders) :
-                   ("leechers" .= statsToJson leechers) : baseJson
+          return $ ("seeders" .= statsToJson tz seeders) :
+                   ("leechers" .= statsToJson tz leechers) : baseJson
 
   -- Our seeder is actually not included in stats
   where cheat :: StatsValue -> StatsValue
         cheat (StatsValue t v) = StatsValue t $ v + 1
 
-statsToJson :: [StatsValue] -> Value
-statsToJson = object .
-              map (\(StatsValue time val) ->
-                    (T.pack $ iso8601 time) .= val
-                  )
+statsToJson :: TimeZone -> [StatsValue] -> Value
+statsToJson tz = 
+    object .
+    map (\(StatsValue time val) ->
+             (T.pack $ iso8601 $ localTimeToZonedTime tz time) .= val
+        )
