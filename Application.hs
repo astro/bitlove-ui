@@ -60,11 +60,11 @@ makeApplication conf logger = do
               "config/postgresql.yml"
               (appEnv conf)
               parseDBConf
-    -- TODO: per tracker/ui?
-    pool <- makeDBPool dbconf setLogger
-    foundation <- makeUIFoundation conf pool setLogger
-    tracker <- makeTrackerApp pool >>= toWaiAppPlain
-    stats <- statsMiddleware (appEnv conf) pool
+    uiPool <- makeDBPool dbconf setLogger
+    trackerPool <- makeDBPool dbconf setLogger
+    foundation <- makeUIFoundation conf uiPool setLogger
+    tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
+    stats <- statsMiddleware (appEnv conf) trackerPool
     ui <- (enforceVhost . stats . autohead) `fmap` 
           toWaiAppPlain foundation
     return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
