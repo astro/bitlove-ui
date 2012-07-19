@@ -43,15 +43,11 @@ groupDownloads (d@(Download {
                ((not $ T.null title') && title == title') ||
                (id' == id)
         (similar, ds') = partition isSimilar ds
-        dropDupInfoHashes ds' =
-            case ds' of
-              d':d'':ds''
-                  | downloadInfoHash d' == downloadInfoHash d'' ->
-                      dropDupInfoHashes $ d':ds''
-              d':ds'' ->
-                  d' : dropDupInfoHashes ds''
-              [] ->
-                  []
+        dropDupInfoHashes [] = []
+        dropDupInfoHashes (d':ds'') =
+            d' : (dropDupInfoHashes $ 
+                  filter ((downloadInfoHash d' ==) . downloadInfoHash) 
+                         ds'')
         similar' = dropDupInfoHashes similar
         downloads = d:similar'
     in (Item { itemUser = user,
