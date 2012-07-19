@@ -67,12 +67,19 @@ sessionBackend withDB =
                in case (mOldUser, mNewUser) of
                     -- Login
                     (Nothing, Just user) ->
-                        -- TODO: fmt cookie
-                        ((:[]) . makeCookie .
-                         BC.pack . T.unpack . 
-                         toHex . unSessionId) `fmap`
-                        withDB (createSession $ UserName $ T.pack $
-                                              BC.unpack user)
+                        do session <- withDB $
+                                      createSession $ 
+                                      UserName $ T.pack $ BC.unpack user
+                           putStrLn $ "New session for " ++ 
+                                    show user ++ ": " ++
+                                    show session
+                           return [AddCookie def
+                                   { setCookieName = "sid"
+                                   , setCookieValue = BC.pack $ T.unpack $
+                                                      toHex $
+                                                            unSessionId
+                                                            session
+                                   }]
                     -- Logout
                     (Just user, Nothing) ->
                         do case mSid of
@@ -84,7 +91,3 @@ sessionBackend withDB =
                     _ ->
                         return []
        return (oldSession, saveSession)
-    where makeCookie val = AddCookie def
-                           { setCookieName = "sid"
-                           , setCookieValue = val
-                           }

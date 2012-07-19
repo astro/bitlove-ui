@@ -228,12 +228,12 @@ postActivateR token = do
           
   case mUser of
     Nothing ->
-      returnJsonError "Invalid activation token"
+        returnJsonError "Invalid activation token"
     Just user ->
-        login user >>
-        (((:[]) . ("welcome" .=) . ($ UserR user)) `fmap`
-         getUrlRender) >>=
-        returnJson
+        do login user
+           welcomeLink <- ($ UserR user) `fmap`
+                          getUrlRender
+           returnJson ["welcome" .= welcomeLink]
 
 getReactivateR :: Handler RepHtml
 getReactivateR =
