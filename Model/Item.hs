@@ -46,10 +46,9 @@ groupDownloads (d@(Download {
         dropDupInfoHashes [] = []
         dropDupInfoHashes (d':ds'') =
             d' : (dropDupInfoHashes $ 
-                  filter ((downloadInfoHash d' ==) . downloadInfoHash) 
+                  filter ((downloadInfoHash d' /=) . downloadInfoHash) 
                          ds'')
-        similar' = dropDupInfoHashes similar
-        downloads = d:similar'
+        downloads = dropDupInfoHashes $ d:similar
     in (Item { itemUser = user,
                itemSlug = downloadSlug d,
                itemFeed = downloadFeed d,
