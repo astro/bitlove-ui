@@ -19,9 +19,9 @@ getDirectoryR = do
     toWidget [hamlet|
               <h2>Directory of Torrentified Podcasters
               ^{renderFeedsList links}
-              <section class="col1">
+              <section class="col1 directory">
                 ^{renderEntries dir1}
-              <section class="col2">
+              <section class="col2 directory">
                 ^{renderEntries dir2}
               |]
     where renderEntries entries =
