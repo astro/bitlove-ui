@@ -292,7 +292,7 @@ article:first-child {
   border-top: none;
 }
 .feed div, .directory .meta {
-  min-height: 68px;
+  min-height: 84px;
 }
 .feed div div {
   min-height: 0;
