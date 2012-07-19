@@ -231,6 +231,7 @@ postActivateR token = do
         returnJsonError "Invalid activation token"
     Just user ->
         do login user
+           -- TODO: set sid in js
            {-
            welcomeLink <- ($ UserR user) `fmap`
                           getUrlRender

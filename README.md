@@ -1,5 +1,6 @@
 ## TODO
 
+* Graphs: If first interval is inside range, deliver as 0, if last, prolong
 * Test widget
 
 * edit-*.js: scroll up
