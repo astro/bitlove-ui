@@ -19,7 +19,7 @@ import Model.Query
 import Model.User
 
 newtype InfoHash = InfoHash { unInfoHash :: ByteString }
-                 deriving (Show)
+                 deriving (Show, Eq, Ord)
                           
 infoHashToHex :: InfoHash -> Text
 infoHashToHex (InfoHash bs) =
