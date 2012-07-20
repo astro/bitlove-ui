@@ -12,7 +12,7 @@ import Numeric (readHex, showHex)
 import Data.Char (isHexDigit, isDigit)
 
 
-iso8601 :: ZonedTime -> String
+iso8601 :: FormatTime t => t -> String
 iso8601 time =
     formatTime defaultTimeLocale (iso8601DateFormat $ Just "%H:%M:%S") time ++
     zone
