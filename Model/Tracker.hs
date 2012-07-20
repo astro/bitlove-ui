@@ -35,8 +35,8 @@ scrape infoHash =
 
 
 
-data PeerId = PeerId { unPeerId :: BC.ByteString }
-              deriving (Show, Typeable)
+newtype PeerId = PeerId { unPeerId :: BC.ByteString }
+               deriving (Show, Typeable)
 
 instance Convertible SqlValue PeerId where
     safeConvert = Right . PeerId . fromBytea
@@ -44,8 +44,8 @@ instance Convertible SqlValue PeerId where
 instance Convertible PeerId SqlValue where
     safeConvert = Right . toBytea . unPeerId
 
-data PeerAddress = Peer4 BC.ByteString
-                 | Peer6 BC.ByteString
+data PeerAddress = Peer4 !BC.ByteString
+                 | Peer6 !BC.ByteString
                    deriving (Show, Read, Typeable, Eq, Ord)
                    
 instance Convertible PeerAddress SqlValue where
@@ -62,7 +62,7 @@ instance Convertible SqlValue PeerAddress where
                   | otherwise =
                       convError "PeerAddress" addr
 
-data TrackedPeer = TrackedPeer PeerId PeerAddress Int
+data TrackedPeer = TrackedPeer !PeerId !PeerAddress !Int
                    deriving (Show, Typeable)
                             
 instance Convertible [SqlValue] TrackedPeer where
