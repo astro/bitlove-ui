@@ -383,9 +383,9 @@ humanSize' n = foldl (\(n', unit) unit' ->
 
 downloadLabel :: Download -> Text
 downloadLabel d =
-    case downloadType d `lookup` byType of
-      Just label -> label
-      Nothing -> downloadName d
+    fromMaybe (fromMaybe (downloadName d) $
+               T.toUpper <$> ext (downloadName d)) $
+    downloadType d `lookup` byType
       
     where byType = [ ("audio/mpeg", "MP3")
                    , ("audio/ogg", "OGG")
@@ -407,3 +407,12 @@ downloadLabel d =
                    , ("text/html", "HTML")
                    , ("audio-mp4a-latm", "M4A")
                    ]
+          ext fn = 
+              let fn' = T.takeWhile (not . (`elem` "?#")) fn
+                  mayLast :: [a] -> Maybe a
+                  mayLast xs 
+                      | null xs = Nothing
+                      | otherwise = Just $
+                                    xs !! (length xs - 1)
+              in mayLast (T.splitOn "/" fn') >>=
+                 (mayLast . T.splitOn ".")
