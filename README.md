@@ -1,5 +1,7 @@
 ## TODO
 
+* Filter for directory
+
 * edit-*.js: scroll up
 * i18n
 * Search
@@ -7,7 +9,6 @@
 * <a rel="me|enclosure|bookmark">
 * MapFeed content-type
 * URL longener?
-* Filter for directory
 * Fix empty downloads.type
 * filter.js:
   * Fix button style breakage in Mozilla
@@ -21,7 +22,6 @@
 
 * <atom:link rel="self">
 * <atom:link rel="alternate">
-* Download buttons: display mime type/titles
 
 * style:
   * Fonts
@@ -38,7 +38,6 @@
 
 * graphs:
   * refactor
-  * stacked traffic
 
 * more configurability
 
