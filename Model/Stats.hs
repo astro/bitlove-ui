@@ -36,9 +36,4 @@ addCounter kind infoHash increment db = do
 
 getGauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 getGauge kind info_hash start stop interval =
-  query ("SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, " ++ agg ++ "(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
-  where agg = 
-            case kind of
-                "leechers" -> "MIN"
-                _ -> "MAX"
-                
+  query ("SELECT TO_TIMESTAMP(FLOOR(EXTRACT(EPOCH FROM \"time\") / ?) * ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [toSql interval, toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
