@@ -2,7 +2,7 @@ module Handler.MapFeed where
 
 import Control.Monad
 import qualified Data.Text as T
-import qualified Data.Map as Map
+import qualified Data.HashMap.Strict as HM
 import Text.XML.Stream.Parse
 import Data.XML.Types
 import Text.XML.Stream.Render
@@ -22,12 +22,12 @@ getMapFeedR user slug = do
     case urls of
       (url:_) -> do
         xml:_ <- Model.feedXml url db
-        enclosures <- Map.fromList `fmap`
+        enclosures <- HM.fromList `fmap`
                       Model.feedEnclosures url db
         let getEnclosureLink enclosure = 
                 (fullUrlRender . TorrentFileR user slug . TorrentName) `fmap`
-                (enclosure `Map.lookup` enclosures)
-        return $ Just (xml, getEnclosureLink)
+                ({-# SCC "enclosureLookup" #-} enclosure `HM.lookup` enclosures)
+        return $ Just (xml, enclosures `seq` getEnclosureLink)
       _ ->
         return Nothing
   case m_data of
