@@ -165,7 +165,7 @@ getUserFeedR user slug =
                  defaultLayout $ do
                    setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
                    when canEdit' $
-                        addScript $ StaticR $ StaticRoute ["edit-user.js"] []
+                        addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
                    let links = [("Subscribe",
                                  [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
                                 ("Just Downloads", 
