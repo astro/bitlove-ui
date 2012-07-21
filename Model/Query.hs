@@ -10,6 +10,11 @@ import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
 import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
+import Control.Monad (mapM)
+import qualified Control.Exception as E
+import System.IO
+import Control.Applicative
+import Data.Either
 
 import Utils
 
@@ -21,9 +26,22 @@ query :: (IConnection conn,
          ) => String -> [SqlValue] -> conn -> IO [e]
 query sql args conn = do
   rows <- quickQuery' conn sql args
-  return $ do Right val <- safeConvert `fmap` rows
-              return val
-
+  concat <$> mapM tryRow rows
+    where tryRow row =
+              do let caught :: E.SomeException -> String
+                     caught = show
+                 leftRight <- E.catch (return $
+                                       either (Left . show) Right $
+                                       safeConvert row)
+                              (return . Left . caught)
+                 case leftRight of
+                   Right x -> 
+                       return [x]
+                   Left e ->
+                       do hPutStrLn stderr $ "cannot safeConvert:\n" ++
+                                    show row ++ "\n" ++ e
+                          return []
+  
 fromBytea :: SqlValue -> ByteString
 fromBytea = unescape . fromSql
   where unescape :: Text -> ByteString

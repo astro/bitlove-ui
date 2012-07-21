@@ -67,7 +67,7 @@ instance Convertible [SqlValue] FeedInfo where
 
 userFeeds :: UserName -> Bool -> Query FeedInfo
 userFeeds user isOwner =
-  query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
+  query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\"), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
          (if isOwner
           then ""
           else "AND user_feeds.\"public\" ") ++
@@ -76,7 +76,7 @@ userFeeds user isOwner =
 
 userFeedInfo :: UserName -> Text -> Query FeedInfo
 userFeedInfo user slug =
-  query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), feeds.\"homepage\", feeds.\"image\", COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]
+  query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\"), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]
 
 addUserFeed :: IConnection conn => 
                UserName -> Text -> Text -> conn -> IO Bool
