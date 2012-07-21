@@ -7,6 +7,7 @@ import Data.Data (Typeable)
 import Database.HDBC
 import Data.Text (Text)
 import Data.Time (LocalTime)
+import Control.Applicative
 
 import Model.Query
 import Model.Download (InfoHash)
@@ -16,10 +17,9 @@ data StatsValue = StatsValue LocalTime Double
 
 instance Convertible [SqlValue] StatsValue where
   safeConvert (time:val:[]) =
-    Right $
-    StatsValue
-    (fromSql time)
-    (fromSql val)
+    StatsValue <$>
+    safeFromSql time <*>
+    safeFromSql val
   safeConvert vals = convError "StatsValue" vals
   
 getCounter :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue

@@ -13,7 +13,7 @@ import Data.Time.LocalTime (LocalTime)
 import Data.ByteString (ByteString, unpack)
 import Data.Data (Typeable)
 import Numeric (showHex)
-
+import Control.Applicative
 
 import Model.Query
 import Model.User
@@ -71,12 +71,29 @@ instance Convertible [SqlValue] Download where
                title:lang:summary:published:
                homepage:payment:image:
                seeders:leechers:upspeed:downspeed:downloaded:[]) = 
-    Right $
-    Download (fromSql user) (fromSql slug) (fromSql feed) (fromSql item) (fromSql enclosure)
-    (fromSql info_hash) (fromSql name) (fromSql size) (fromSql type_) 
-    (fromSql feed_title) (fromSql title) (fromSql lang) (fromSql summary) (fromSql published) 
-    (fromSql homepage) (fromSql payment) (fromSql image) 
-    (fromSql seeders) (fromSql leechers) (fromSql upspeed) (fromSql downspeed) (fromSql downloaded)
+    Download <$>
+    safeFromSql user <*> 
+    safeFromSql slug <*> 
+    safeFromSql feed <*> 
+    safeFromSql item <*> 
+    safeFromSql enclosure <*>
+    safeFromSql info_hash <*> 
+    safeFromSql name <*> 
+    safeFromSql size <*> 
+    safeFromSql type_ <*> 
+    safeFromSql feed_title <*> 
+    safeFromSql title <*> 
+    safeFromSql lang <*> 
+    safeFromSql summary <*> 
+    safeFromSql published <*> 
+    safeFromSql homepage <*> 
+    safeFromSql payment <*> 
+    safeFromSql image <*> 
+    safeFromSql seeders <*> 
+    safeFromSql leechers <*> 
+    safeFromSql upspeed <*> 
+    safeFromSql downspeed <*> 
+    safeFromSql downloaded    
   safeConvert vals = convError "Download" vals
 
 

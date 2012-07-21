@@ -62,6 +62,7 @@ import Database.HDBC
 import Data.Time
 import Data.Data (Typeable)
 import qualified Data.ByteString.Char8 as BC
+import Control.Applicative
 
 import Model.Query
 import Model.Download
@@ -85,12 +86,11 @@ data Torrent = Torrent {
 
 instance Convertible [SqlValue] Torrent where
   safeConvert (info_hash:name:size:torrent:[]) =
-    Right $
-    Torrent 
-    (fromSql info_hash)
-    (fromSql name)
-    (fromSql size)
-    (fromBytea torrent)
+    Torrent <$>
+    safeFromSql info_hash <*>
+    safeFromSql name <*>
+    safeFromSql size <*>
+    pure (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
 
 torrentByName :: UserName -> Text -> Text -> Query Torrent
@@ -118,15 +118,14 @@ data DirectoryEntry = DirectoryEntry
 instance Convertible [SqlValue] DirectoryEntry where
     safeConvert (user:userTitle:userImage:
                  feedSlug:feedTitle:feedLang:feedTypes:[]) = 
-      Right $
-      DirectoryEntry
-      (fromSql user)
-      (fromSql userTitle)
-      (fromSql userImage)
-      (fromSql feedSlug)
-      (fromSql feedTitle)
-      (fromSql feedLang)
-      (fromSql feedTypes)
+      DirectoryEntry <$>
+      safeFromSql user <*>
+      safeFromSql userTitle <*>
+      safeFromSql userImage <*>
+      safeFromSql feedSlug <*>
+      safeFromSql feedTitle <*>
+      safeFromSql feedLang <*>
+      safeFromSql feedTypes
     safeConvert vals = convError "DirectoryEntry" vals
       
 getDirectory :: Query DirectoryEntry

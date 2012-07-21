@@ -7,6 +7,7 @@ import Data.Data (Typeable)
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad (when)
+import Control.Applicative
 
 import Model.Query
 import Model.Download
@@ -20,12 +21,11 @@ data ScrapeInfo = ScrapeInfo {
                   
 instance Convertible [SqlValue] ScrapeInfo where               
   safeConvert (leechers:seeders:downspeed:downloaded:[]) =
-    Right $
-    ScrapeInfo
-    (fromSql leechers)
-    (fromSql seeders)
-    (fromSql downspeed)
-    (fromSql downloaded)
+    ScrapeInfo <$>
+    safeFromSql leechers <*>
+    safeFromSql seeders <*>
+    safeFromSql downspeed <*>
+    safeFromSql downloaded
   safeConvert vals = convError "ScrapeInfo" vals
 
 scrape :: InfoHash -> Query ScrapeInfo
@@ -67,11 +67,10 @@ data TrackedPeer = TrackedPeer !PeerId !PeerAddress !Int
                             
 instance Convertible [SqlValue] TrackedPeer where
     safeConvert (peerId:addr:port:[]) =
-        Right $
-        TrackedPeer
-        (fromSql peerId)
-        (fromSql addr)
-        (fromSql port)
+        TrackedPeer <$>
+        safeFromSql peerId <*>
+        safeFromSql addr <*>
+        safeFromSql port
     safeConvert vals =
         convError "TrackedPeer" vals
         

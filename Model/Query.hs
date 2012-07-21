@@ -43,15 +43,17 @@ query sql args conn = do
                           return []
   
 fromBytea :: SqlValue -> ByteString
-fromBytea = unescape . fromSql
-  where unescape :: Text -> ByteString
+fromBytea SqlNull = ""
+fromBytea sql = unescape $ fromSql sql
+  where unescape :: ByteString -> ByteString
         unescape text =
-          case T.splitAt 2 text of
+          case BC.splitAt 2 text of
             ("\\x", hex) ->
-              fromHex hex
+              -- efficiency?
+              fromHex $ T.pack $ BC.unpack hex
             _ ->
               pack $ octToWords text
-        octToWords = go . T.unpack
+        octToWords = go . BC.unpack
           where go ('\\':c:t)
                   | c `elem` "\\\"\'\n\r\t" = fromIntegral (ord c) : go t
                 go ('\\':t) = let (oct, t') = splitAt 3 t

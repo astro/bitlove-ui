@@ -7,6 +7,7 @@ import Database.HDBC
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
+import Control.Applicative
 
 import Model.Query
 import Model.User
@@ -20,9 +21,11 @@ userFeed user slug =
   [toSql user, toSql slug]
 
 newtype FeedXml = FeedXml LBC.ByteString
+    deriving (Typeable)
 
 instance Convertible [SqlValue] FeedXml where
-  safeConvert = Right . FeedXml . fromSql . head
+  safeConvert [v] = FeedXml <$> safeConvert v
+  safeConvert vals = convError "FeedXml" vals
 
 feedXml :: Text -> Query FeedXml
 feedXml url =
@@ -53,16 +56,15 @@ data FeedInfo = FeedInfo {
                
 instance Convertible [SqlValue] FeedInfo where
   safeConvert (url:slug:title:homepage:image:public:torrentify:error_text:[]) =
-    Right $
-    FeedInfo 
-    (fromSql url)
-    (fromSql slug)
-    (fromSql title) 
-    (fromSql homepage) 
-    (fromSql image) 
-    (fromSql public) 
-    (fromSql torrentify) 
-    (fromSql error_text)
+    FeedInfo <$>
+    safeFromSql url <*>
+    safeFromSql slug <*>
+    safeFromSql title <*>
+    safeFromSql homepage <*>
+    safeFromSql image <*>
+    safeFromSql public <*>
+    safeFromSql torrentify <*>
+    safeFromSql error_text
   safeConvert vals = convError "FeedInfo" vals
 
 userFeeds :: UserName -> Bool -> Query FeedInfo
@@ -99,10 +101,9 @@ data FeedDetails = FeedDetails {
                     
 instance Convertible [SqlValue] FeedDetails where
   safeConvert (public:title:[]) =
-    Right $
-    FeedDetails
-    (fromSql public)
-    (fromSql title)
+    FeedDetails <$>
+    safeFromSql public <*>
+    safeFromSql title
   safeConvert vals = convError "FeedDetails" vals
 
 userFeedDetails :: UserName -> Text -> Query FeedDetails

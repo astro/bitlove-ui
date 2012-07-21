@@ -11,6 +11,7 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Aeson
 import System.Random
+import Control.Applicative
 
 import Model.Query
 import Utils
@@ -43,11 +44,10 @@ data UserDetails = UserDetails {
                    
 instance Convertible [SqlValue] UserDetails where
   safeConvert (title:image:homepage:[]) =
-      Right $
-      UserDetails
-      (fromSql title)
-      (fromSql image)
-      (fromSql homepage)
+      UserDetails <$>
+      safeFromSql title <*>
+      safeFromSql image <*>
+      safeFromSql homepage
   safeConvert vals = convError "UserDetails" vals
 
 userDetailsByName :: UserName -> Query UserDetails
@@ -90,10 +90,9 @@ data UserSalt = UserSalt Salt Salted
 
 instance Convertible [SqlValue] UserSalt where
   safeConvert (salt:salted:[]) =
-      Right $
-      UserSalt
-      (fromSql salt)
-      (fromSql salted)
+      UserSalt <$>
+      safeFromSql salt <*>
+      safeFromSql salted
   safeConvert vals = convError "UserSalt" vals
 
 userSalt :: UserName -> Query UserSalt
