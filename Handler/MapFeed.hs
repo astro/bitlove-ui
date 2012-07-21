@@ -42,9 +42,9 @@ type Attrs = [(Name, [Content])]
   
 mapFeed :: FeedXml -> (Text -> Maybe Text) -> Source (ResourceT IO) (Flush Builder)
 mapFeed (FeedXml xml) getEnclosureLink =
-  parseLBS def xml $=
+  ({-# SCC "parseLBS" #-} parseLBS def xml) $=
   mapEnclosures =$=
-  renderBuilder def =$=
+  ({-# SCC "renderBuilder" #-} renderBuilder def) =$=
   CL.map Chunk
   where mapEnclosures :: Monad m => Conduit Event m Event
         mapEnclosures =
@@ -58,16 +58,19 @@ mapFeed (FeedXml xml) getEnclosureLink =
                            (attrs `getAttr` "rel") == "enclosure" ->
                              let href = attrs `getAttr` "href"
                                  attrs' = updateAttr attrs "type" $ Just typeTorrent
-                             in EventBeginElement name $
-                                updateAttr attrs' "href" $ getEnclosureLink href
+                                 attrs'' = updateAttr attrs' "href" $ getEnclosureLink href
+                             in attrs'' `seq`
+                                EventBeginElement name attrs''
+                                
                      EventBeginElement name@(Name {
                                                 nameLocalName = "enclosure",
                                                 nameNamespace = Nothing
                                              }) attrs ->
                          let url = attrs `getAttr` "url"
                              attrs' = updateAttr attrs "type" $ Just typeTorrent
-                         in EventBeginElement name $
-                            updateAttr attrs' "url" $ getEnclosureLink url
+                             attrs'' = updateAttr attrs' "url" $ getEnclosureLink url
+                         in attrs'' `seq`
+                            EventBeginElement name attrs''
                      EventBeginElement _ _ ->
                          event
                      _ ->
