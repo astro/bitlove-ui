@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, FlexibleInstances #-}
 module Model.Query where
 
 import Prelude
@@ -15,6 +15,7 @@ import qualified Control.Exception as E
 import System.IO
 import Control.Applicative
 import Data.Either
+import Data.Default
 
 import Utils
 
@@ -41,6 +42,19 @@ query sql args conn = do
                        do hPutStrLn stderr $ "cannot safeConvert:\n" ++
                                     show row ++ "\n" ++ e
                           return []
+                          
+data QueryPage = QueryPage { pageLimit :: Int
+                           , pageOffset :: Int
+                           }
+                 
+instance Default QueryPage where
+    def = QueryPage 25 0
+
+instance Convertible QueryPage [SqlValue] where
+    safeConvert (QueryPage limit offset) =
+        do limit' <- safeConvert limit
+           offset' <- safeConvert offset
+           return [limit', offset']
   
 fromBytea :: SqlValue -> ByteString
 fromBytea SqlNull = ""

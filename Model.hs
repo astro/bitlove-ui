@@ -7,6 +7,8 @@ module Model (
   purgeTorrent,
   DirectoryEntry (..),
   getDirectory,
+  -- Model.Query
+  QueryPage (..),
   -- Model.Stats
   StatsValue (..),
   getCounter,

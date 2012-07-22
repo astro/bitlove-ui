@@ -97,27 +97,32 @@ instance Convertible [SqlValue] Download where
   safeConvert vals = convError "Download" vals
 
 
-recentDownloads :: Int -> Query Download
-recentDownloads limit =
-  query "SELECT * FROM get_recent_downloads(?)" [toSql limit]
+recentDownloads :: QueryPage -> Query Download
+recentDownloads page =
+  query "SELECT * FROM get_recent_downloads(?, ?)" $
+  convert page
 
-popularDownloads :: Int -> Query Download
-popularDownloads limit =
-  query "SELECT * FROM get_popular_downloads(?)" [toSql limit]
+popularDownloads :: QueryPage -> Query Download
+popularDownloads page =
+  query "SELECT * FROM get_popular_downloads(?, ?)" $
+  convert page
 
-mostDownloaded :: Int -> Int -> Query Download
-mostDownloaded limit period =
-  query "SELECT * FROM get_most_downloaded(?, ?)" [toSql limit, toSql period]
+mostDownloaded :: Int -> QueryPage -> Query Download
+mostDownloaded period page =
+  query "SELECT * FROM get_most_downloaded(?, ?, ?)" $
+  convert page ++ [toSql period]
 
-userDownloads :: Int -> UserName -> Query Download
-userDownloads limit user =
-  query "SELECT * FROM get_user_recent_downloads(?, ?)" [toSql limit, toSql user]
+userDownloads :: UserName -> QueryPage -> Query Download
+userDownloads user page =
+  query "SELECT * FROM get_user_recent_downloads(?, ?, ?)" $
+  convert page ++ [toSql user]
 
 enclosureDownloads :: Text -> Query Download
 enclosureDownloads url =
   query "SELECT * FROM get_enclosure_downloads(?)" [toSql url]
   
-feedDownloads :: Int -> Text -> Query Download
-feedDownloads limit url =
-  query "SELECT * FROM get_recent_downloads(?, ?)" [toSql limit, toSql url]
+feedDownloads :: Text -> QueryPage -> Query Download
+feedDownloads url page =
+  query "SELECT * FROM get_recent_downloads(?, ?, ?)" $
+  convert page ++ [toSql url]
   

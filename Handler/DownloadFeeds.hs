@@ -4,6 +4,7 @@ module Handler.DownloadFeeds where
 import qualified Data.Text as T
 import Data.Maybe
 import Data.Time (getCurrentTimeZone)
+import Data.Default (def)
 
 import qualified Model
 import Import
@@ -135,7 +136,7 @@ itemLink urlRender item =
     itemId item
 
 getNew :: RepFeed a => Handler a
-getNew = withDB (Model.recentDownloads 25) >>=
+getNew = withDB (Model.recentDownloads def) >>=
          renderFeed' Parameters {
                            pTitle = "Bitlove: New",
                            pLink = NewR,
@@ -149,7 +150,7 @@ getNewAtomR :: Handler RepAtom
 getNewAtomR = getNew
 
 getTop :: RepFeed a => Handler a
-getTop = withDB (Model.popularDownloads 25) >>=
+getTop = withDB (Model.popularDownloads def) >>=
          renderFeed' Parameters {
                            pTitle = "Bitlove: Top",
                            pLink = TopR,
@@ -169,7 +170,7 @@ getTopDownloaded period =
           PeriodDays 1 -> (1, "1 day")
           PeriodDays days -> (days, T.pack $ show days ++ " days")
           PeriodAll -> (10000, "all time")
-  in withDB (Model.mostDownloaded 25 period_days) >>=
+  in withDB (Model.mostDownloaded period_days def) >>=
          renderFeed' Parameters {
                            pTitle = "Bitlove: Top Downloaded in " `T.append` period_title,
                            pLink = TopDownloadedR period,
@@ -186,7 +187,7 @@ getUserDownloads :: RepFeed a => UserName -> Handler a
 getUserDownloads user = do
     (details, downloads) <- withDB $ \db -> do
       details <- Model.userDetailsByName user db
-      downloads <- Model.userDownloads 20 user db
+      downloads <- Model.userDownloads user def db
       return (details, downloads)
     case details of
       [] ->
@@ -214,7 +215,7 @@ getUserFeed user slug = do
         return Nothing
       (feed:_) ->
         (Just . (feed, )) `fmap` 
-        Model.feedDownloads 50 (feedUrl feed) db
+        Model.feedDownloads (feedUrl feed) def db
 
   case mFeedDownloads of
     Nothing ->

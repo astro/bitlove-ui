@@ -884,3 +884,19 @@ background-color: #efefeb; color: #312c2a;
   -ms-transition: opacity 0.5s ease-out;
   -o-transition: opacity 0.5s ease-out;
 }
+
+.pagination {
+  margin: 0;
+  padding: 1em 0;
+}
+.pagination p {
+  margin: 0;
+  padding: 0;
+}
+.pagination .previous {
+  float: left;
+  text-align: left;
+}
+.pagination .next {
+  text-align: right;
+}

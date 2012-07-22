@@ -8,7 +8,7 @@ import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
 import Text.Blaze.Html5 hiding (div, details, map)
-import Text.Blaze.Html5.Attributes hiding (item)
+import Text.Blaze.Html5.Attributes hiding (item, min, max)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 
@@ -16,11 +16,22 @@ import qualified Model
 import Import
 import BitloveAuth
 
+data Page = Page { pageNumber :: Int
+                 , pagePrevious :: Maybe Text
+                 , pageNext :: Maybe Text
+                 }
+
+pageSize = 30
+
+withPage :: Page -> (Model.QueryPage -> a) -> a
+withPage p f =
+    f $ Model.QueryPage pageSize $ (pageNumber p - 1) * pageSize
+
 
 getFrontR :: Handler RepHtml
 getFrontR = do
   downloads <- withDB $
-               Model.mostDownloaded 4 1
+               Model.mostDownloaded 1 (Model.QueryPage 4 0)
   defaultLayout $ do
     setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
     $(whamletFile "templates/front.hamlet")
@@ -31,8 +42,10 @@ getFrontR = do
 
 getNewR :: Handler RepHtml
 getNewR = do
+    page <- makePage
     downloads <- withDB $
-                 Model.recentDownloads 50
+                 withPage page $
+                 Model.recentDownloads
     defaultLayout $ do
         setTitle "Bitlove: New Torrents"
         addFilterScript
@@ -45,12 +58,15 @@ getNewR = do
   <h2>New Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
+  ^{renderPagination page}
 |]
 
 getTopR :: Handler RepHtml
 getTopR = do
+    page <- makePage
     downloads <- withDB $
-                 Model.popularDownloads 25
+                 withPage page $
+                 Model.popularDownloads
     defaultLayout $ do
         setTitle "Bitlove: Popular Torrents"
         addFilterScript
@@ -63,6 +79,7 @@ getTopR = do
   <h2>Popular Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
+  ^{renderPagination page}
 |]
 
 getTopDownloadedR :: Period -> Handler RepHtml
@@ -72,8 +89,10 @@ getTopDownloadedR period = do
           PeriodDays 1 -> (1, "1 day")
           PeriodDays days -> (days, show days ++ " days")
           PeriodAll -> (10000, "all time")
+  page <- makePage
   downloads <- withDB $
-               Model.mostDownloaded 10 period_days
+               withPage page $
+               Model.mostDownloaded period_days
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitle "Bitlove: Top Downloaded"
@@ -87,11 +106,13 @@ getTopDownloadedR period = do
   <h2>Top downloaded in #{period_title}
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
+  ^{renderPagination page}
 |]
 
 getUserR :: UserName -> Handler RepHtml
 getUserR user = do
   canEdit' <- canEdit user
+  page <- makePage
   let fetch =
           withDB $ \db -> do
                   detailss <- Model.userDetailsByName user db
@@ -100,7 +121,7 @@ getUserR user = do
                         return Nothing
                     (details:_) -> 
                         do feeds <- Model.userFeeds user canEdit' db
-                           downloads <- Model.userDownloads 20 user db
+                           downloads <- withPage page (Model.userDownloads user) db
                            return $ Just (details, feeds, downloads)
       render (details, feeds, downloads) =
           defaultLayout $ do 
@@ -143,37 +164,42 @@ getUserR user = do
   <h2>Recent Torrents
   ^{renderFeedsList links}
   ^{renderDownloads downloads False}
+  ^{renderPagination page}
       |]
   
   fetch >>= maybe notFound render
   
 
 getUserFeedR :: UserName -> Text -> Handler RepHtml
-getUserFeedR user slug =
-  fetch >>= maybe notFound render
-    where fetch = 
-              withDB $ \db -> do
-                feeds <- Model.userFeedInfo user slug db
-                case feeds of
-                  [] ->
-                      return Nothing
-                  (feed:_) ->
-                      (Just . (feed, )) `fmap` 
-                      Model.feedDownloads 50 (feedUrl feed) db
-          render (feed, downloads) =
-              do canEdit' <- canEdit user
-                 defaultLayout $ do
-                   setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
-                   when canEdit' $
-                        addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
-                   let links = [("Subscribe",
-                                 [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
-                                ("Just Downloads", 
-                                 [("RSS", UserFeedRssR user slug, BC.unpack typeRss),
-                                  ("ATOM", UserFeedAtomR user slug, BC.unpack typeAtom)
-                                 ])]
-                   addFeedsLinks links
-                   toWidget [hamlet|
+getUserFeedR user slug = do
+  page <- makePage
+  mFeedDownloads <-
+      withDB $ \db -> do
+        feeds <- Model.userFeedInfo user slug db
+        case feeds of
+          [] ->
+              return Nothing
+          (feed:_) ->
+              (Just . (feed, )) <$>
+              withPage page (Model.feedDownloads $ feedUrl feed) db
+
+  case mFeedDownloads of          
+    Nothing ->
+        notFound
+    Just (feed, downloads) ->
+        do canEdit' <- canEdit user
+           let links = [("Subscribe",
+                         [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
+                        ("Just Downloads", 
+                         [("RSS", UserFeedRssR user slug, BC.unpack typeRss),
+                          ("ATOM", UserFeedAtomR user slug, BC.unpack typeAtom)
+                         ])]
+           defaultLayout $
+                      do setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+                         when canEdit' $
+                              addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
+                         addFeedsLinks links
+                         toWidget [hamlet|
 <section class="col">
   <header class="feed">
     <div class="meta">
@@ -195,6 +221,7 @@ getUserFeedR user slug =
 
   ^{renderFeedsList links}
   ^{renderDownloads downloads False}
+  ^{renderPagination page}
     |]
 
 renderDownloads downloads showOrigin =
@@ -362,6 +389,50 @@ renderFeedsList lists =
                   type=#{type_}>#{title}
                |]
 
+pageParameter :: Handler Int
+pageParameter = (clamp . fromInt 1 . T.unpack . fromMaybe "") <$> 
+                lookupGetParam "page"
+    where fromInt d s =
+              case reads s of
+                [(i, "")] -> i
+                _ -> d
+          clamp = min maxPages .
+                  max 1
+                
+maxPages = 10
+                
+renderPagination page =
+    [hamlet|
+     <nav .pagination>
+       $maybe previous <- pagePrevious page
+         <p .previous>
+           <a href="#{previous}">⟸
+       $maybe next <- pageNext page
+         <p .next>
+           <a href="#{next}">⟹
+     |]
+
+makePage :: Handler Page
+makePage = do 
+  p <- pageParameter
+  url <- getUrlRender
+  mRoute <- getCurrentRoute
+  let pageLink p' =
+          ((`T.append`
+            ("?page=" `T.append`
+             T.pack (show p'))) . url) <$> 
+          mRoute
+      clamp n
+            | n < 1 || n > maxPages = 
+                Nothing
+            | otherwise =
+                Just n
+  return $
+         Page { pageNumber = p
+              , pagePrevious = clamp (p - 1) >>= pageLink
+              , pageNext = clamp (p + 1) >>= pageLink
+              }
+                                    
 safeLogo :: Text -> Text
 safeLogo url
     | "http" `T.isPrefixOf` url = url
