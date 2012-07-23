@@ -82,3 +82,20 @@ instance PathPiece Token where
   fromPathPiece = Just . Token . fromHex
   toPathPiece = toHex . unToken
   
+
+data Thumbnail = Thumbnail Int
+                 deriving (Show, Eq, Ord, Read)
+
+instance PathPiece Thumbnail where
+    fromPathPiece "48x48.png" = 
+        Just $ Thumbnail 48
+    fromPathPiece "64x64.png" = 
+        Just $ Thumbnail 64
+    toPathPiece (Thumbnail size) =
+        let s = T.pack $ show size
+        in T.concat [ s
+                    , "x"
+                    , s
+                    , ".png"
+                    ]
+    

@@ -44,6 +44,10 @@
 /#UserName/#Text/downloads.rss UserFeedRssR GET
 /#UserName/#Text/downloads.atom UserFeedAtomR GET
 
+/#UserName/#Thumbnail UserThumbnailR GET
+/#UserName/#Text/#Thumbnail UserFeedThumbnailR GET
+/#UserName/#Text/#Text/#Thumbnail UserFeedItemThumbnailR GET
+
 -- /$user/$slug/*.torrent
 /#UserName/#Text/#TorrentName TorrentFileR GET DELETE
 /#UserName/#Text UserFeedR GET PUT DELETE

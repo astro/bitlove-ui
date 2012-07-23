@@ -42,6 +42,7 @@ import Handler.ByEnclosureAPI
 import Handler.Tracker
 import Handler.Help
 import Handler.Widget
+import Handler.Thumbnails
 import Stats
 
 
