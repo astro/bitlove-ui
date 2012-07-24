@@ -3,9 +3,10 @@ module Handler.Directory where
 import Data.List
 import qualified Data.ByteString.Char8 as BC
 
+import PathPieces
 import qualified Model
 import Import
-import Handler.Browse (safeLogo, renderFeedsList, addFeedsLinks)
+import Handler.Browse (renderFeedsList, addFeedsLinks)
 
 
 getDirectoryR :: Handler RepHtml
@@ -29,7 +30,7 @@ getDirectoryR = do
                $forall es <- entries
                  <article class="meta">
                    <img class="logo"
-                        src="#{safeLogo $ Model.dirUserImage $ head es}">
+                        src="@{UserThumbnailR (Model.dirUser $ head es) (Thumbnail 64)}">
                    <div class="title">
                      <h3>
                        <a href="@{UserR $ Model.dirUser $ head es}">#{Model.dirUserTitle $ head es}

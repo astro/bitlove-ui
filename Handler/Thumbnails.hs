@@ -45,8 +45,7 @@ instance HasReps RepPng where
 
 serveThumbnail :: Int -> Text -> Handler RepPng
 serveThumbnail size url
-        -- TODO: redirect to stub.png
-    | T.null url = notFound
+    | T.null url = redirect $ StaticR $ StaticRoute ["stub.png"] []
     | otherwise =
         cacheSeconds (24 * 60 * 60) >>
         generateThumbnail url size >>=

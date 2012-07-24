@@ -435,11 +435,6 @@ makePage = do
               , pageNext = clamp (p + 1) >>= pageLink
               }
                                     
-safeLogo :: Text -> Text
-safeLogo url
-    | "http" `T.isPrefixOf` url = url
-    | otherwise = "/static/stub.png"
-
 humanSize :: (Integral a, Show a) => a -> String
 humanSize n = let (n', unit) = humanSize' $ fromIntegral n
                   ns | n' < 10 = show $
