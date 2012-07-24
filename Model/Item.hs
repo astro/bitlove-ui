@@ -4,7 +4,9 @@ import Prelude hiding (id)
 import qualified Data.Text as T
 import Data.Time
 import Data.List (partition)
+import Database.HDBC
 
+import Model.Query
 import Model.Download
 import Model.User
 
@@ -63,3 +65,8 @@ groupDownloads (d@(Download {
                itemImage = downloadImage d,
                itemDownloads = downloads
              }) : (groupDownloads ds')
+       
+userItemImage :: UserName -> T.Text -> T.Text -> Query T.Text
+userItemImage user slug item =
+  query "SELECT \"image\" FROM user_feeds JOIN feed_items USING (\"feed\") WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND feed_items.\"id\"=?" [toSql user, toSql slug, toSql item]
+  

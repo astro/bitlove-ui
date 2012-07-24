@@ -8,6 +8,7 @@ import qualified Data.Text as T
 import Network.HTTP.Types (statusCode)
 import qualified Data.Conduit.List as CL
 import Blaze.ByteString.Builder (fromByteString)
+import Data.Maybe
 
 import PathPieces
 import Import
@@ -15,9 +16,9 @@ import qualified Model
 
 
 generateThumbnail :: T.Text -> Int -> Handler (Maybe (Source (ResourceT IO) B.ByteString))
-generateThumbnail url size =
-    (maybe Nothing $ Just . ($= resize)) <$>
-    download
+generateThumbnail url size = 
+    do cacheSeconds $ 24 * 60 * 60
+       maybe Nothing (Just . ($= resize)) <$> download
   where download :: Handler (Maybe (Source (ResourceT IO) B.ByteString))
         download = do
           manager <- httpManager <$> getYesod
@@ -42,28 +43,27 @@ instance HasReps RepPng where
     return (typePng,
             ContentSource $ src =$= CL.map (Chunk . fromByteString))
 
-
-getUserThumbnailR :: Model.UserName -> Thumbnail -> Handler RepPng
-getUserThumbnailR user (Thumbnail size) = do
-  mUrl <-
-      withDB $ \db -> do
-        detailss <- Model.userDetailsByName user db
-        case detailss of
-          [] ->
-              return Nothing
-          (details:_) -> 
-              -- TODO: cache
-              return $ Just $ userImage details
-  case mUrl of
-    Nothing ->
+serveThumbnail :: Int -> Text -> Handler RepPng
+serveThumbnail size url
         -- TODO: redirect to stub.png
-        notFound
-    Just url ->
+    | T.null url = notFound
+    | otherwise =
+        cacheSeconds (24 * 60 * 60) >>
         generateThumbnail url size >>=
         maybe notFound (return . RepPng)
+      
+
+getUserThumbnailR :: Model.UserName -> Thumbnail -> Handler RepPng
+getUserThumbnailR user (Thumbnail size) =
+  (fromMaybe "" . (userImage <$>) . listToMaybe) <$> withDB (Model.userDetailsByName user) >>=
+  serveThumbnail size
   
 getUserFeedThumbnailR :: Model.UserName -> Text -> Thumbnail -> Handler RepPng
-getUserFeedThumbnailR = undefined
+getUserFeedThumbnailR user slug (Thumbnail size) =
+  (fromMaybe "" . (feedImage <$>) . listToMaybe) <$> withDB (Model.userFeedInfo user slug) >>=
+  serveThumbnail size
 
 getUserFeedItemThumbnailR :: Model.UserName -> Text -> Text -> Thumbnail -> Handler RepPng
-getUserFeedItemThumbnailR = undefined
+getUserFeedItemThumbnailR user slug item (Thumbnail size) =
+  (fromMaybe "" . listToMaybe) <$> withDB (Model.userItemImage user slug item) >>=
+  serveThumbnail size

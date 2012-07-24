@@ -27,6 +27,7 @@ module Model (
   -- Model.Item
   Item (..),
   groupDownloads,
+  userItemImage,
   -- Model.User
   UserName (..),
   UserDetails (..),

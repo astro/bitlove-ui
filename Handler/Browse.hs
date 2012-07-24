@@ -12,6 +12,7 @@ import Text.Blaze.Html5.Attributes hiding (item, min, max)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 
+import PathPieces
 import qualified Model
 import Import
 import BitloveAuth
@@ -137,7 +138,7 @@ getUserR user = do
   <div class="meta">
     $if not (T.null $ userImage details)
         <img class="logo"
-             src=#{userImage details}>
+             src=@{UserThumbnailR user (Thumbnail 64)}>
     <div class="title">
       <h2>#{userTitle details}
       $if not (T.null $ userHomepage details)
@@ -149,7 +150,7 @@ getUserR user = do
   $forall feed <- feeds
     <article class="feed">
       <img class="logo"
-           src="#{safeLogo (feedImage feed)}">
+           src="@{UserFeedThumbnailR user (feedSlug feed) (Thumbnail 64)}">
       <div>
         <h3>
           <a href="@{UserFeedR user (feedSlug feed)}">#{feedTitle feed}
@@ -204,7 +205,7 @@ getUserFeedR user slug = do
   <header class="feed">
     <div class="meta">
       <img class="logo"
-           src="#{safeLogo (feedImage feed)}">
+           src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
       <div class="title">
         <div>
           <h2>#{feedTitle feed}
@@ -257,7 +258,8 @@ renderItem item showOrigin =
            xml:lang="#{fromMaybe "" $ itemLang item}">
     <div>
       $if not (T.null $ itemImage item)
-        <img src="#{itemImage item}" class="logo">
+        <img class="logo"
+             src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}">
       <div class="right">
         <p class="published">#{date}
         $if not (T.null $ itemPayment item)

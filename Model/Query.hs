@@ -19,6 +19,8 @@ import Data.Default
 
 import Utils
 
+instance Convertible [SqlValue] Text where
+  safeConvert = safeConvert . head
 
 type Query e = IConnection conn => conn -> IO [e]
 
