@@ -10,6 +10,7 @@ import qualified Data.Conduit.List as CL
 import Blaze.ByteString.Builder (fromByteString)
 import Data.Maybe
 import qualified Control.Exception.Lifted as EX
+import System.IO
 
 import PathPieces
 import Import
@@ -28,10 +29,10 @@ generateThumbnail url size =
           res <- lift $ http req manager
           case res of
             Response _ _ _ src
-              | statusCode (responseStatus res) == 200 ->
-                return $ Just src
+                | statusCode (responseStatus res) == 200 ->
+                    return $ Just src
             _ ->
-              return Nothing
+                return Nothing
         resize :: Conduit B.ByteString (ResourceT IO) B.ByteString
         resize = [ccmd|
                   mogrify -thumbnail #{show size}x#{show size} -format png -
@@ -56,19 +57,28 @@ serveThumbnail size url
            case mImg of
              Just (Cache.CachedImage data_) ->
                  return $ RepPng $ data_
+             Just (Cache.CachedError _) ->
+                 noThumbnail
              Nothing ->
-                 do mSrc <- generateThumbnail url size
-                    case mSrc of
-                      Nothing ->
+                 do let fetchStoreReturn src =
+                            do data_ <- lift $ B.concat <$> (src $$ CL.consume)
+                               -- TODO: catch here for concurrent updates
+                               withDB $ Cache.putImage url size $
+                                      Cache.CachedImage data_
+                               return $ RepPng $ data_
+                        bail :: EX.SomeException -> Handler a
+                        bail = bail' . show
+                        bail' :: String -> Handler a
+                        bail' e = do 
+                          liftIO $ hPutStrLn stderr $ 
+                                     "Image cache " ++ show url ++ 
+                                     " " ++ e
+                          withDB $ Cache.putImage url size $ 
+                                 Cache.CachedError $ show e
                           noThumbnail
-                      Just src ->
-                          let fetchStoreReturn =
-                                  do data_ <- lift $ B.concat <$> (src $$ CL.consume)
-                                     withDB $ Cache.putImage url size data_
-                                     return $ RepPng $ data_
-                              bail :: EX.SomeException -> Handler a
-                              bail = const noThumbnail
-                          in EX.catch fetchStoreReturn bail
+                    EX.catch (generateThumbnail url size >>=
+                              maybe (bail' "No HTTP source") fetchStoreReturn
+                             ) bail
       
 noThumbnail :: Handler a
 noThumbnail = redirect $ StaticR $ StaticRoute ["stub.png"] []
