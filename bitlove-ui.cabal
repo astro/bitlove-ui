@@ -36,6 +36,7 @@ library
                      Model.Tracker
                      Model.Session
                      Model.Stats
+                     Model.ImageCache
                      Utils
                      Stats
                      Settings
@@ -131,6 +132,7 @@ library
                  , file-embed                    >= 0.0.4.4    && < 0.0.5
                  , unordered-containers          >= 0.2.1.0    && < 0.2.2
                  , process-conduit               >= 0.4.1      && < 0.5
+                 , lifted-base                   >= 0.1.1      && < 0.2
 
 executable         ui
     if flag(library-only)

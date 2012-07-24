@@ -9,10 +9,12 @@ import Network.HTTP.Types (statusCode)
 import qualified Data.Conduit.List as CL
 import Blaze.ByteString.Builder (fromByteString)
 import Data.Maybe
+import qualified Control.Exception.Lifted as EX
 
 import PathPieces
 import Import
 import qualified Model
+import qualified Model.ImageCache as Cache
 
 
 generateThumbnail :: T.Text -> Int -> Handler (Maybe (Source (ResourceT IO) B.ByteString))
@@ -36,21 +38,40 @@ generateThumbnail url size =
                   |]
 
 
-newtype RepPng = RepPng (Source (ResourceT IO) B.ByteString)
+newtype RepPng = RepPng B.ByteString
 
 instance HasReps RepPng where
   chooseRep (RepPng src) _cts =
     return (typePng,
-            ContentSource $ src =$= CL.map (Chunk . fromByteString))
+            ContentBuilder (fromByteString src) (Just $ B.length src)
+           )
 
 serveThumbnail :: Int -> Text -> Handler RepPng
 serveThumbnail size url
-    | T.null url = redirect $ StaticR $ StaticRoute ["stub.png"] []
+    | T.null url = noThumbnail
     | otherwise =
-        cacheSeconds (24 * 60 * 60) >>
-        generateThumbnail url size >>=
-        maybe notFound (return . RepPng)
+        do cacheSeconds (24 * 60 * 60)
+           
+           mImg <- listToMaybe <$> withDB (Cache.getImage url size)
+           case mImg of
+             Just (Cache.CachedImage data_) ->
+                 return $ RepPng $ data_
+             Nothing ->
+                 do mSrc <- generateThumbnail url size
+                    case mSrc of
+                      Nothing ->
+                          noThumbnail
+                      Just src ->
+                          let fetchStoreReturn =
+                                  do data_ <- lift $ B.concat <$> (src $$ CL.consume)
+                                     withDB $ Cache.putImage url size data_
+                                     return $ RepPng $ data_
+                              bail :: EX.SomeException -> Handler a
+                              bail = const noThumbnail
+                          in EX.catch fetchStoreReturn bail
       
+noThumbnail :: Handler a
+noThumbnail = redirect $ StaticR $ StaticRoute ["stub.png"] []
 
 getUserThumbnailR :: Model.UserName -> Thumbnail -> Handler RepPng
 getUserThumbnailR user (Thumbnail size) =
