@@ -4,8 +4,6 @@ module Model.Download where
 import Data.Convertible
 import Prelude
 import Database.HDBC
-
-
 import Prelude
 import Data.Text (Text)
 import qualified Data.Text as T

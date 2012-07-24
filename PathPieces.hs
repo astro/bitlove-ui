@@ -91,6 +91,8 @@ instance PathPiece Thumbnail where
         Just $ Thumbnail 48
     fromPathPiece "64x64.png" = 
         Just $ Thumbnail 64
+    fromPathPiece _ =
+        Nothing
     toPathPiece (Thumbnail size) =
         let s = T.pack $ show size
         in T.concat [ s

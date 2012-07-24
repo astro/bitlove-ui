@@ -487,3 +487,4 @@ downloadLabel d =
                                     xs !! (length xs - 1)
               in mayLast (T.splitOn "/" fn') >>=
                  (mayLast . T.splitOn ".")
+                 

@@ -27,6 +27,9 @@ query :: (IConnection conn,
          ) => String -> [SqlValue] -> conn -> IO [e]
 query sql args conn = do
   rows <- quickQuery' conn sql args
+  putStrLn $ "SQL: " ++ sql ++
+           "\nargs: " ++ show args ++
+           "\nRows: " ++ show rows 
   concat <$> mapM tryRow rows
     where tryRow row =
               do let caught :: E.SomeException -> String
