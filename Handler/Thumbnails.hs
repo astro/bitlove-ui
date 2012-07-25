@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Handler.Thumbnails where
 
 import Data.Conduit
@@ -11,6 +12,8 @@ import Blaze.ByteString.Builder (fromByteString)
 import Data.Maybe
 import qualified Control.Exception.Lifted as EX
 import System.IO
+import Control.Monad
+import Data.Data (Typeable)
 
 import PathPieces
 import Import
@@ -47,6 +50,11 @@ instance HasReps RepPng where
             ContentBuilder (fromByteString src) (Just $ B.length src)
            )
 
+data EmptyException = EmptyException
+                    deriving (Show, Typeable)
+
+instance EX.Exception EmptyException
+
 serveThumbnail :: Int -> Text -> Handler RepPng
 serveThumbnail size url
     | T.null url = noThumbnail
@@ -62,6 +70,8 @@ serveThumbnail size url
              Nothing ->
                  do let fetchStoreReturn src =
                             do data_ <- lift $ B.concat <$> (src $$ CL.consume)
+                               when (B.null data_) $
+                                    EX.throw EmptyException
                                -- TODO: catch here for concurrent updates
                                withDB $ Cache.putImage url size $
                                       Cache.CachedImage data_
