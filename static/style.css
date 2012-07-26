@@ -256,7 +256,7 @@ img.logo {
   max-height: 48px;
 }
 .item .title {
-  margin-left: 42px;
+  margin-left: 50px;
 }
 .moreby {
   font-size: 70%;
@@ -315,7 +315,7 @@ article:first-child {
 }
 
 article.item {
-  min-height: 40px;
+  min-height: 48px;
 }
 article:target {
   border: 3px solid #fff79f;
@@ -342,7 +342,7 @@ h3 {
   clear: right;
   list-style-type: none;
   padding: 0;
-  margin: 0.6em 0 0.1em 44px;
+  margin: 0.6em 0 0.1em 52px;
   text-align: right;
   /* meta & flattr floats above */
   display: block;
