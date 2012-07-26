@@ -40,6 +40,10 @@ feedEnclosures :: Text -> Query (Text, Text)
 feedEnclosures url =
   query "SELECT enclosures.url, torrents.name FROM enclosures JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE enclosures.feed=$1" [toSql url]
   
+enclosureErrors :: Text -> Query (Text, Text)
+enclosureErrors url =
+  query "SELECT enclosures.\"url\", enclosure_torrents.\"error\" FROM enclosures JOIN enclosure_torrents USING (url) WHERE enclosures.feed=? AND enclosure_torrents.\"error\" IS NOT NULL AND enclosure_torrents.\"error\" != ''" [toSql url]
+  
 data FeedInfo = FeedInfo {
       feedUrl :: Text
     , feedSlug :: Text

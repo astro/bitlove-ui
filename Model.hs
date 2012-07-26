@@ -42,6 +42,7 @@ module Model (
   FeedXml (..),
   feedXml,
   feedEnclosures,
+  enclosureErrors,
   FeedInfo (..),
   userFeed,
   userFeeds,

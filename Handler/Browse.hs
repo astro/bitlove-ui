@@ -159,7 +159,7 @@ getUserR user = do
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
         $if not (feedPublic feed)
-          <p class="hint">Private
+          <p .note>Private
 
 <section class="col2">
   <h2>Recent Torrents
@@ -173,28 +173,38 @@ getUserR user = do
 
 getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug = do
+  canEdit' <- canEdit user
   page <- makePage
-  mFeedDownloads <-
+  mFeedDownloadsErrors <-
       withDB $ \db -> do
         feeds <- Model.userFeedInfo user slug db
         case feeds of
           [] ->
               return Nothing
           (feed:_) ->
-              (Just . (feed, )) <$>
-              withPage page (Model.feedDownloads $ feedUrl feed) db
+              do downloads <-
+                     withPage page (Model.feedDownloads $ feedUrl feed) db
+                 enclosureErrors <-
+                     if canEdit'
+                     then Model.enclosureErrors (feedUrl feed) db
+                     else return []
+                 return $ Just (feed, downloads, enclosureErrors)
 
-  case mFeedDownloads of          
+  case mFeedDownloadsErrors of          
     Nothing ->
         notFound
-    Just (feed, downloads) ->
-        do canEdit' <- canEdit user
-           let links = [("Subscribe",
+    Just (feed, downloads, enclosureErrors) ->
+        do let links = [("Subscribe",
                          [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
                         ("Just Downloads", 
                          [("RSS", UserFeedRssR user slug, BC.unpack typeRss),
                           ("ATOM", UserFeedAtomR user slug, BC.unpack typeAtom)
                          ])]
+               mError 
+                   | not canEdit' = Nothing
+                   | otherwise = case feedError feed of
+                                   Just "" -> Nothing
+                                   mE -> mE
            defaultLayout $
                       do setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
                          when canEdit' $
@@ -219,7 +229,19 @@ getUserFeedR user slug = do
         $if not (feedPublic feed)
           <p class="hint">
              Private — Not included in directory or public torrent listings
+        $maybe error <- mError
+          <div class="error">
+             <h3>Feed Error
+             <p><pre>#{error}
+             <p .hint>Right now, the error message will not be cleared in case of HTTP 304 Not modified. Don't worry too much if your torrents appear to be fine.
 
+  $if not (null enclosureErrors)
+    <div .error>
+       <h3>Enclosure Errors
+       <dl .enclosureErrors>
+         $forall enclosureError <- enclosureErrors
+           <dt>#{fst enclosureError}
+           <dd><pre>#{snd enclosureError}
   ^{renderFeedsList links}
   ^{renderDownloads downloads False}
   ^{renderPagination page}
