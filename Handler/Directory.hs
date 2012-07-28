@@ -17,7 +17,7 @@ getDirectoryR = do
     setTitle "Bitlove: Directory"
     let links = [("Feeds", [("OPML", DirectoryOpmlR, BC.unpack typeOpml)])]
     addFeedsLinks links
-    toWidget [hamlet|
+    [whamlet|
               <h2>Directory of Torrentified Podcasters
               ^{renderFeedsList links}
               <section class="col1 directory">

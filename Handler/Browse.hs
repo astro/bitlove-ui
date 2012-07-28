@@ -8,7 +8,7 @@ import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
 import Text.Blaze.Html5 hiding (div, details, map)
-import Text.Blaze.Html5.Attributes hiding (item, min, max)
+import Text.Blaze.Html5.Attributes hiding (item, min, max, id)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 
@@ -54,7 +54,7 @@ getNewR = do
                                     ("ATOM", NewAtomR, BC.unpack typeAtom)
                                    ])]
         addFeedsLinks links
-        toWidget [hamlet|
+        [whamlet|
 <section class="col">
   <h2>New Torrents
   ^{renderFeedsList links}
@@ -75,7 +75,7 @@ getTopR = do
                                     ("ATOM", TopAtomR, BC.unpack typeAtom)
                                    ])]
         addFeedsLinks links
-        toWidget [hamlet|
+        [whamlet|
 <section class="col">
   <h2>Popular Torrents
   ^{renderFeedsList links}
@@ -102,7 +102,7 @@ getTopDownloadedR period = do
                                 ("ATOM", TopDownloadedAtomR period, BC.unpack typeAtom)
                                ])]
     addFeedsLinks links
-    toWidget [hamlet|
+    [whamlet|
 <section class="col">
   <h2>Top downloaded in #{period_title}
   ^{renderFeedsList links}
@@ -133,7 +133,7 @@ getUserR user = do
                                               ("ATOM", UserDownloadsAtomR user, BC.unpack typeAtom)
                                              ])]
                   addFeedsLinks links
-                  toWidget [hamlet|
+                  [whamlet|
 <header class="user">
   <div class="meta">
     $if not (T.null $ userImage details)
@@ -210,7 +210,7 @@ getUserFeedR user slug = do
                          when canEdit' $
                               addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
                          addFeedsLinks links
-                         toWidget [hamlet|
+                         [whamlet|
 <section class="col">
   <header class="feed">
     <div class="meta">
@@ -395,23 +395,31 @@ addFeedsLinks lists = do
        ^{addFeedsLink feed}
                  |]
 
-renderFeedsList lists =
-    [hamlet|
-     <dl class="feedslist">
-       $forall list <- lists
-         ^{renderFeedsList' list}
-     |]
-    where renderFeedsList' (title :: Text, feeds) =
+renderFeedsList lists = do
+  renderRoute <-
+    lift $
+    isMiro >>= \isMiro' ->
+    (liftIO $ putStrLn $ "isMiro=" ++ show isMiro') >>
+    (if isMiro'
+     then (("http://subscribe.getmiro.com/?type=video&url1=" `T.append`) <$>)
+     else id) <$>
+    getFullUrlRender
+  let renderFeedsList' (title :: Text, feeds) =
               [hamlet|
                <dt>#{title}:
                $forall feed <- feeds
                  <dd>^{renderFeedsList'' feed}
                |]
-          renderFeedsList'' (title :: Text, route, type_) =
+      renderFeedsList'' (title :: Text, route, type_) =
               [hamlet|
-               <a href="@{route}"
+               <a href="#{renderRoute route}"
                   type=#{type_}>#{title}
                |]
+  [whamlet|
+     <dl class="feedslist">
+       $forall list <- lists
+         ^{renderFeedsList' list}
+     |]
 
 pageParameter :: Handler Int
 pageParameter = (clamp . fromInt 1 . T.unpack . fromMaybe "") <$> 

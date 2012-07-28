@@ -9,6 +9,7 @@ module Foundation
     , Widget
     , Form
     , getFullUrlRender
+    , isMiro
     , withDB, withDBPool, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
@@ -40,6 +41,8 @@ import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Control.Exception as E
+import qualified Network.Wai as Wai
+import qualified Data.ByteString.Char8 as BC
 
 import PathPieces
 import BitloveAuth
@@ -178,6 +181,13 @@ getFullUrlRender =
     do approot <- appRoot <$> settings <$> getYesod
        ((approot `T.append`) .) <$> getUrlRender
 
+isMiro :: GHandler sub master Bool
+isMiro = 
+    maybe False (maybe False (const True) .
+                 BC.findSubstring "Miro/") <$>
+    lookup "User-Agent" <$> 
+    Wai.requestHeaders <$> 
+    waiRequest
 
 errorHandler' NotFound =
   fmap chooseRep $ defaultLayout $ do
