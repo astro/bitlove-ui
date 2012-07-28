@@ -5,6 +5,7 @@ import qualified Data.Text as T
 import Data.Maybe
 import Data.Time (getCurrentTimeZone)
 import Data.Default (def)
+import Blaze.ByteString.Builder
 
 import qualified Model
 import Import
@@ -35,11 +36,18 @@ class RepFeed c where
   renderFeed' params downloads = renderFeed params $
                                  groupDownloads downloads
   
+withXmlDecl :: Content -> Content
+withXmlDecl (ContentBuilder b _) =
+  flip ContentBuilder Nothing $
+  fromByteString "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" `mappend`
+  b
+withXmlDecl c = c
+
 newtype RepRss = RepRss Content
 
 instance HasReps RepRss where
     chooseRep (RepRss content) _cts =
-      return (typeRss, content)
+      return (typeRss, withXmlDecl content)
       
 instance RepFeed RepRss where
   renderFeed params items = do
@@ -82,7 +90,7 @@ newtype RepAtom = RepAtom Content
 
 instance HasReps RepAtom where
     chooseRep (RepAtom content) _cts =
-      return (typeAtom, content)
+      return (typeAtom, withXmlDecl content)
       
 instance RepFeed RepAtom where
   renderFeed params items = do
