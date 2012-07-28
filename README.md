@@ -6,7 +6,6 @@
 * i18n
 * Search
 * Per-item pages
-* <a rel="me|enclosure|bookmark">
 * MapFeed content-type
 * URL longener?
 * Fix empty downloads.type
@@ -18,7 +17,6 @@
   * HTML
 
 * enforce https for log in
-* Scaled images cache
 
 * <atom:link rel="self">
 * <atom:link rel="alternate">
@@ -26,8 +24,6 @@
 * style:
   * Fonts
   * Flattr donate
-
-* Check U-A & replace RSS links with Miro subscribe URLs
 
 * Edit user:
   * About field
@@ -46,5 +42,4 @@
 * Feed summaries: X items, Y torrents
 
 * OEmbed
-* Widgets
 
