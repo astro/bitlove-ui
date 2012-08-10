@@ -2,7 +2,8 @@ function LightBox() {
     this.el_background = $("<div class='lightboxbackground'></div>");
     this.el = $("<div class='lightbox'></div>");
     this.el_background.append(this.el);
-    $('body').append(this.el_background);
+    $('body').scrollTop(0).append(this.el_background);
+
 }
 LightBox.prototype = {
     remove: function() {
@@ -79,7 +80,7 @@ editButton.bind('click', function() {
  * Add feed button
  */
 var addButton = $("<p class='add button'>Add</a>");
-$('.col1').append(addButton);
+$('.col1 h2').after(addButton);
 addButton.bind('click', function() {
     var box = new LightBox();
     box.content("<form class='addfeed'>" +

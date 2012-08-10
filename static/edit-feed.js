@@ -2,7 +2,7 @@ function LightBox() {
     this.el_background = $("<div class='lightboxbackground'></div>");
     this.el = $("<div class='lightbox'></div>");
     this.el_background.append(this.el);
-    $('body').append(this.el_background);
+    $('body').scrollTop(0).append(this.el_background);
 }
 LightBox.prototype = {
     remove: function() {
