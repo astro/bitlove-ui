@@ -9,7 +9,8 @@ $(document).ready(function() {
 	    return;
 
 	resolve(url, function(info) {
-	    console.log("resolve",url,info);
+	    if (window.console && console.log)
+		console.log("Bitlove torrent",url,info);
 	    var torrent = info && info.sources && info.sources[0] && info.sources[0].torrent;
 	    if (info && torrent) {
 		var t = $('<div class="podPress_downloadlinks"><a class="podpress_downloadimglink" title="Download via BitTorrent" type="application/x-bittorrent"><img src="http://bitlove.org/static/bitlove-button.png" class="podPress_imgicon"></a><span class="podpress_mediafile_title"> <span class="s"></span><span class="l"></span><span class="d"></span></span></div>');

@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
 	    (function(p) {
 	        resolve(url, function(info) {
-	            console.log("resolve",url,info);
+		    if (window.console && console.log)
+			console.log("Bitlove torrent",url,info);
 	            var torrent = info && info.sources && info.sources[0] && info.sources[0].torrent;
 	            if (info && torrent) {
 		        var t1 = document.createTextNode(" | ");
