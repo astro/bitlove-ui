@@ -1,5 +1,6 @@
 module Utils ( iso8601, rfc822, localTimeToZonedTime
              , isHex, toHex, fromHex
+             , fixUrl, unescapeEntities
              ) where
 
 import Prelude
@@ -8,8 +9,8 @@ import System.Locale
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
-import Numeric (readHex, showHex)
-import Data.Char (isHexDigit, isDigit)
+import Numeric (readDec, readHex, showHex)
+import Data.Char (isHexDigit, isDigit, chr)
 
 
 iso8601 :: FormatTime t => t -> String
@@ -49,3 +50,39 @@ fromHex = B.pack . hexToWords
             let (hex, text') = T.splitAt 2 text
                 w = fst $ head $ readHex $ T.unpack hex
             in w:(hexToWords text')
+
+
+-- FIXME: rm usage once feeds parser stores URLs properly
+fixUrl = unescapeEntities
+
+unescapeEntities :: T.Text -> T.Text
+unescapeEntities t =
+    case T.break (== '&') t of
+      (t, "") ->
+          t
+      (t', t'') ->
+          let (ent, t''') = T.break (== ';') t''
+              t'''' | T.null t''' = ""
+                    | otherwise = T.tail t'''
+              readCodepoints = 
+                  case T.unpack ent of
+                    ('&':'#':'x':hex)
+                        | all isHexDigit hex ->
+                            readHex hex
+                    ('&':'#':dec)
+                        | all isDigit dec ->
+                            readDec dec
+                    _ ->
+                        []
+          in case readCodepoints of
+               [(codepoint, "")] ->
+                   T.concat [ t'
+                            , T.singleton (chr codepoint)
+                            , unescapeEntities t''''
+                            ]
+               _ ->
+                   T.concat [ t'
+                            , ent
+                            , unescapeEntities t'''
+                            ]
+             

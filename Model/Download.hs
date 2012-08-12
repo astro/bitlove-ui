@@ -13,6 +13,7 @@ import Data.Data (Typeable)
 import Numeric (showHex)
 import Control.Applicative
 
+import Utils
 import Model.Query
 import Model.User
 
@@ -86,7 +87,7 @@ instance Convertible [SqlValue] Download where
     safeFromSql published <*> 
     safeFromSql homepage <*> 
     safeFromSql payment <*> 
-    safeFromSql image <*> 
+    (fixUrl <$> safeFromSql image) <*> 
     safeFromSql seeders <*> 
     safeFromSql leechers <*> 
     safeFromSql upspeed <*> 

@@ -68,6 +68,7 @@ import Data.Data (Typeable)
 import qualified Data.ByteString.Char8 as BC
 import Control.Applicative
 
+import Utils
 import Model.Query
 import Model.Download
 import Model.Item
@@ -125,7 +126,7 @@ instance Convertible [SqlValue] DirectoryEntry where
       DirectoryEntry <$>
       safeFromSql user <*>
       safeFromSql userTitle <*>
-      safeFromSql userImage <*>
+      (fixUrl <$> safeFromSql userImage) <*>
       safeFromSql feedSlug <*>
       safeFromSql feedTitle <*>
       safeFromSql feedLang <*>

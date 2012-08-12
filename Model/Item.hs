@@ -6,6 +6,7 @@ import Data.Time
 import Data.List (partition)
 import Database.HDBC
 
+import Utils
 import Model.Query
 import Model.Download
 import Model.User
@@ -68,5 +69,6 @@ groupDownloads (d@(Download {
        
 userItemImage :: UserName -> T.Text -> T.Text -> Query T.Text
 userItemImage user slug item =
+  fmap (map fixUrl) . 
   query "SELECT \"image\" FROM user_feeds JOIN feed_items USING (\"feed\") WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND feed_items.\"id\"=?" [toSql user, toSql slug, toSql item]
   

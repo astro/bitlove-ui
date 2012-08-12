@@ -46,7 +46,7 @@ instance Convertible [SqlValue] UserDetails where
   safeConvert (title:image:homepage:[]) =
       UserDetails <$>
       safeFromSql title <*>
-      safeFromSql image <*>
+      (fixUrl <$> safeFromSql image) <*>
       safeFromSql homepage
   safeConvert vals = convError "UserDetails" vals
 

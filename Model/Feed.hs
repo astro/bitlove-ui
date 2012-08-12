@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
 import Control.Applicative
 
+import Utils
 import Model.Query
 import Model.User
 
@@ -62,7 +63,7 @@ instance Convertible [SqlValue] FeedInfo where
     safeFromSql slug <*>
     safeFromSql title <*>
     safeFromSql homepage <*>
-    safeFromSql image <*>
+    (fixUrl <$> safeFromSql image) <*>
     safeFromSql public <*>
     safeFromSql torrentify <*>
     safeFromSql error_text
