@@ -1,6 +1,5 @@
 import Prelude
 import Yesod.Default.Config (AppConfig (..), loadConfig, configSettings, csParseExtra)
-import Yesod.Logger (Logger, defaultDevelopmentLogger)
 import Settings
 import Application          (makeApplication)
 import System.Environment (getArgs)
@@ -25,8 +24,7 @@ fromArgs = do
 main :: IO ()
 main = do 
   config <- fromArgs 
-  logger <- defaultDevelopmentLogger
-  app <- makeApplication config logger
+  app <- makeApplication config
   print config
   let settings = defaultSettings
                         { settingsPort = appPort config

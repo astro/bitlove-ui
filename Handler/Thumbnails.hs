@@ -5,6 +5,7 @@ import Data.Conduit
 import Network.HTTP.Conduit
 import System.Process.QQ
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as T
 import Network.HTTP.Types (statusCode)
 import qualified Data.Conduit.List as CL
@@ -21,11 +22,17 @@ import qualified Model
 import qualified Model.ImageCache as Cache
 
 
-generateThumbnail :: T.Text -> Int -> Handler (Maybe (Source (ResourceT IO) B.ByteString))
+generateThumbnail :: T.Text -> Int -> Handler (Maybe B.ByteString)
 generateThumbnail url size = 
     do cacheSeconds $ 24 * 60 * 60
-       maybe Nothing (Just . ($= resize)) <$> download
-  where download :: Handler (Maybe (Source (ResourceT IO) B.ByteString))
+       mSource <- download
+       case mSource of
+         Nothing ->
+             return Nothing
+         Just source ->
+             Just <$> B.concat <$>
+             lift (source $$+- (resize =$ CL.consume))
+  where download :: Handler (Maybe (ResumableSource (ResourceT IO) B.ByteString))
         download = do
           manager <- httpManager <$> getYesod
           req <- lift $ parseUrl $ T.unpack url
@@ -68,9 +75,8 @@ serveThumbnail size url
              Just (Cache.CachedError _) ->
                  noThumbnail
              Nothing ->
-                 do let fetchStoreReturn src =
-                            do data_ <- lift $ B.concat <$> (src $$ CL.consume)
-                               when (B.null data_) $
+                 do let storeReturn data_ =
+                            do when (B.null data_) $
                                     EX.throw EmptyException
                                -- TODO: catch here for concurrent updates
                                withDB $ Cache.putImage url size $
@@ -87,7 +93,7 @@ serveThumbnail size url
                                  Cache.CachedError $ show e
                           noThumbnail
                     EX.catch (generateThumbnail url size >>=
-                              maybe (bail' "No HTTP source") fetchStoreReturn
+                              maybe (bail' "No HTTP source") storeReturn
                              ) bail
       
 noThumbnail :: Handler a

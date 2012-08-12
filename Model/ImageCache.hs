@@ -6,7 +6,6 @@ import Data.Convertible
 import Data.Text (Text)
 import Database.HDBC
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
 
 import Model.Query
 

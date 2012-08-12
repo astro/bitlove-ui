@@ -27,7 +27,6 @@ import Control.Monad.Trans.Resource
 --import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
-import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
 import Settings (widgetFile, Extra (..), BitloveEnv (..))
@@ -57,7 +56,6 @@ type DBPool = Pool PostgreSQL.Connection
 -- access to the data present here.
 data UIApp = UIApp
     { settings :: AppConfig BitloveEnv Extra
-    , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
     , uiDBPool :: DBPool -- ^ Database connection pool.
     , httpManager :: Manager
@@ -141,8 +139,9 @@ instance Yesod UIApp where
     -- The page to be redirected to when authentication is required.
     --authRoute _ = Just $ AuthR LoginR
 
-    messageLogger y loc level msg =
-      formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
+    messageLogger y loc level msg _ =
+      return ()
+      --formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

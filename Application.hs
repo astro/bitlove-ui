@@ -9,8 +9,6 @@ import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
-import Yesod.Logger (Logger, logBS, toProduction, logString)
-import Network.Wai.Middleware.RequestLogger (logCallback, logCallbackDev)
 import Network.HTTP.Conduit (newManager, def)
 import Data.Conduit.Pool
 import Database.HDBC as HDBC (disconnect)
@@ -24,7 +22,7 @@ import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
 import Data.Monoid
-import System.IO (stderr)
+import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
 
 
@@ -55,24 +53,21 @@ mkYesodDispatch "UIApp" resourcesUIApp
 -- performs initialization and creates a WAI application. This is also the
 -- place to put your migrate statements to have automatic database
 -- migrations handled by Yesod.
-makeApplication :: AppConfig BitloveEnv Extra -> Logger -> IO Application
-makeApplication conf logger = do
+makeApplication :: AppConfig BitloveEnv Extra -> IO Application
+makeApplication conf = do
     dbconf <- withYamlEnvironment 
               "config/postgresql.yml"
               (appEnv conf)
               parseDBConf
-    uiPool <- makeDBPool dbconf setLogger
-    trackerPool <- makeDBPool dbconf setLogger
-    foundation <- makeUIFoundation conf uiPool setLogger
+    uiPool <- makeDBPool dbconf
+    trackerPool <- makeDBPool dbconf
+    foundation <- makeUIFoundation conf uiPool
     tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
     ui <- (enforceVhost . stats . autohead) `fmap` 
           toWaiAppPlain foundation
-    return $ measureDuration $ {-logWare $-} anyApp [tracker, ui]
+    return $ measureDuration $ anyApp [tracker, ui]
   where
-    setLogger = if development then logger else toProduction logger
-    logWare   = if development then logCallbackDev (logBS setLogger)
-                               else logCallback    (logBS setLogger)
     anyApp [app] = 
         app
     anyApp (app:apps) = 
@@ -132,11 +127,11 @@ makeApplication conf logger = do
              ]
            return $ res'
 
-makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> Logger -> IO UIApp
-makeUIFoundation conf pool setLogger = do
+makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
+makeUIFoundation conf pool = do
     manager <- newManager def
     s <- staticSite
-    return $ UIApp conf setLogger s pool manager
+    return $ UIApp conf s pool manager
     
 parseDBConf :: Monad m =>
                Value -> m [(String, String)]
@@ -155,8 +150,8 @@ parseDBConf = return . parse
               error ("Cannot parse: " ++ show v)
         parse _ = error "Expected JSON object"
     
-makeDBPool :: [(String, String)] -> Logger -> IO DBPool
-makeDBPool dbconf logger =
+makeDBPool :: [(String, String)] -> IO DBPool
+makeDBPool dbconf =
   let dbconf' :: [([Char], [Char])]
       dbconf' = filter ((`elem` ["host", "hostaddr",
                                  "port", "dbname",
@@ -166,8 +161,8 @@ makeDBPool dbconf logger =
                        k ++ "=" ++ v
                      ) dbconf'
   in createPool
-     (logString logger "connectPostgreSQL" >> connectPostgreSQL dbconf'')
-     (\db -> logString logger "HDBC.disconnect" >> HDBC.disconnect db)
+     (hPutStrLn stderr "connectPostgreSQL" >> connectPostgreSQL dbconf'')
+     (\db -> hPutStrLn stderr "HDBC.disconnect" >> HDBC.disconnect db)
      4 60 4
 
 
