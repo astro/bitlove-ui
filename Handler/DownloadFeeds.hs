@@ -80,10 +80,9 @@ instance RepFeed RepRss where
                        href=#{itemPayment item}
                        >
         $forall d <- itemDownloads item
-            <link rel="enclosure"
-                  type="#{typeTorrent}"
-                  size="#{downloadSize d}"
-                  href="#{url $ torrentLink d}">
+            <enclosure type="#{typeTorrent}"
+                       length="#{downloadSize d}"
+                       url="#{url $ torrentLink d}">
     |]
 
 newtype RepAtom = RepAtom Content
