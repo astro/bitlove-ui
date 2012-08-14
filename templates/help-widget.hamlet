@@ -4,7 +4,10 @@
   
   <h3>Widget for Podpress
   <img src="/static/podpress-widget.png">
-  <p>Include the following snippet in your site's template:
+  <p>
+    Install #
+    <a href="http://plugins.trac.wordpress.org/browser/podpress/trunk/optional_files/bitlove_scripts_for_podpress/bitlove_scripts_for_podpress.php">the plugin by Tim Berger
+    or include the following snippet in your site's template:
   <pre>&lt;script src="http://bitlove.org/widget/podpress.js" type="text/javascript"&gt;&lt;/script&gt;
   <p>
     Make sure you put it after jQuery. Contact #
