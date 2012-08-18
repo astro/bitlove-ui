@@ -10,6 +10,12 @@ LightBox.prototype = {
 	this.el.remove();
 	this.el_background.remove();
     },
+    removeCb: function() {
+	var that = this;
+	return function() {
+	    that.remove();
+	};
+    },
     find: function(key) {
 	return this.el.find(key);
     },
@@ -43,7 +49,7 @@ editButton.bind('click', function() {
 		 box.find('#title').val(response.title);
 		 box.find('#image').val(response.image);
 		 box.find('#homepage').val(response.homepage);
-		 box.find('.cancel').click(box.remove.bind(box));
+		 box.find('.cancel').click(box.removeCb());
 		 box.find('.save').click(function(ev) {
 		     ev.preventDefault();
 
@@ -63,7 +69,7 @@ editButton.bind('click', function() {
 			      error: function() {
 				  box.content("<p>Cannot submit</p>" +
 					      "<p class='button'>Close</p>");
-				  box.find('.button').click(box.remove.bind(box));
+				  box.find('.button').click(box.removeCb());
 			      }
 			    });
 		 });
@@ -71,7 +77,7 @@ editButton.bind('click', function() {
 	     error: function() {
 		 box.content("<p>An error occured</p>" +
 			     "<p class='button'>Close</p>");
-		 box.find('.button').click(box.remove.bind(box));
+		 box.find('.button').click(box.removeCb());
 	     }
 	   });
 });
@@ -111,7 +117,7 @@ addButton.bind('click', function() {
     slugEl.bind('input', fixSlug);
     slugEl.bind('keyup', fixSlug);
 
-    box.find('.cancel').click(box.remove.bind(box));
+    box.find('.cancel').click(box.removeCb());
     box.find('.save').click(function(ev) {
 	ev.preventDefault();
 
@@ -140,13 +146,13 @@ addButton.bind('click', function() {
 			 box.content("<p class='message'></p>" +
 				     "<p class='button'>Close</p>");
 			 box.find('.message').text((response && response.error) || "An error occured");
-			 box.find('.button').click(box.remove.bind(box));
+			 box.find('.button').click(box.removeCb());
 		     }
 		 },
 		 error: function() {
 		     box.content("<p>Cannot communicate</p>" +
 				 "<p class='button'>Close</p>");
-		     box.find('.button').click(box.remove.bind(box));
+		     box.find('.button').click(box.removeCb());
 		 }
 	       });
     });

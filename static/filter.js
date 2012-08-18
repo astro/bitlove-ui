@@ -113,6 +113,7 @@ function sortKeysNullLast(o) {
 }
 
 function FilterDialog() {
+    var that = this;
     this.el = $('<form class="filterdialog"><div class="type"><h2>By type</h2><ul></ul><p><a class="all">Select all</a></p></div><div class="lang"><h2>By language</h2><ul></ul><p><a class="all">Select all</a></p></div></form>');
 
     /* Add checkboxes  */
@@ -121,25 +122,24 @@ function FilterDialog() {
 	var text = type ?
 	    (type.substr(0, 1).toLocaleUpperCase() + type.substr(1)) :
 	    "Other";
-	this.addOption('type', type, text, allTypes[type]);
-    }.bind(this));
+	that.addOption('type', type, text, allTypes[type]);
+    });
     var allLangs = Filter.getAllLangs();
     sortKeysNullLast(allLangs).forEach(function(lang) {
 	var text = lang ?
 	    (lang.substr(0, 1).toLocaleUpperCase() + lang.substr(1)) :
 	    "Other";
-	this.addOption('lang', lang, text, allLangs[lang]);
-    }.bind(this));
+	that.addOption('lang', lang, text, allLangs[lang]);
+    });
 
     /* Select all */
-    var update = this.update.bind(this);
     this.el.find('.type, .lang').each(function() {
 	var col = $(this);
 	col.find('.all').click(function(ev) {
 	    ev.preventDefault();
 
 	    col.find('input[type=checkbox]').prop('checked', true);
-	    update();
+	    that.update();
 	});
     });
 }
@@ -155,9 +155,10 @@ FilterDialog.prototype = {
 	option.attr('id', id);
 	option.val(val);
 	option.prop('checked', !Filter.mask[column][val]);
+	var that = this;
 	option.change(function() {
-	    this.update();
-	}.bind(this));
+	    that.update();
+	});
 	li.append(option);
 
 	var label = $('<label></label>');
@@ -170,13 +171,14 @@ FilterDialog.prototype = {
 	this.el.find('.' + column).find('ul').append(li);
     },
     update: function() {
+	var el = this.el;
 	['type', 'lang'].forEach(function(column) {
 	    /* Rebuild mask */
-	    this.el.find('.' + column + ' input[type=checkbox]').each(function() {
+	    el.find('.' + column + ' input[type=checkbox]').each(function() {
 		var input = $(this);
 		Filter.mask[column][input.val()] = !input.prop('checked');
 	    });
-	}.bind(this));
+	});
 
 	Filter.applyMask();
     }

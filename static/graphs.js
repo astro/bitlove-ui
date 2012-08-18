@@ -16,6 +16,7 @@ function humanSize(value) {
     return v + " " + units[u] + "B";
 };
 
+
 /**
  * TODO: inherit for the three graph types
  */
@@ -37,7 +38,8 @@ function Graph(basepath, type, published) {
     }
 
     var timeselect = this.el.find('.timeselect');
-    timeselect.change(this.loadGraph.bind(this));
+    var that = this;
+    timeselect.change(function() { that.loadGraph(); });
     var age = new Date().getTime() - new Date(published).getTime();
     if (age <= 24 * 60 * 60 * 1000)
 	timeselect.val('day');
@@ -55,9 +57,10 @@ Graph.prototype = {};
 Graph.prototype.loadGraph = function() {
     var timespec = this.el.find('.timeselect').val();
     var url = this.basepath + "/g/" + timespec + "/" + this.type + ".json";
+    var that = this;
     $.ajax({ url: url,
-	     success: this.setData.bind(this),
-	     error: this.el.text.bind(this.el, "Error retrieving " + url)
+	     success: function(data) { that.setData(data); },
+	     error: function() { that.el.text("Error retrieving " + url); }
 	   });
 };
 
@@ -205,7 +208,8 @@ Graph.prototype.setData = function(response) {
 };
 
 Graph.prototype.remove = function() {
-    this.el.slideUp(300, this.el.remove.bind(this.el));
+    var el = this.el;
+    this.el.slideUp(300, function() { el.remove(); });
 };
 
 function StatsHook(basepath, stats) {
@@ -223,7 +227,10 @@ StatsHook.prototype = {};
 StatsHook.prototype.attach = function(sel, type) {
     var toggle = this.stats.find(sel);
     toggle.addClass('toggleable');
-    toggle.click(this.toggleGraph.bind(this, type, toggle));
+    var that = this;
+    toggle.click(function() {
+	that.toggleGraph(type, toggle);
+    });
 };
 
 var TZ_OFFSET = "+02:00";

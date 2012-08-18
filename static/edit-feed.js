@@ -9,6 +9,12 @@ LightBox.prototype = {
 	this.el.remove();
 	this.el_background.remove();
     },
+    removeCb: function() {
+	var that = this;
+	return function() {
+	    that.remove();
+	};
+    },
     find: function(key) {
 	return this.el.find(key);
     },
@@ -53,7 +59,7 @@ editButton.bind('click', function() {
 		 }
 		 box.find('#settitle').bind('change', titleVisibility);
 		 titleVisibility();
-		 box.find('.cancel').click(box.remove.bind(box));
+		 box.find('.cancel').click(box.removeCb());
 		 box.find('.save').click(function(ev) {
 		     ev.preventDefault();
 
@@ -73,7 +79,7 @@ editButton.bind('click', function() {
 			      error: function() {
 				  box.content("<p>Cannot submit</p>" +
 					      "<p class='button'>Close</p>");
-				  box.find('.button').click(box.remove.bind(box));
+				  box.find('.button').click(box.removeCb());
 			      }
 			    });
 		 });
@@ -81,7 +87,7 @@ editButton.bind('click', function() {
 	     error: function() {
 		 box.content("<p>An error occured</p>" +
 			     "<p class='button'>Close</p>");
-		 box.find('.button').click(box.remove.bind(box));
+		 box.find('.button').click(box.removeCb());
 	     }
 	   });
 });
@@ -100,7 +106,7 @@ rmButton.bind('click', function() {
 		"<input type='reset' class='cancel button' value='Cancel'>" +
 		"<input type='submit' class='save button' value='Delete'>" +
 		"</form>");
-    box.find('.cancel').click(box.remove.bind(box));
+    box.find('.cancel').click(box.removeCb());
     box.find('.save').click(function(ev) {
 	ev.preventDefault();
 
@@ -119,7 +125,7 @@ rmButton.bind('click', function() {
 		 error: function() {
 		     box.content("<p>Cannot submit</p>" +
 				 "<p class='button'>Close</p>");
-		     box.find('.button').click(box.remove.bind(box));
+		     box.find('.button').click(box.removeCb());
 		 }
 	       });
     });
@@ -141,7 +147,7 @@ $('.download').each(function() {
 		    "<input type='reset' class='cancel button' value='Cancel'>" +
 		    "<input type='submit' class='save button' value='Purge'>" +
 		    "</form>");
-	box.find('.cancel').click(box.remove.bind(box));
+	box.find('.cancel').click(box.removeCb());
 	box.find('.save').click(function(ev) {
 	    ev.preventDefault();
 
@@ -155,7 +161,7 @@ $('.download').each(function() {
 		     error: function() {
 			 box.content("<p>Request failed</p>" +
 				     "<p class='button'>Close</p>");
-			 box.find('.button').click(box.remove.bind(box));
+			 box.find('.button').click(box.removeCb());
 		     }
 		   });
 	});
