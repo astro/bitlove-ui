@@ -244,19 +244,3 @@ withDBPool pool f = do
           do mrReuse db True
              mrRelease db
              return a
-    
--- This instance is required to use forms. You can modify renderMessage to
--- achieve customized and internationalized form validation messages.
-instance RenderMessage UIApp FormMessage where
-    renderMessage _ _ = defaultFormMessage
-
--- Note: previous versions of the scaffolding included a deliver function to
--- send emails. Unfortunately, there are too many different options for us to
--- give a reasonable default. Instead, the information is available on the
--- wiki:
---
--- https://github.com/yesodweb/yesod/wiki/Sending-email
-
-
-
-  

@@ -1,15 +1,15 @@
 <section class="col">
-  <noscript>JavaScript is mandatory beyond this point
+  <noscript>_{MsgNoScript}
   <form class="login r">
     <h2>Activate your account
     <p>
-      <label for="password1">Password:
+      <label for="password1">_{MsgPassword}:
       <input id="password1" type="password">
     <p>
-      <label for="password2">Repeat:
+      <label for="password2">_{MsgPasswordRepeat}:
       <input id="password2" type="password">
     <p id="progress">
-    <input id="activate" type="submit" value="Activate"
+    <input id="activate" type="submit" value="_{MsgActivate}"
     	   data-token="#{hexToken}" data-salt="#{hexSalt}">
   <script src="/static/jquery-1.7.1.min.js" type="text/javascript">
   <script src="/static/jsSHA.js" type="text/javascript">

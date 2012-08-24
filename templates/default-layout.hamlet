@@ -8,9 +8,9 @@
 <nav class="navtabs">
   <ul>
     <li>
-      <a href=@{NewR}>New
+      <a href=@{NewR}>_{MsgNew}
     <li class="navtop">
-      <a href=@{TopR}>Top
+      <a href=@{TopR}>_{MsgTop}
       <ul class="navDownloaded">
         <li>
           <a href=@{TopDownloadedR (PeriodDays 1)}>1
@@ -20,9 +20,9 @@
           <a href="/top/30">30
         <li>
           <a href="/top/all">∞
-        <li>days
+        <li>_{MsgDays}
     <li>
-      <a href="/directory">Directory
+      <a href="/directory">_{MsgDirectory}
 <div class="content">
   $maybe msg <- mmsg
     <div #message>#{msg}
@@ -30,10 +30,10 @@
 $maybe user <- msu
     <nav id="navbar">
       <p>
-        Logged in as #
+        _{MsgLoggedInAs} #
         <a href="@{UserR user}">#{userName user}
       <p>
-        <a href="@{LogoutR}">Logout
+        <a href="@{LogoutR}">_{MsgLogout}
 <footer>
   <div>
     <p>Twitter:

@@ -36,7 +36,7 @@ getFrontR = do
   defaultLayout $ do
     setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
     $(whamletFile "templates/front.hamlet")
-    toWidget [hamlet|
+    [whamlet|
 <section class="col2">
   ^{renderDownloads downloads True}
 |]
@@ -56,7 +56,7 @@ getNewR = do
         addFeedsLinks links
         [whamlet|
 <section class="col">
-  <h2>New Torrents
+  <h2>_{MsgNewTorrents}
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
   ^{renderPagination page}
@@ -77,7 +77,7 @@ getTopR = do
         addFeedsLinks links
         [whamlet|
 <section class="col">
-  <h2>Popular Torrents
+  <h2>_{MsgTopTorrents}
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
   ^{renderPagination page}
@@ -85,11 +85,11 @@ getTopR = do
 
 getTopDownloadedR :: Period -> Handler RepHtml
 getTopDownloadedR period = do
-  let (period_days, period_title) = 
+  let period_days =
         case period of
-          PeriodDays 1 -> (1, "1 day")
-          PeriodDays days -> (days, show days ++ " days")
-          PeriodAll -> (10000, "all time")
+          PeriodDays 1 -> 1
+          PeriodDays days -> days
+          PeriodAll -> 10000
   page <- makePage
   downloads <- withDB $
                withPage page $
@@ -104,7 +104,15 @@ getTopDownloadedR period = do
     addFeedsLinks links
     [whamlet|
 <section class="col">
-  <h2>Top downloaded in #{period_title}
+  <h2>
+    $case period
+      $of PeriodDays n
+        $if n == 1
+          \ _{MsgTopDownloadedDay}
+        $else
+          \ _{MsgTopDownloadedDays n}
+      $of PeriodAll
+        \ _{MsgTopDownloadedAll}
   ^{renderFeedsList links}
   ^{renderDownloads downloads True}
   ^{renderPagination page}
@@ -220,7 +228,7 @@ getUserFeedR user slug = do
         <div>
           <h2>#{feedTitle feed}
           <span class="publisher">
-            \ by #
+            \ _{MsgBy} #
             <a href="@{UserR user}">#{userName user}
         $if not (T.null $ feedHomepage feed)
           <p class="homepage">
@@ -248,12 +256,12 @@ getUserFeedR user slug = do
     |]
 
 renderDownloads downloads showOrigin =
-    [hamlet|
+    [whamlet|
 $forall item <- Model.groupDownloads downloads
   ^{renderItem item showOrigin}
       |]
 
-renderItem item showOrigin =
+renderItem item showOrigin = do
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
       isOnlyDownload = length (itemDownloads item) == 1
@@ -274,7 +282,7 @@ renderItem item showOrigin =
       types = map downloadType $ itemDownloads item
       countType t = length $ filter (== t) types
       isOnlyType = (== 1) . countType
-  in [hamlet|
+  [whamlet|
   <article class="item"
            id="#{itemId item}"
            xml:lang="#{fromMaybe "" $ itemLang item}">
@@ -292,9 +300,9 @@ renderItem item showOrigin =
           <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
         $if showOrigin
           <p class="feed">
-            \ in #
+            \ _{MsgIn} #
             <a href="@{UserFeedR (itemUser item) (itemSlug item)}">#{fromMaybe (itemSlug item) $ itemFeedTitle item}
-            \ by #
+            \ _{MsgBy} #
             <a href="@{UserR $ itemUser item}">#{userName $ itemUser item}
         $else
            <p class="homepage">
