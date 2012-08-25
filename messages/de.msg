@@ -36,3 +36,18 @@ TitleError: Fehler
 TitleReactivate: Bitlove: Passwortwiederherstellung
 TitleDirectory: Bitlove: Verzeichnis
 HeadingDirectory: Verzeichnis torrentifizierter Podcaster
+TitleHelp: Bitlove: Hilfe
+HeadingSignup: Podcaster-Anmeldung
+Username: Benutzername
+UsernameHint: Dein Benutzername ist dein Label. Es wird überall sichtbar sein und kann mehrere Feeds beinhalten.
+Email: E-Mail
+EmailHint: Wir schicken eine Aktivierungsmail um die Anmeldung zu bestätigen.
+Tos1: Die Medien die ich hier veröffentliche dürfen frei kopiert werden.
+Tos2: Ich werde diesen Dienst ausschließlich für Inhalte nutzen die (weiter-)verbreitet werden dürfen.
+NoWarez: Keine warez
+NoWarezExplanation: Alle Podcast-Feeds und -Daten kommen von normalen Web-Servern. Hol dir eine Seedbox!
+Broadcaster: Vertreter einer Sendeanstalt?
+BroadcasterExplanation: Veröffentlichen Sie ihre Inhalte auf Bitlove und machen damit Ihr Publikum froh! Kontaktieren Sie
+ForgotPasswordQuestion: Passwort vergessen?
+Reactivate: Benutzer reaktivieren
+Ok: Okay

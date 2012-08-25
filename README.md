@@ -2,9 +2,6 @@
 
 * Filter for directory
 
-* i18n
-  * Titles
-  * Various messages (Handler.Auth, ...)
 * Search
 * Fix pagination
 

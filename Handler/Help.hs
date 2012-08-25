@@ -8,27 +8,27 @@ import Import
 
 getHelpR =
   defaultLayout $ do
-    setTitle "Bitlove: Help"
+    setTitleI MsgTitleHelp
     renderHelpNavigation
     $(whamletFile "templates/help.hamlet")
 
 getHelpPodcasterR =
   defaultLayout $ do
-    setTitle "Bitlove: Help"
+    setTitleI MsgTitleHelp
     renderHelpNavigation
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-podcaster.hamlet")
 
 getHelpFeedsR =
   defaultLayout $ do
-    setTitle "Bitlove: Help"
+    setTitleI MsgTitleHelp
     renderHelpNavigation
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-feeds.hamlet")
 
 getHelpApiR =
   defaultLayout $ do
-    setTitle "Bitlove: Help"
+    setTitleI MsgTitleHelp
     renderHelpNavigation
     renderHelpPodcasterNavigation
     let example = T.pack $
@@ -37,7 +37,7 @@ getHelpApiR =
 
 getHelpWidgetR =
   defaultLayout $ do
-    setTitle "Bitlove: Help"
+    setTitleI MsgTitleHelp
     renderHelpNavigation
     renderHelpPodcasterNavigation
     let example = T.pack $

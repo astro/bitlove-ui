@@ -3,8 +3,8 @@
   	method="POST"
 	enctype="application/x-www-form-urlencoded"
 	action="/reactivate">
-    <h2>Reactivate your account
+    <h2>_{MsgReactivate}
     <p>
-      <label for="email">E-Mail:
+      <label for="email">_{MsgEmail}:
       <input id="email" name="email">
-    <input type="submit" value="Ok">
+    <input type="submit" value="_{MsgOk}">

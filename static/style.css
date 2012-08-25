@@ -593,12 +593,17 @@ footer a {
 .login label, .signup label {
   display: inline-block;
   padding-right: 1em;
-  width: 6em;
+  width: 8em;
 }
-.signup label[for^=tos] {
-  width: auto;
+.tos {
+  font-size: 60%;
+  color: #666;
+}
+.tos label {
   padding-left: 0.5em;
   vertical-align: bottom;
+  width: 80%;
+  max-width: 30em;
 }
 .login #progress {
   color: #aaa;
@@ -617,11 +622,6 @@ input[type!=submit]:hover, input[type!=submit]:focus {
   color: black;
   background-color: #ffe;
   border: 1px solid #3f0;
-}
-
-.tos {
-  font-size: 60%;
-  color: #666;
 }
 
 noscript {
@@ -708,7 +708,7 @@ noscript {
   font-size: 80%;
   font-style: italic;
   color: #777;
-  margin-top: 0;
+  margin: 0 0 2em;
   line-height: 1em;
 }
 

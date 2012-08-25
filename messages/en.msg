@@ -37,3 +37,18 @@ TitleError: Error
 TitleReactivate: Bitlove: Recover your password
 TitleDirectory: Bitlove: Directory
 HeadingDirectory: Directory of torrentified Podcasters
+TitleHelp: Bitlove: Help
+HeadingSignup: Podcaster Signup
+Username: Username
+UsernameHint: Your username is your label. It will be visible everywhere, and you can put multiple feeds under it. Give it some thought.
+Email: Email
+EmailHint: We will send a password activation EMail for completing signup.
+Tos1: The media I am about to publish here is free to copy.
+Tos2: I will use this service only for content I am allowed to (re-)distribute.
+NoWarez: No warez
+NoWarezExplanation: All podcast feeds and torrents are backed by actual Web servers. Get your own seedbox.
+Broadcaster: Representing a broadcast institution?
+BroadcasterExplanation: Place your content on Bitlove to make your audience happy! Contact us at
+ForgotPasswordQuestion: Forgot password?
+Reactivate: Reactivate your account
+Ok: Ok
