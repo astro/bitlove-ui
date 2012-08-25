@@ -1,15 +1,15 @@
 <section class="col1">
   <p class="about">
-    <b>Bitlove</b> is the fully <b>automatic</b> Podcast download service on <b>P2P speed</b>. We generate a <b>Torrent</b> for all media files of an <b>RSS feed</b> and will <b>seed</b> them all the time.
+    _{MsgFrontAbout}
   <div class="navtabs">
     <ul>
       <li>
-        <a href="/help">Learn more&#x2026;</a>
+        <a href="/help">_{MsgLearnMore}</a>
   <p class="about">
-    Are You a <b>Podcast Publisher?</b>
+    _{MsgAreYouPublisher}
   <div class="navtabs">
     <ul>
       <li>
-        <a href="@{SignupR}">Sign up</a>
+        <a href="@{SignupR}">_{MsgSignUp}</a>
       <li>
-        <a href="@{LoginR}">Login</a>
+        <a href="@{LoginR}">_{MsgLogin}</a>

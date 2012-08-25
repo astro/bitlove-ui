@@ -167,7 +167,7 @@ getUserR user = do
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
         $if not (feedPublic feed)
-          <p .note>Private
+          <p .note>_{MsgPrivate}
 
 <section class="col2">
   <h2>Recent Torrents
@@ -235,17 +235,16 @@ getUserFeedR user slug = do
             <a rel="me"
                href="#{feedHomepage feed}">#{feedHomepage feed}
         $if not (feedPublic feed)
-          <p class="hint">
-             Private — Not included in directory or public torrent listings
+          <p class="hint">_{MsgPrivateExplain}
         $maybe error <- mError
           <div class="error">
              <h3>Feed Error
              <p><pre>#{error}
-             <p .hint>Right now, the error message will not be cleared in case of HTTP 304 Not modified. Don't worry too much if your torrents appear to be fine.
+             <p .hint>_{MsgErrorExplain}
 
   $if not (null enclosureErrors)
     <div .error>
-       <h3>Enclosure Errors
+       <h3>_{MsgEnclosureErrors}
        <dl .enclosureErrors>
          $forall enclosureError <- enclosureErrors
            <dt>#{fst enclosureError}
@@ -265,6 +264,17 @@ renderItem item showOrigin = do
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
       isOnlyDownload = length (itemDownloads item) == 1
+      stats :: Text -> Text -> Integer -> t -> Markup
+      stats c t n = [hamlet|
+                     <dl class=#{c}>
+                       <dt>
+                         #{n}
+                       <dd>
+                         $if n == 1
+                           #{t}
+                         $else
+                           #{t}s
+                   |]
       bandwidth d
           | downloadDownspeed d < 100 * 1024 =
               Nothing
@@ -311,7 +321,7 @@ renderItem item showOrigin = do
       <ul class="download">
         <li class="torrent">
           <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
-             title="Download #{downloadName d} with BitTorrent"
+             title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              data-type="#{downloadType d}">
             $if isOnlyType (downloadType d)
@@ -319,7 +329,7 @@ renderItem item showOrigin = do
             $else
               <span>#{downloadName d}
             \ #
-            <span class="size" title="Download size">
+            <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">
           $maybe (speed, unit) <- bandwidth d
@@ -329,15 +339,9 @@ renderItem item showOrigin = do
                   <span class="unit"> #{unit}
                 <dd>Download speed
                   
-          <dl class="seeders">
-            <dt>#{seeders d}
-            <dd>Seeders
-          <dl class="leechers">
-            <dt>#{downloadLeechers d}
-            <dd>Leechers
-          <dl class="downloads">
-            <dt>#{downloadDownloaded d}
-            <dd>Downloads
+          ^{stats "seeders" "Seeder" $ seeders d}
+          ^{stats "leechers" "Leecher" $ downloadLeechers d}
+          ^{stats "downloads" "Download" $ downloadDownloaded d}
 |]
   where payment = itemPayment item
         homepage = itemHomepage item

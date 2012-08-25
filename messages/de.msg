@@ -15,3 +15,14 @@ TopDownloadedDays n@Int: Meist heruntergeladen in #{show n} Tagen
 TopDownloadedAll: Meist heruntergeladen jeher
 In: bei
 By: von
+FrontAbout: Bitlove ist das Rundumsorglospaket für Podcast-Downloads mit P2P-Geschwindigkeit. Für alle Mediendateien im RSS-Feed erstellen wir einen Torrent, um die Daten auch mit anderen Herunterladenden zu teilen. Ein eigener Seeder sorgt dabei für garantierte Verteilung und Mindestgeschwindigkeit.
+LearnMore: Erfahre mehr…
+AreYouPublisher: Bist Du ein Podcast Publisher?
+SignUp: Anmelden
+Login: Login
+Private: Privat
+PrivateExplain: Privat — Nicht im Verzeichnis aufgeführt.
+ErrorExplain: Momentan bleibt der Fehlerstatus bei HTTP 304 Not modified erhalten. Das ist nicht weiter schlimm wenn die Torrents stimmen.
+EnclosureErrors: Enclosure-Fehler
+DownloadTorrent name@Text: #{name} mit BitTorrent herunterladen
+DownloadSize: Downloadgröße
