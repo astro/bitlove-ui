@@ -10,7 +10,6 @@
 * URL longener?
 * Fix empty downloads.type
 * filter.js:
-  * Fix button style breakage in Mozilla
   * Fix z-index (Android?)
 * New {feeds,downloads}.{lang,summary,type} in:
   * Downloads Feeds
