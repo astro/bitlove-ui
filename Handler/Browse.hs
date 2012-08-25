@@ -34,7 +34,7 @@ getFrontR = do
   downloads <- withDB $
                Model.mostDownloaded 1 (Model.QueryPage 4 0)
   defaultLayout $ do
-    setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
+    setTitleI MsgTitle
     $(whamletFile "templates/front.hamlet")
     [whamlet|
 <section class="col2">
@@ -48,7 +48,7 @@ getNewR = do
                  withPage page $
                  Model.recentDownloads
     defaultLayout $ do
-        setTitle "Bitlove: New Torrents"
+        setTitleI MsgTitleNew
         addFilterScript
         let links = [("Downloads", [("RSS", NewRssR, BC.unpack typeRss),
                                     ("ATOM", NewAtomR, BC.unpack typeAtom)
@@ -69,7 +69,7 @@ getTopR = do
                  withPage page $
                  Model.popularDownloads
     defaultLayout $ do
-        setTitle "Bitlove: Popular Torrents"
+        setTitleI MsgTitleTop
         addFilterScript
         let links = [("Downloads", [("RSS", TopRssR, BC.unpack typeRss),
                                     ("ATOM", TopAtomR, BC.unpack typeAtom)
@@ -96,7 +96,7 @@ getTopDownloadedR period = do
                Model.mostDownloaded period_days
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
-    setTitle "Bitlove: Top Downloaded"
+    setTitleI MsgTitleTopDownloaded
     addFilterScript
     let links = [("Downloads", [("RSS", TopDownloadedRssR period, BC.unpack typeRss),
                                 ("ATOM", TopDownloadedAtomR period, BC.unpack typeAtom)
@@ -134,7 +134,7 @@ getUserR user = do
                            return $ Just (details, feeds, downloads)
       render (details, feeds, downloads) =
           defaultLayout $ do 
-                  setTitle $ toMarkup $ userName user `T.append` " on Bitlove"
+                  setTitleI $ MsgTitleUser $ userName user
                   when canEdit' $
                        addScript $ StaticR $ StaticRoute ["edit-user.js"] []
                   let links = [("Downloads", [("RSS", UserDownloadsRssR user, BC.unpack typeRss),
@@ -214,7 +214,7 @@ getUserFeedR user slug = do
                                    Just "" -> Nothing
                                    mE -> mE
            defaultLayout $
-                      do setTitle $ toMarkup $ feedTitle feed `T.append` " on Bitlove"
+                      do setTitleI $ MsgTitleFeed $ feedTitle feed
                          when canEdit' $
                               addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
                          addFeedsLinks links

@@ -30,7 +30,7 @@ import Model.User
 getSignupR :: Handler RepHtml
 getSignupR =
     defaultLayout $ do
-      setTitle "Bitlove: Signup"
+      setTitleI MsgTitleSignup
       $(whamletFile "templates/signup.hamlet")
       
 data SignupStatus = SignupOk | SignupConflict | SignupError
@@ -92,7 +92,7 @@ Thanks for sharing
   case sent of
     True ->
         defaultLayout $ do
-              setTitle "Bitlove: Signup"
+              setTitleI MsgTitleSignup
               toWidget [hamlet|
                         <h2>Account activation pending
                         <p>Please check your mail to activate your account.
@@ -100,7 +100,7 @@ Thanks for sharing
     False ->
         -- TODO: unregister & rm token
         defaultLayout $ do
-              setTitle "Error"
+              setTitleI MsgTitleError
               toWidget [hamlet|
                         <h2>Sorry
                         <p>Sending mail failed. Please #
@@ -115,7 +115,7 @@ Thanks for sharing
                                       ) (T.unpack name)
           sendError :: Text -> Handler a
           sendError e = defaultLayout (do
-                                        setTitle "Error"
+                                        setTitleI MsgTitleError
                                         toWidget [hamlet|
                                                   <h2>Error
                                                   <p>#{e}
@@ -128,7 +128,7 @@ Thanks for sharing
 getLoginR :: Handler RepHtml
 getLoginR =
     defaultLayout $ do
-      setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
+      setTitleI MsgTitle
       $(whamletFile "templates/login.hamlet")
 
 
@@ -201,7 +201,7 @@ getActivateR token = do
   case mSalt of
     Nothing ->
         defaultLayout $ do
-                       setTitle "Huh?"
+                       setTitleI MsgTitleError
                        toWidget [hamlet|
                                  <h2>Error
                                  <p>Invalid activation token
@@ -210,7 +210,7 @@ getActivateR token = do
         do let hexToken = toHex $ unToken token
                hexSalt = toHex $ unSalt salt
            defaultLayout $ do
-                       setTitle "Bitlove: Peer-to-Peer Love for Your Podcast Downloads"
+                       setTitleI MsgTitle
                        $(whamletFile "templates/activate.hamlet")
 
 postActivateR :: Token -> Handler RepJson
@@ -245,7 +245,7 @@ postActivateR token = do
 getReactivateR :: Handler RepHtml
 getReactivateR =
     defaultLayout $ do
-      setTitle "Bitlove: Recover your password"
+      setTitleI MsgTitleReactivate
       $(whamletFile "templates/reactivate.hamlet")
       
 postReactivateR :: Handler RepHtml
@@ -280,7 +280,7 @@ Thanks for sharing
                 ) True userTokens
   
   defaultLayout $ do
-    setTitle "Bitlove: Recover your password"
+    setTitleI MsgTitleReactivate
     case sent of
       _ | null userTokens ->
             toWidget [hamlet|

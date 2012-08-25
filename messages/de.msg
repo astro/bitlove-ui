@@ -26,3 +26,13 @@ ErrorExplain: Momentan bleibt der Fehlerstatus bei HTTP 304 Not modified erhalte
 EnclosureErrors: Enclosure-Fehler
 DownloadTorrent name@Text: #{name} mit BitTorrent herunterladen
 DownloadSize: Downloadgröße
+TitleNew: Bitlove: Neue Torrents
+TitleTop: Bitlove: Beliebte Torrents
+TitleTopDownloaded: Bitlove: Meist heruntergeladen
+TitleUser user@Text: #{user} auf Bitlove
+TitleFeed title@Text: #{title} bei Bitlove
+TitleSignup: Bitlove: Anmeldung
+TitleError: Fehler
+TitleReactivate: Bitlove: Passwortwiederherstellung
+TitleDirectory: Bitlove: Verzeichnis
+HeadingDirectory: Verzeichnis torrentifizierter Podcaster

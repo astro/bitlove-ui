@@ -2,9 +2,12 @@
 
 * Filter for directory
 
-* edit-*.js: scroll up
 * i18n
+  * Titles
+  * Various messages (Handler.Auth, ...)
 * Search
+* Fix pagination
+
 * Per-item pages
 * MapFeed content-type
 * URL longener?

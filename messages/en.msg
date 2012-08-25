@@ -26,3 +26,14 @@ ErrorExplain: Right now, the error message will not be cleared in case of HTTP 3
 EnclosureErrors: Enclosure Errors
 DownloadTorrent name@Text: Download #{name} with BitTorrent
 DownloadSize: Download size
+Title: Bitlove: Peer-to-Peer Love for Your Podcast Downloads
+TitleNew: Bitlove: New Torrents
+TitleTop: Bitlove: Popular Torrents
+TitleTopDownloaded: Bitlove: Top Downloaded
+TitleUser user@Text: #{user} on Bitlove
+TitleFeed title@Text: #{title} on Bitlove
+TitleSignup: Bitlove: Signup
+TitleError: Error
+TitleReactivate: Bitlove: Recover your password
+TitleDirectory: Bitlove: Directory
+HeadingDirectory: Directory of torrentified Podcasters
