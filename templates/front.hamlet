@@ -4,7 +4,7 @@
   <div class="navtabs">
     <ul>
       <li>
-        <a href="/help">_{MsgLearnMore}</a>
+        <a href="@{HelpR}">_{MsgLearnMore}</a>
   <p class="about">
     _{MsgAreYouPublisher}
   <div class="navtabs">

@@ -1,6 +1,6 @@
 <header class="site">
   <h1>
-    <a href="/">Bitlove
+    <a href="@{FrontR}">Bitlove
   <p class="slogan">Peer-to-Peer Love for Your Podcast Downloads
   <p class="siteflattr">
     <a class="FlattrButton" style="display:none;" href="http://bitlove.org/" rev="flattr;button:large;">
@@ -14,16 +14,16 @@
       <div class="navDownloaded">
         <ul>
           <li>
-            <a href=@{TopDownloadedR (PeriodDays 1)}>1
+            <a href=@{TopDownloadedR $ PeriodDays 1}>1
           <li>
-            <a href="/top/7">7
+            <a href="@{TopDownloadedR $ PeriodDays 7}">7
           <li>
-            <a href="/top/30">30
+            <a href="@{TopDownloadedR $ PeriodDays 30}">30
           <li>
-            <a href="/top/all">∞
+            <a href="@{TopDownloadedR PeriodAll}">∞
           <li>_{MsgDays}
     <li>
-      <a href="/directory">_{MsgDirectory}
+      <a href="@{DirectoryR}">_{MsgDirectory}
 <div class="content">
   $maybe msg <- mmsg
     <div #message>#{msg}
@@ -46,11 +46,11 @@ $maybe user <- msu
   <div>
     <p>Help:
     <p>
-      <a href="/help/podcaster">Getting started
+      <a href="@{HelpPodcasterR}">Getting started
     <p>
-      <a href="/help/podcaster/widget">Widget
+      <a href="@{HelpWidgetR}">Widget
     <p>
-      <a href="/help/podcaster/api">API
+      <a href="@{HelpApiR}">API
   <div>
     <p>
       100% #
