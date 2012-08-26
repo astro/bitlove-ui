@@ -807,7 +807,6 @@ background-color: #efefeb; color: #312c2a;
 .filterbutton:after {
   content: "\25BE";
   border-left: 0.075em solid rgba(0,0,0,0.1);
-  float: right;
   font: 120%/1.6 zocial;
   font-style: normal;
   font-weight: normal;
