@@ -88,8 +88,7 @@ header.site .slogan {
 }
 .navtabs ul li {
   display: inline-block;
-  margin: 0 2.5em;
-  padding: 0 0 0.1em;
+  padding: 0 2.6em;
 }
 .navtabs ul li a {
   font-size: 90%;
@@ -99,22 +98,24 @@ header.site .slogan {
 }
 .navtabs .navDownloaded {
   display: none;
-}
-.navtabs:hover .navDownloaded {
-  display: block;
   position: absolute;
-  left: -6em;
-  min-width: 10em;
-  margin: 0 2.5em;
-  padding: 0;
-  font-size: 80%;
-  color: #666;
+  padding: 0 20px 20px;
 }
 
-.navtabs .navDownloaded {
-  background-color: white;
-  border-radius: 0 0 0.5em 0.5em;
+.navtabs .navDownloaded ul {
+    min-width: 10em;
+    margin: 0;
+    padding: 0;
+    font-size: 80%;
+    color: #666;
+    background-color: white;
+    border-radius: 0 0 0.5em 0.5em;
 }
+
+.navtabs li.navtop:hover .navDownloaded {
+  display: block;
+}
+
 .navtabs .navDownloaded li {
   display: inline-block;
   margin: 0;
