@@ -11,16 +11,17 @@
       <a href=@{NewR}>_{MsgNew}
     <li class="navtop">
       <a href=@{TopR}>_{MsgTop}
-      <ul class="navDownloaded">
-        <li>
-          <a href=@{TopDownloadedR (PeriodDays 1)}>1
-        <li>
-          <a href="/top/7">7
-        <li>
-          <a href="/top/30">30
-        <li>
-          <a href="/top/all">∞
-        <li>_{MsgDays}
+      <div class="navDownloaded">
+        <ul>
+          <li>
+            <a href=@{TopDownloadedR (PeriodDays 1)}>1
+          <li>
+            <a href="/top/7">7
+          <li>
+            <a href="/top/30">30
+          <li>
+            <a href="/top/all">∞
+          <li>_{MsgDays}
     <li>
       <a href="/directory">_{MsgDirectory}
 <div class="content">

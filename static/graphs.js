@@ -1,3 +1,11 @@
+$(function() {
+    $('.navtop').each(function() {
+        var a = $(this).outerWidth();
+        var sub = $('.navDownloaded', this);
+        sub.css({'left': (-(sub.outerWidth() - a)/2) + 'px'});
+    })
+});
+
 function timeToMS(t) {
     var d = new Date(t);
     return d.getTime() - d.getTimezoneOffset() * 60 * 1000;
