@@ -837,7 +837,7 @@ background-color: #efefeb; color: #312c2a;
   background-color: white;
   width: 20em;
   text-align: left;
-  z-index: 1;
+  z-index: 200;
 }
 .filterdialog .type, .filterdialog .lang {
   display: inline-block;
