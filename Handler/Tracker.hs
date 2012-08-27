@@ -23,7 +23,10 @@ import qualified WorkQueue as WQ
 
 
 -- TODO: make configurable
+ourPeerId :: PeerId
 ourPeerId = PeerId "-<30000-bitlove.org/"
+
+ourSeeders :: [TrackedPeer]
 ourSeeders = do
   addr <-  [ Peer4 "\85\10\246\236"
            , Peer6 "\x2a\x01\x04\xf8\x01\x60\x54\x21\x00\x00\x00\x00\x00\x00\x00\x03"

@@ -14,29 +14,23 @@ Some commands need to be adjusted or left off. Start the installation by running
     pg_ctl -D /usr/local/var/postgres start
     createdb prittorrent
 
-Next get the database setup sql files in your project folder:
+Next get the database dump in your project folder:
 
-    wget https://raw.github.com/astro/prittorrent/master/pg_install.sql
-    wget https://raw.github.com/astro/prittorrent/master/pg_meta.sql
-    wget https://raw.github.com/astro/prittorrent/master/pg_var.sql
-    wget https://raw.github.com/astro/prittorrent/master/pg_tracker.sql
-    wget https://raw.github.com/astro/prittorrent/master/pg_downloads.sql
-    wget https://raw.github.com/astro/prittorrent/master/pg_stats.sql
+    https://spaceboyz.net/~astro/prittorrent-2012-08-27.sql.bz2
+    bzip2 -d prittorrent-2012-08-27.sql.bz2
 
 Open a shell with `psql prittorrent` and enter:
 
     CREATE USER prittorrent WITH SUPERUSER PASSWORD '1234';
-    \i pg_install.sql
-    -- ignore the tablespace errors
-    \i pg_imagecache.sql
+    CREATE ROLE postgres;
+    \i prittorrent-2012-08-27.sql
     \q
-    rm pg_!(imagecache).sql
+    rm prittorrent-2012-08-27.sql
 
 Compile and run:
 
     cabal update && cabal install --only-dependencies
-    cabal configure && cabal build
-    ./dist/build/ui/ui Development
+    yesod devel
 
 Now point your browser to `http://localhost:8081/`.
 
@@ -74,4 +68,4 @@ Now point your browser to `http://localhost:8081/`.
 * Fetch & display feed summaries
 * Feed summaries: X items, Y torrents
 * OEmbed
-* Installation: automation, sample data, fix database setup
+* Installation: automation

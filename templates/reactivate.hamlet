@@ -1,3 +1,4 @@
+$newline always
 <section class="col">
   <form class="login"
   	method="POST"

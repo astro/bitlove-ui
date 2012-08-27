@@ -22,7 +22,6 @@ import Prelude
 import System.IO (stderr, hPrint)
 import Yesod
 import Yesod.Static
-import Control.Monad (forM_)
 import Control.Monad.Trans.Resource
 --import Yesod.Auth
 import Yesod.Default.Config
@@ -37,11 +36,12 @@ import Control.Applicative
 import Data.Conduit.Pool
 import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
+import Settings.StaticFiles
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Control.Exception as E
 import qualified Network.Wai as Wai
-import qualified Data.ByteString.Char8 as BC
+import Data.ByteString.Char8 (isInfixOf)
 
 import PathPieces
 import BitloveAuth
@@ -124,8 +124,9 @@ instance Yesod UIApp where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-          forM_ ["jquery-1.7.1.min.js", "jquery.flot.js", "graphs.js"] $
-            addScript . StaticR . flip StaticRoute [] . (:[])
+          addScript $ StaticR js_jquery_1_7_1_min_js
+          addScript $ StaticR js_jquery_flot_js
+          addScript $ StaticR js_graphs_js
           addScriptRemote "https://api.flattr.com/js/0.6/load.js?mode=auto&popout=0&button=compact"
           $(widgetFile "default-layout")
         hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -139,7 +140,7 @@ instance Yesod UIApp where
     -- The page to be redirected to when authentication is required.
     --authRoute _ = Just $ AuthR LoginR
 
-    messageLogger y loc level msg _ =
+    messageLogger _y _loc _level _msg _ =
       return ()
       --formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
 
@@ -177,22 +178,22 @@ authorizeFor user = do
 -- We want full http://host URLs only in a few cases (feeds, API)
 getFullUrlRender :: GHandler sub UIApp (Route UIApp -> Text)
 getFullUrlRender =
-    do approot <- appRoot <$> settings <$> getYesod
-       ((approot `T.append`) .) <$> getUrlRender
+    do approot' <- appRoot <$> settings <$> getYesod
+       (T.append approot' .) <$> getUrlRender
 
 isMiro :: GHandler sub master Bool
-isMiro = 
-    maybe False (maybe False (const True) .
-                 BC.findSubstring "Miro/") <$>
-    lookup "User-Agent" <$> 
-    Wai.requestHeaders <$> 
-    waiRequest
+isMiro = let
+        userAgent = lookup "User-Agent" <$> Wai.requestHeaders <$> waiRequest
+    in maybe False (isInfixOf "Miro/") <$> userAgent
+    
 
+errorHandler' :: forall sub.
+                 ErrorResponse -> GHandler sub UIApp ChooseRep
 errorHandler' NotFound =
   fmap chooseRep $ defaultLayout $ do
     setTitle "Bitlove: Not found"
     let img = StaticR $ StaticRoute ["404.jpg"] []
-    toWidget [hamlet|
+    toWidget [hamlet|$newline always
               <article>
                 <h2>Not Found
                 <img src="@{img}">
@@ -201,7 +202,7 @@ errorHandler' NotFound =
 errorHandler' (PermissionDenied _) =
   fmap chooseRep $ defaultLayout $ do
     setTitle "Bitlove: Permission denied"
-    toWidget [hamlet|
+    toWidget [hamlet|$newline always
               <h2>Permission denied
               |]
 errorHandler' e = do
@@ -209,7 +210,7 @@ errorHandler' e = do
   fmap chooseRep $ defaultLayout $
     do setTitle "Bitlove: Error"
        let img = StaticR $ StaticRoute ["500.jpg"] []
-       toWidget [hamlet|
+       toWidget [hamlet|$newline always
                  <article>
                    <h2>Oops
                    <img src="@{img}">

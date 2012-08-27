@@ -2,7 +2,6 @@ module WorkQueue where
 
 import Prelude
 import Control.Concurrent
-import Control.Concurrent.Chan
 import qualified Control.Exception as E
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 
@@ -19,7 +18,7 @@ makeQueue = do
              E.catch (runResourceT f) handleE
              loop
               
-  forkIO loop
+  _ <- forkIO loop
   return $ Queue chan
 
 enqueue :: Queue -> ResourceT IO () -> IO ()

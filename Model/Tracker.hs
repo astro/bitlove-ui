@@ -6,7 +6,6 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BC
-import Control.Monad (when)
 import Control.Applicative
 
 import Model.Query

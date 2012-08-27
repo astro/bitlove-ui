@@ -58,12 +58,12 @@ putUserFeedR user slug = do
   returnJson ["link" .= link]
     
     where validateSlug :: Text -> Bool
-          validateSlug slug = T.length slug >= 1 &&
+          validateSlug slg = T.length slg >= 1 &&
                               all (\c ->
                                     isAsciiLower c ||
                                     isDigit c ||
                                     c `elem` "-_"
-                                  ) (T.unpack slug)
+                                  ) (T.unpack slg)
 
 deleteUserFeedR :: UserName -> Text -> Handler RepJson
 deleteUserFeedR user slug = do

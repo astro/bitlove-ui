@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances, DeriveDataTypeable #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Model.Feed where
 
 import Prelude

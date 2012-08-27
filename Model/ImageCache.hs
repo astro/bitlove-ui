@@ -13,11 +13,11 @@ data CachedImage = CachedImage B.ByteString
                  | CachedError String
 
 instance Convertible [SqlValue] CachedImage where
-    safeConvert [data_, error] 
+    safeConvert [data_, err] 
         | not (B.null $ fromBytea data_) =
             Right $ CachedImage $ fromBytea data_
         | otherwise =
-            Right $ CachedError $ fromSql error
+            Right $ CachedError $ fromSql err
     safeConvert _ = Right $ CachedError "safeConvert CachedImage error"
 
 getImage :: Text -> Int -> Query CachedImage
@@ -29,9 +29,9 @@ putImage :: IConnection conn =>
             Text -> Int -> CachedImage -> conn -> IO ()
 putImage url size cached db =
     do 1 <- case cached of
-              CachedError error ->
+              CachedError err ->
                   run db "INSERT INTO cached_images (\"url\", \"size\", \"error\", \"time\") VALUES (?, ?, ?, NOW())" 
-                  [toSql url, toSql size, toSql error]
+                  [toSql url, toSql size, toSql err]
               CachedImage data_ ->
                   run db "INSERT INTO cached_images (\"url\", \"size\", \"data\", \"time\") VALUES (?, ?, ?, NOW())" 
                   [toSql url, toSql size, toBytea data_]
