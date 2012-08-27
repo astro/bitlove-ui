@@ -4,6 +4,8 @@ module Handler.ByEnclosureAPI where
 import Prelude
 import Yesod
 import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import qualified Text.Regex.PCRE.Light as PCRE
 import Control.Monad
 import Data.Time
 
@@ -21,7 +23,8 @@ getByEnclosureJson = do
   urlDownloads <- withDB $ \db ->
     forM urls $ \url ->
         (url, ) `fmap`
-        enclosureDownloads url db
+        let url' = rewriteUrl url
+        in enclosureDownloads url' db
   -- Drop enclosures with no associated download
   let urlDownloads' = filter ((> 0) . length . snd) urlDownloads
   RepJson `fmap` 
@@ -63,6 +66,18 @@ getByEnclosureJson = do
                                   , "item.image" .= downloadImage d
                                   , "feed.title" .= downloadFeedTitle d
                                   ]
+          rewriteUrl :: Text -> Text
+          rewriteUrl t =
+              let rePodpress = PCRE.compile "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$" []
+                  t' = encodeUtf8 t
+              in case PCRE.match rePodpress t' [] of
+                   Just [_, r1, r2] ->
+                       T.concat [ decodeUtf8 r1
+                                , "feed"
+                                , decodeUtf8 r2
+                                ]
+                   _ ->
+                       t
 
 torrentLink :: Download -> GHandler y' UIApp Text
 torrentLink d = 
