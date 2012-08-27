@@ -36,14 +36,18 @@ withPage page f =
 getFrontR :: Handler RepHtml
 getFrontR = do
   downloads <- withDB $
-               Model.mostDownloaded 1 (Model.QueryPage 4 0)
+               Model.mostDownloaded 1 (Model.QueryPage 20 0)
   defaultLayout $ do
     setTitleI MsgTitle
     $(whamletFile "templates/front.hamlet")
     [whamlet|$newline always
-<section class="col2">
-  ^{renderDownloads downloads True}
-|]
+     <section class="downloads">
+       <ul>
+         $forall item <- Model.groupDownloads downloads
+           <li>
+             <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">
+               <img src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 64)}">
+     |]
 
 getNewR :: Handler RepHtml
 getNewR = do
@@ -235,7 +239,7 @@ getUserFeedR user slug = do
                                 <div class="title">
                                   <div>
                                     <h2>#{feedTitle feed}
-                                    <span class="publisher">
+                                    <p class="publisher">
                                       \ _{MsgBy} #
                                       <a href="@{UserR user}">#{userName user}
                                   $if not (T.null $ feedHomepage feed)
@@ -311,10 +315,10 @@ renderItem item showOrigin = do
         <img class="logo"
              src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}">
       <div class="right">
-        <p class="published">#{date}
         $if not (T.null $ itemPayment item)
           <div class="flattr">
             #{renderPayment}
+        <p class="published">#{date}
       <div class="title">
         <h3>
           <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
@@ -330,15 +334,15 @@ renderItem item showOrigin = do
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
+          <i class="icon-download"></i>
           <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              data-type="#{downloadType d}">
-            $if isOnlyType (downloadType d)
-              <span>#{downloadLabel d}
-            $else
-              <span>#{downloadName d}
-            \ #
+            <span class="type">#{downloadLabel d}
+            $if not (isOnlyType (downloadType d))
+              <span class="name-info icon-info-sign">
+                <span class="file-name">#{downloadName d}
             <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">
@@ -470,10 +474,10 @@ renderPagination page =
      <nav .pagination>
        $maybe previous <- pagePrevious page
          <p .previous>
-           <a href="#{previous}">⟸
+           <a href="#{previous}"><i class="icon-arrow-left"></i> Previous
        $maybe next <- pageNext page
          <p .next>
-           <a href="#{next}">⟹
+           <a href="#{next}">Next <i class="icon-arrow-right"></i>
      |]
 
 makePage :: Handler Page

@@ -2,15 +2,18 @@ NoScript: JavaScript wird benötigt
 Password: Passwort
 PasswordRepeat: Wiederholen
 Activate: Aktivieren
+Within: Innerhalb
 Days: Tage
 LoggedInAs: Eingeloggt als
 Logout: Logout
-New: Neu
-Top: Top
-Directory: Verzeichnis
+Front: Was ist Bitlove?
+New: Neue Folgen
+Top: Top-Folgen
+Directory: Alle Folgen
+GettingStarted: Kurzanleitung
 NewTorrents: Neue Torrents
 TopTorrents: Beliebte Torrents
-TopDownloadedDay: Meist heruntergeladen an 1 Tag
+TopDownloadedDay: Meist heruntergeladen an einem Tag
 TopDownloadedDays n@Int: Meist heruntergeladen in #{show n} Tagen
 TopDownloadedAll: Meist heruntergeladen jeher
 In: bei

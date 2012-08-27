@@ -12,7 +12,7 @@ import Handler.Browse (renderFeedsList, addFeedsLinks)
 getDirectoryR :: Handler RepHtml
 getDirectoryR = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory)
-  let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
+  --let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
   defaultLayout $ do
     setTitleI MsgTitleDirectory
     let 
@@ -22,10 +22,8 @@ getDirectoryR = do
     [whamlet|$newline always
               <h2>_{MsgHeadingDirectory}
               ^{renderFeedsList links}
-              <section class="col1 directory">
-                ^{renderEntries dir1}
-              <section class="col2 directory">
-                ^{renderEntries dir2}
+              <section class="directory">
+                ^{renderEntries dir}
               |]
     where renderEntries entries =
               [hamlet|$newline always

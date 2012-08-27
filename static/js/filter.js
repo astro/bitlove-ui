@@ -186,7 +186,7 @@ FilterDialog.prototype = {
 
 var container = $('<div class="filter"></div>');
 $('.feedslist').after(container);
-var filterButton = $('<a class="filterbutton">Filter</a>');
+var filterButton = $('<a class="filterbutton">Filter<i class="icon-caret-down"></i></a>');
 container.append(filterButton);
 
 var filterDialog;
@@ -196,12 +196,22 @@ filterButton.click(function(ev) {
     if (!filterDialog) {
 	filterDialog = new FilterDialog();
 	container.append(filterDialog.el);
-	filterButton.addClass('toggled');
+	$("i", filterButton).addClass('icon-caret-up').removeClass('icon-caret-down');
     } else {
 	filterDialog.hide();
 	filterDialog = null;
-	filterButton.removeClass('toggled');
+	$("i", filterButton).addClass('icon-caret-down').removeClass('icon-caret-up');
     }
 });
+
+$('.torrent .name-info').each(function() {
+  var a = $(this).parent(a);
+  var title = a.attr('title');
+  var nameInfo = $(this);
+  (function (a, title, nameInfo) {
+    nameInfo.hover(function() { a.removeAttr('title') },
+                  function() { a.attr('title', title) })
+  })(a, title, nameInfo);
+})
 
 })();
