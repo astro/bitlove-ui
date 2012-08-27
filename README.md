@@ -1,8 +1,8 @@
 # Bitlove (Web Interface)
 
-The Bitlove web interface is built with Haskell using the Yesod framework. See [the website](http://bitlove.org/) for information about the project.
+The Bitlove web interface is built with Haskell using the Yesod framework. See [Bitlove.org](http://bitlove.org/) for the actual site.
 
-The Yesod project has a [Yesod book](http://www.yesodweb.com/book) with links to a [Haskell book](http://learnyouahaskell.com/chapters) and [a second one](http://book.realworldhaskell.org/read/) (all online readable).
+The Yesod project has [a little book](http://www.yesodweb.com/book). For beginners, read [Real World Haskell](http://book.realworldhaskell.org/read/).
 
 ## Installation (for the less experienced)
 
@@ -27,19 +27,19 @@ Open a shell with `psql prittorrent` and enter:
 
     CREATE USER prittorrent WITH SUPERUSER PASSWORD '1234';
     \i pg_install.sql
-    -- second time (it’s a bit messed up)
-    \i pg_install.sql
+    -- ignore the tablespace errors
     \i pg_imagecache.sql
     \q
     rm pg_!(imagecache).sql
 
-Compile and run (add your cabal bin directory to `PATH`):
+Compile and run:
 
     cabal update && cabal install --only-dependencies
-    yesod configure && yesod build
+    cabal configure && cabal build
     ./dist/build/ui/ui Development
 
-Now point your browser to `http://localhost:8081/`. If you don’t have a `localhost` entry in your `/etc/host` file, add it.
+Now point your browser to `http://localhost:8081/`.
+
 
 ## TODO
 
