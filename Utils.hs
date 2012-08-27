@@ -53,11 +53,12 @@ fromHex = B.pack . hexToWords
 
 
 -- FIXME: rm usage once feeds parser stores URLs properly
+fixUrl :: T.Text -> T.Text
 fixUrl = unescapeEntities
 
 unescapeEntities :: T.Text -> T.Text
-unescapeEntities t =
-    case T.break (== '&') t of
+unescapeEntities text =
+    case T.break (== '&') text of
       (t, "") ->
           t
       (t', t'') ->

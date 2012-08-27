@@ -5,7 +5,6 @@ import Data.Conduit
 import Network.HTTP.Conduit
 import System.Process.QQ
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as T
 import Network.HTTP.Types (statusCode)
 import qualified Data.Conduit.List as CL

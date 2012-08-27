@@ -16,12 +16,13 @@ import Prelude
 import Text.Shakespeare.Text (st)
 import Language.Haskell.TH.Syntax
 import Yesod.Default.Config
-import qualified Yesod.Default.Util
+import Yesod.Default.Util
 import Data.Text (Text)
 import Data.Yaml
 import Control.Applicative
 import Settings.Development
-import Data.Default
+import Data.Default (def)
+import Text.Hamlet
 
 
 data BitloveEnv = Development
@@ -55,12 +56,22 @@ staticRoot :: AppConfig DefaultEnv x -> Text
 staticRoot conf = [st|#{appRoot conf}/static|]
 
 
+-- | Settings for 'widgetFile', such as which template languages to support and
+-- default Hamlet settings.
+widgetFileSettings :: WidgetFileSettings
+widgetFileSettings = def
+    { wfsHamletSettings = defaultHamletSettings
+        { hamletNewlines = AlwaysNewlines
+        }
+    }
+
 -- The rest of this file contains settings which rarely need changing by a
 -- user.
 
 widgetFile :: String -> Q Exp
-widgetFile = if development then Yesod.Default.Util.widgetFileReload def
-                            else Yesod.Default.Util.widgetFileNoReload def
+widgetFile = (if development then widgetFileReload
+                             else widgetFileNoReload)
+              widgetFileSettings
 
 data Extra = Extra
     { extraCopyright :: Text

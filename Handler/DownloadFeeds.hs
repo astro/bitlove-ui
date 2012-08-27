@@ -53,7 +53,7 @@ instance RepFeed RepRss where
   renderFeed params items = do
     url <- getFullUrlRender
     let image = pImage params
-    RepRss `fmap` hamletToContent [xhamlet|
+    RepRss `fmap` hamletToContent [xhamlet|$newline always
 <rss version="2.0"
      xmlns:atom=#{nsAtom}>
   <channel>
@@ -96,7 +96,7 @@ instance RepFeed RepAtom where
     let image = pImage params
     url <- getFullUrlRender
     tz <- liftIO getCurrentTimeZone
-    RepAtom `fmap` hamletToContent [xhamlet|
+    RepAtom `fmap` hamletToContent [xhamlet|$newline always
 <feed version="1.0"
       xmlns=#{nsAtom}>
     <title>#{pTitle params}
@@ -137,6 +137,7 @@ instance RepFeed RepAtom where
                   >
     |]
 
+itemLink :: (Route UIApp -> Text) -> Item -> Text
 itemLink urlRender item =
     urlRender (UserFeedR (itemUser item) (itemSlug item)) `T.append`
     "#" `T.append`

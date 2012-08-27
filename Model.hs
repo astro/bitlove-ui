@@ -63,7 +63,6 @@ import Prelude
 import Data.Convertible
 import Data.Text (Text)
 import Database.HDBC
-import Data.Time
 import Data.Data (Typeable)
 import qualified Data.ByteString.Char8 as BC
 import Control.Applicative
@@ -121,16 +120,16 @@ data DirectoryEntry = DirectoryEntry
     } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] DirectoryEntry where
-    safeConvert (user:userTitle:userImage:
-                 feedSlug:feedTitle:feedLang:feedTypes:[]) = 
+    safeConvert (userVal:userTitleVal:userImageVal:
+                 feedSlugVal:feedTitleVal:feedLangVal:feedTypesVal:[]) = 
       DirectoryEntry <$>
-      safeFromSql user <*>
-      safeFromSql userTitle <*>
-      (fixUrl <$> safeFromSql userImage) <*>
-      safeFromSql feedSlug <*>
-      safeFromSql feedTitle <*>
-      safeFromSql feedLang <*>
-      safeFromSql feedTypes
+      safeFromSql userVal <*>
+      safeFromSql userTitleVal <*>
+      (fixUrl <$> safeFromSql userImageVal) <*>
+      safeFromSql feedSlugVal <*>
+      safeFromSql feedTitleVal <*>
+      safeFromSql feedLangVal <*>
+      safeFromSql feedTypesVal
     safeConvert vals = convError "DirectoryEntry" vals
       
 getDirectory :: Query DirectoryEntry
