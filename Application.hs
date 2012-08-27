@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( makeApplication
+    , getApplicationDev
     , makeUIFoundation
     ) where
 
@@ -126,6 +127,14 @@ makeApplication conf = do
              , Wai.rawPathInfo req
              ]
            return $ res'
+
+getApplicationDev :: IO (Int, Application)
+getApplicationDev =
+    defaultDevelApp loader makeApplication
+  where
+    loader = loadConfig (configSettings Settings.Development)
+        { csParseExtra = parseExtra 
+        }
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
 makeUIFoundation conf pool = do
