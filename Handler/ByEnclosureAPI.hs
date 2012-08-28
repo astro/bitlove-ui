@@ -8,6 +8,7 @@ import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import qualified Text.Regex.PCRE.Light as PCRE
 import Control.Monad
 import Data.Time
+import Data.Maybe (catMaybes)
 
 import Import
 
@@ -68,16 +69,36 @@ getByEnclosureJson = do
                                   ]
           rewriteUrl :: Text -> Text
           rewriteUrl t =
-              let rePodpress = PCRE.compile "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$" []
-                  t' = encodeUtf8 t
-              in case PCRE.match rePodpress t' [] of
-                   Just [_, r1, r2] ->
-                       T.concat [ decodeUtf8 r1
-                                , "feed"
-                                , decodeUtf8 r2
-                                ]
-                   _ ->
-                       t
+              let t' = encodeUtf8 t
+                  rePodpress = PCRE.compile "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$" []
+                  rewritePodpress =
+                      do [_, r1, r2] <- PCRE.match rePodpress t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , "feed"
+                                         , decodeUtf8 r2
+                                         ]
+                  reBlubrry1 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?\\/)p\\/(.+?)$" []
+                  rewriteBlubrry1 =
+                      do [_, r1, r2, r3] <- PCRE.match reBlubrry1 t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , decodeUtf8 r2
+                                         , decodeUtf8 r3
+                                         ]
+                  reBlubrry2 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?)$" []
+                  rewriteBlubrry2 =
+                      do [_, r1, r2] <- PCRE.match reBlubrry2 t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , decodeUtf8 r2
+                                         ]
+              in head $
+                 catMaybes [ rewritePodpress
+                           , rewriteBlubrry1
+                           , rewriteBlubrry2
+                           , Just t
+                           ]
 
 torrentLink :: Download -> GHandler y' UIApp Text
 torrentLink d = 
