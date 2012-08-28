@@ -1,5 +1,11 @@
+window.bitlovePodpress = false;
+
 var $ = jQuery;
 $(document).ready(function() {
+    if (window.bitlovePodpress)
+	return;
+    window.bitlovePodpress = true;
+
     /* For Podpress */
     $('.podPress_downloadlinks').each(function() {
 	var orig = $(this);

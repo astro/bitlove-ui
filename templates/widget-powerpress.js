@@ -1,4 +1,10 @@
+window.bitlovePowerpress = false;
+
 document.addEventListener('DOMContentLoaded', function(){
+    if (window.bitlovePowerpress)
+	return;
+    window.bitlovePowerpress = true;
+
     var i, ps = document.getElementsByClassName('powerpress_links');
     for(i = 0; i < ps.length; i++) {
 	var p = ps[i];
