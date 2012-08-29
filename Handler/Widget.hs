@@ -9,6 +9,7 @@ import Data.Monoid
 import Import
 
 
+cacheWidget :: GHandler a b ()
 cacheWidget = cacheSeconds $ 60 * 60
 
 newtype RepJs = RepJs Content
