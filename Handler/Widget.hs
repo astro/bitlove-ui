@@ -7,6 +7,9 @@ import Data.Monoid
 
 import Import
 
+
+cacheWidget = cacheSeconds $ 60 * 60
+
 newtype RepJs = RepJs Content
 
 instance HasReps RepJs where
@@ -22,22 +25,26 @@ wrapJs js = mconcat
 
 getWidgetBaseR :: Handler RepJs
 getWidgetBaseR =
-    serveJs $
-    fromByteString "window.torrentByEnclosure = " `mappend`
-    wrapJs (fromByteString $(embedFile "templates/widget-base.js"))
+    do cacheWidget
+       serveJs $
+               fromByteString "window.torrentByEnclosure = "
+               `mappend`
+               wrapJs (fromByteString $(embedFile "templates/widget-base.js"))
     
 getWidgetPowerpressR :: Handler RepJs
 getWidgetPowerpressR =
-    serveJs $
-    wrapJs $
-    fromByteString $(embedFile "templates/widget-base.js")
-    `mappend`
-    fromByteString $(embedFile "templates/widget-powerpress.js")
+    do cacheWidget
+       serveJs $
+               wrapJs $
+               fromByteString $(embedFile "templates/widget-base.js") 
+               `mappend`
+               fromByteString $(embedFile "templates/widget-powerpress.js")
 
 getWidgetPodpressR :: Handler RepJs
 getWidgetPodpressR =
-    serveJs $
-    wrapJs $
-    fromByteString $(embedFile "templates/widget-base.js")
-    `mappend`
-    fromByteString $(embedFile "templates/widget-podpress.js")
+    do cacheWidget
+       serveJs $
+               wrapJs $
+               fromByteString $(embedFile "templates/widget-base.js")
+               `mappend`
+               fromByteString $(embedFile "templates/widget-podpress.js")

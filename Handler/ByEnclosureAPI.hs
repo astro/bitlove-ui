@@ -4,8 +4,11 @@ module Handler.ByEnclosureAPI where
 import Prelude
 import Yesod
 import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import qualified Text.Regex.PCRE.Light as PCRE
 import Control.Monad
 import Data.Time
+import Data.Maybe (catMaybes)
 
 import Import
 
@@ -21,7 +24,8 @@ getByEnclosureJson = do
   urlDownloads <- withDB $ \db ->
     forM urls $ \url ->
         (url, ) `fmap`
-        enclosureDownloads url db
+        let url' = rewriteUrl url
+        in enclosureDownloads url' db
   -- Drop enclosures with no associated download
   let urlDownloads' = filter ((> 0) . length . snd) urlDownloads
   RepJson `fmap` 
@@ -63,6 +67,38 @@ getByEnclosureJson = do
                                   , "item.image" .= downloadImage d
                                   , "feed.title" .= downloadFeedTitle d
                                   ]
+          rewriteUrl :: Text -> Text
+          rewriteUrl t =
+              let t' = encodeUtf8 t
+                  rePodpress = PCRE.compile "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$" []
+                  rewritePodpress =
+                      do [_, r1, r2] <- PCRE.match rePodpress t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , "feed"
+                                         , decodeUtf8 r2
+                                         ]
+                  reBlubrry1 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?\\/)p\\/(.+?)$" []
+                  rewriteBlubrry1 =
+                      do [_, r1, r2, r3] <- PCRE.match reBlubrry1 t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , decodeUtf8 r2
+                                         , decodeUtf8 r3
+                                         ]
+                  reBlubrry2 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?)$" []
+                  rewriteBlubrry2 =
+                      do [_, r1, r2] <- PCRE.match reBlubrry2 t' []
+                         return $
+                                T.concat [ decodeUtf8 r1
+                                         , decodeUtf8 r2
+                                         ]
+              in head $
+                 catMaybes [ rewritePodpress
+                           , rewriteBlubrry1
+                           , rewriteBlubrry2
+                           , Just t
+                           ]
 
 torrentLink :: Download -> GHandler y' UIApp Text
 torrentLink d = 

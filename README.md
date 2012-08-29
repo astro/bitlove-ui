@@ -44,11 +44,8 @@ Now point your browser to `http://localhost:8081/`.
 ## TODO
 
 * Filter for directory
-* edit-*.js: scroll up
-* i18n
 * Search
 * Fix pagination
-
 * Per-item pages
 * MapFeed content-type
 * URL longener?
