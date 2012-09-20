@@ -27,11 +27,12 @@ getWidgetBaseR :: Handler RepJs
 getWidgetBaseR =
     do cacheWidget
        serveJs $
-               mconcat
-               [ fromByteString "window.torrentByEnclosure = "
-               , wrapJs (fromByteString $(embedFile "templates/widget-base.js"))
-               , fromByteString "return resolve;"
-               ]
+               fromByteString "window.torrentByEnclosure = "
+               `mappend`
+               wrapJs (fromByteString $(embedFile "templates/widget-base.js")
+                       `mappend`
+                       fromByteString "return resolve;"
+                      )
     
 getWidgetPowerpressR :: Handler RepJs
 getWidgetPowerpressR =
