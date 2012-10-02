@@ -352,6 +352,7 @@ h3 {
 }
 .torrent {
   float: left;
+  white-space: nowrap;
 }
 /***
    * This button has been copied from
