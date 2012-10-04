@@ -230,6 +230,8 @@ getUserFeedR user slug = do
           <span class="publisher">
             \ _{MsgBy} #
             <a href="@{UserR user}">#{userName user}
+        $if canEdit'
+          <p .note>#{feedUrl feed}
         $if not (T.null $ feedHomepage feed)
           <p class="homepage">
             <a rel="me"
