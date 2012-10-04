@@ -79,7 +79,7 @@ instance PathPiece UserName where
   
   
 instance PathPiece Token where
-  fromPathPiece = Just . Token . fromHex
+  fromPathPiece = Just . Token . fromHex' . T.unpack
   toPathPiece = toHex . unToken
   
 

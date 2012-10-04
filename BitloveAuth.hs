@@ -41,7 +41,7 @@ sessionBackend withDB =
                ]
            mSid 
              | maybe False isHex mSidCookie = 
-                 (SessionId . fromHex . T.pack . BC.unpack) `fmap`
+                 (SessionId . fromHex' . BC.unpack) `fmap`
                  mSidCookie
              | otherwise = 
                  Nothing

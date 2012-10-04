@@ -5,16 +5,16 @@ import Prelude
 import Data.Convertible
 import Data.Text (Text)
 import Database.HDBC
-import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
 
 import Model.Query
 
-data CachedImage = CachedImage B.ByteString
+data CachedImage = CachedImage LB.ByteString
                  | CachedError String
 
 instance Convertible [SqlValue] CachedImage where
     safeConvert [data_, error] 
-        | not (B.null $ fromBytea data_) =
+        | not (LB.null $ fromBytea data_) =
             Right $ CachedImage $ fromBytea data_
         | otherwise =
             Right $ CachedError $ fromSql error

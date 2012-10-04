@@ -65,7 +65,7 @@ import Data.Text (Text)
 import Database.HDBC
 import Data.Time
 import Data.Data (Typeable)
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy as LB
 import Control.Applicative
 
 import Utils
@@ -86,7 +86,7 @@ data Torrent = Torrent {
   torrentInfoHash :: InfoHash,
   torrentName :: Text,
   torrentSize :: Integer,
-  torrentTorrent :: BC.ByteString
+  torrentTorrent :: LB.ByteString
 } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] Torrent where

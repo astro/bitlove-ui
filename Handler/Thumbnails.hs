@@ -9,7 +9,7 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as T
 import Network.HTTP.Types (statusCode)
 import qualified Data.Conduit.List as CL
-import Blaze.ByteString.Builder (fromByteString)
+import Blaze.ByteString.Builder (fromLazyByteString)
 import Data.Maybe
 import qualified Control.Exception.Lifted as EX
 import System.IO
@@ -22,7 +22,7 @@ import qualified Model
 import qualified Model.ImageCache as Cache
 
 
-generateThumbnail :: T.Text -> Int -> Handler (Maybe B.ByteString)
+generateThumbnail :: T.Text -> Int -> Handler (Maybe LB.ByteString)
 generateThumbnail url size = 
     do cacheSeconds $ 24 * 60 * 60
        mSource <- download
@@ -30,7 +30,7 @@ generateThumbnail url size =
          Nothing ->
              return Nothing
          Just source ->
-             Just <$> B.concat <$>
+             Just <$> LB.fromChunks <$>
              lift (source $$+- (resize =$ CL.consume))
   where download :: Handler (Maybe (ResumableSource (ResourceT IO) B.ByteString))
         download = do
@@ -49,12 +49,14 @@ generateThumbnail url size =
                   |]
 
 
-newtype RepPng = RepPng B.ByteString
+newtype RepPng = RepPng LB.ByteString
 
 instance HasReps RepPng where
-  chooseRep (RepPng src) _cts =
+  chooseRep (RepPng src) _cts = do
+    let builder = fromLazyByteString src
+        len = fromIntegral $ LB.length src
     return (typePng,
-            ContentBuilder (fromByteString src) (Just $ B.length src)
+            ContentBuilder builder (Just len)
            )
 
 data EmptyException = EmptyException
@@ -76,7 +78,7 @@ serveThumbnail size url
                  noThumbnail
              Nothing ->
                  do let storeReturn data_ =
-                            do when (B.null data_) $
+                            do when (LB.null data_) $
                                     EX.throw EmptyException
                                -- TODO: catch here for concurrent updates
                                withDB $ Cache.putImage url size $

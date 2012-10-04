@@ -4,9 +4,6 @@ import Yesod
 import Import
 import qualified Model as Model
 
-import Debug.Trace
-import qualified Data.ByteString.Char8 as BC
-
 
 typeTorrent :: ContentType
 typeTorrent = "application/x-bittorrent"
@@ -25,5 +22,5 @@ getTorrentFileR user slug (TorrentName name) = do
       notFound
     (torrent:_) -> do
       let content = toContent $ torrentTorrent torrent
-      trace ("content: " ++ show (BC.length $ torrentTorrent torrent)) $ return $ RepTorrent content
+      return $ RepTorrent content
       

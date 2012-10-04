@@ -29,10 +29,10 @@ infoHashToHex (InfoHash bs) =
   unpack bs
                           
 instance Convertible InfoHash SqlValue where
-  safeConvert (InfoHash bs) = Right $ toBytea bs
+  safeConvert (InfoHash bs) = Right $ toBytea' bs
 
 instance Convertible SqlValue InfoHash where
-  safeConvert = Right . InfoHash . fromBytea
+  safeConvert = Right . InfoHash . fromBytea'
 
 -- For selecting just the info_hash column:
 instance Convertible [SqlValue] InfoHash where

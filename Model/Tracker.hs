@@ -39,21 +39,21 @@ newtype PeerId = PeerId { unPeerId :: BC.ByteString }
                deriving (Show, Typeable)
 
 instance Convertible SqlValue PeerId where
-    safeConvert = Right . PeerId . fromBytea
+    safeConvert = Right . PeerId . fromBytea'
     
 instance Convertible PeerId SqlValue where
-    safeConvert = Right . toBytea . unPeerId
+    safeConvert = Right . toBytea' . unPeerId
 
 data PeerAddress = Peer4 !BC.ByteString
                  | Peer6 !BC.ByteString
                    deriving (Show, Read, Typeable, Eq, Ord)
                    
 instance Convertible PeerAddress SqlValue where
-    safeConvert (Peer4 addr) = Right $ toBytea addr
-    safeConvert (Peer6 addr) = Right $ toBytea addr
+    safeConvert (Peer4 addr) = Right $ toBytea' addr
+    safeConvert (Peer6 addr) = Right $ toBytea' addr
 
 instance Convertible SqlValue PeerAddress where
-    safeConvert = decide . fromBytea
+    safeConvert = decide . fromBytea'
         where decide addr
                   | BC.length addr == 4 =
                       Right $ Peer4 addr

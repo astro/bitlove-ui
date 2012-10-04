@@ -1,5 +1,5 @@
 module Utils ( iso8601, rfc822, localTimeToZonedTime
-             , isHex, toHex, fromHex
+             , isHex, toHex, fromHex, fromHex'
              , fixUrl, unescapeEntities
              ) where
 
@@ -7,6 +7,7 @@ import Prelude
 import Data.Time
 import System.Locale
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import Numeric (readDec, readHex, showHex)
@@ -42,14 +43,17 @@ toHex = T.pack . concatMap mapByte . B.unpack
               | length s < len = pad len padding $ padding:s
               | otherwise = s
 
-fromHex :: T.Text -> B.ByteString
-fromHex = B.pack . hexToWords
-  where hexToWords text
-          | T.null text = []
-          | otherwise = 
-            let (hex, text') = T.splitAt 2 text
-                w = fst $ head $ readHex $ T.unpack hex
-            in w:(hexToWords text')
+fromHex :: String -> LB.ByteString
+fromHex = LB.pack . hexToWords
+  where hexToWords (c:c':text) =
+            let hex = [c, c']
+                (word, _):_ = readHex hex
+            in word : hexToWords text
+        hexToWords _ = []
+
+-- Strict variant of above
+fromHex' :: String -> B.ByteString
+fromHex' = B.concat . LB.toChunks . fromHex
 
 
 -- FIXME: rm usage once feeds parser stores URLs properly

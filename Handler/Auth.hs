@@ -159,7 +159,7 @@ postLoginR = do
     (Nothing, Just hexToken, Just hexResponse) ->
         do r <-
              withDB $ \db -> do
-               let token = Token $ fromHex hexToken
+               let token = Token $ fromHex' $ T.unpack hexToken
                users <- Model.validateToken "login" token db
                case users of
                  [] ->
@@ -168,7 +168,7 @@ postLoginR = do
                      do (UserSalt _ salted):_ <- userSalt user db
                         let hexSalted = toHex $ unSalted salted
                         expected <- runResourceT $ hmacSHA1 (unToken token) (encodeUtf8 hexSalted)
-                        case fromHex hexResponse of
+                        case fromHex' $ T.unpack hexResponse of
                           response
                               | response == expected ->
                                 -- Success!
@@ -215,7 +215,7 @@ getActivateR token = do
 
 postActivateR :: Token -> Handler RepJson
 postActivateR token = do
-  Just salted <- (fmap $ Salted . fromHex) `fmap`
+  Just salted <- (fmap $ Salted . fromHex' . T.unpack) `fmap`
                  lookupPostParam "salted"
   mUser <- withDB $ \db ->
     do users <- Model.validateToken "activate" token db

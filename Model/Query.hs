@@ -6,8 +6,10 @@ import Database.HDBC
 import Data.Convertible
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.ByteString (ByteString, pack, unpack)
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.Lazy.Char8 as LBC
 import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
 import Control.Monad (mapM)
@@ -16,6 +18,7 @@ import System.IO
 import Control.Applicative
 import Data.Either
 import Data.Default
+import Debug.Trace
 
 import Utils
 
@@ -58,31 +61,46 @@ instance Convertible QueryPage [SqlValue] where
            offset' <- safeConvert offset
            return [limit', offset']
   
-fromBytea :: SqlValue -> ByteString
+-- TODO: return LB?
+fromBytea :: SqlValue -> LBC.ByteString
 fromBytea SqlNull = ""
-fromBytea sql = unescape $ fromSql sql
-  where unescape :: ByteString -> ByteString
-        unescape text =
-          case BC.splitAt 2 text of
-            ("\\x", hex) ->
-              -- efficiency?
-              fromHex $ T.pack $ BC.unpack hex
-            _ ->
-              pack $ octToWords text
-        octToWords = go . BC.unpack
-          where go ('\\':c:t)
-                  | c `elem` "\\\"\'\n\r\t" = fromIntegral (ord c) : go t
-                go ('\\':t) = let (oct, t') = splitAt 3 t
-                              in case readOct oct of
-                                [(n, "")] -> 
-                                  n : go t'
-                                _ -> 
-                                  error $ "Cannot read oct " ++ show oct
-                go (c:t) = (fromIntegral $ ord c):(go t)
-                go [] = []
+fromBytea sql =
+  let text :: String
+      text = fromSql sql
+  in trace ("fromBytea " ++ show (length text)) $
+    case text of
+      '\\':'x':hex ->
+          fromHex hex
+      text' ->
+          let unescape ('\\':c:t)
+                  | c `elem` "\\\"\'" = 
+                      c : unescape t
+                  | c == 'n' =
+                      '\n' : unescape t
+                  | c == 'r' =
+                      '\r' : unescape t
+                  | c == 't' =
+                      '\t' : unescape t
+              unescape ('\\':t) = 
+                  let (oct, t') = splitAt 3 t
+                  in 
+                    case readOct oct of
+                      [(n, "")] -> 
+                          chr n : unescape t'
+                      _ -> 
+                          error $ "Cannot read oct " ++ show oct
+              unescape (c:t) = c : unescape t
+              unescape "" = trace ("fromBytea unescaped " ++ show (length text)) ""
+
+        in LBC.pack $ unescape text'
                            
-toBytea :: ByteString -> SqlValue
-toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . unpack
+-- Strict variant of above
+fromBytea' :: SqlValue -> B.ByteString
+fromBytea' = B.concat . LBC.toChunks . fromBytea
+           
+-- TODO: BC.pack neccessary?
+toBytea :: LB.ByteString -> SqlValue
+toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . LB.unpack
   where escape 92 = "\\\\"
         escape c | c >= 32 && c <= 126 = [chr c]
         escape c = "\\" ++ oct c
@@ -91,3 +109,6 @@ toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . unpack
         pad targetLen padding s
           | length s >= targetLen = s
           | otherwise = pad targetLen padding (padding:s)
+
+toBytea' :: B.ByteString -> SqlValue
+toBytea' = toBytea . LB.fromChunks . (:[])
