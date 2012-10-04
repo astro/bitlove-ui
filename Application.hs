@@ -115,10 +115,10 @@ makeApplication conf = do
            utc2 <- liftIO getCurrentTime
            liftIO $ BC.hPutStrLn stderr $ BC.concat
              [ "["
-             , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
-             , "ms cpu "
              , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
-             , "ms real] "
+             , "ms real "
+             , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
+             , "ms cpu] "
              , BC.pack $ show $ statusCode $ Wai.responseStatus res
              , " "
              , Wai.requestMethod req
