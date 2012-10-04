@@ -18,7 +18,6 @@ import System.IO
 import Control.Applicative
 import Data.Either
 import Data.Default
-import Debug.Trace
 
 import Utils
 
@@ -67,7 +66,7 @@ fromBytea SqlNull = ""
 fromBytea sql =
   let text :: String
       text = fromSql sql
-  in trace ("fromBytea " ++ show (length text)) $
+  in 
     case text of
       '\\':'x':hex ->
           fromHex hex
@@ -90,7 +89,7 @@ fromBytea sql =
                       _ -> 
                           error $ "Cannot read oct " ++ show oct
               unescape (c:t) = c : unescape t
-              unescape "" = trace ("fromBytea unescaped " ++ show (length text)) ""
+              unescape "" = ""
 
         in LBC.pack $ unescape text'
                            
