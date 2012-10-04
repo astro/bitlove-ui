@@ -24,6 +24,7 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Monoid
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
+import Control.Monad.Trans.Resource (register)
 
 
 -- Import all relevant handler modules here.
@@ -111,20 +112,21 @@ makeApplication conf = do
            utc1 <- liftIO getCurrentTime
            res <- app req
            let res' = res `seq` res
-           cpu2 <- liftIO getCPUTime
-           utc2 <- liftIO getCurrentTime
-           liftIO $ BC.hPutStrLn stderr $ BC.concat
-             [ "["
-             , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
-             , "ms real "
-             , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
-             , "ms cpu] "
-             , BC.pack $ show $ statusCode $ Wai.responseStatus res
-             , " "
-             , Wai.requestMethod req
-             , " "
-             , Wai.rawPathInfo req
-             ]
+           register $ do
+             cpu2 <- liftIO getCPUTime
+             utc2 <- liftIO getCurrentTime
+             liftIO $ BC.hPutStrLn stderr $ BC.concat
+                      [ "["
+                      , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
+                      , "ms real "
+                      , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
+                      , "ms cpu] "
+                      , BC.pack $ show $ statusCode $ Wai.responseStatus res
+                      , " "
+                      , Wai.requestMethod req
+                      , " "
+                      , Wai.rawPathInfo req
+                      ]
            return $ res'
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
