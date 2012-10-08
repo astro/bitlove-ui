@@ -3,7 +3,7 @@ module Handler.MapFeed where
 import Control.Monad
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as HM
-import Text.XML.Stream.Parse
+import Text.XML.Expat.Conduit
 import Data.XML.Types
 import Text.XML.Stream.Render
 import Data.Conduit
@@ -44,7 +44,8 @@ type Attrs = [(Name, [Content])]
              
 mapFeed :: FeedXml -> (Text -> Maybe Text) -> Source (ResourceT IO) (Flush Builder)
 mapFeed (FeedXml xml) getEnclosureLink =
-  ({-# SCC "parseLBS" #-} parseLBS def $ LB.concat $ chunkify 64 xml) $= 
+  ({-# SCC "parseLBS" #-} parseLBS def xml) $=
+  expatToXml =$=
   mapEnclosures =$=
   ({-# SCC "renderBuilder" #-} renderBuilder def) =$=
   CL.map Chunk
@@ -95,12 +96,6 @@ mapFeed (FeedXml xml) getEnclosureLink =
           in case m_val of
                Just val -> (name, [ContentText val]) : attrs'
                Nothing -> attrs'
-        chunkify chunkSize s
-            | LB.null s = []
-            | otherwise = 
-                let s' = LB.take chunkSize s 
-                    s'' = LB.drop chunkSize s
-                in s' : chunkify chunkSize s'' 
 
 typeTorrent :: Text
 typeTorrent = "application/x-bittorrent"
