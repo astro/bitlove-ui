@@ -43,8 +43,10 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* Filter for directory
+* Feed etags
+* New layout
 * Search
+* Filter for directory
 * Fix pagination
 
 * Per-item pages
@@ -73,3 +75,6 @@ Now point your browser to `http://localhost:8081/`.
 * Feed summaries: X items, Y torrents
 * OEmbed
 * Installation: automation, sample data, fix database setup
+
+
+http://bokardo.com/principles-of-user-interface-design/ ← 15
