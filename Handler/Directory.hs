@@ -12,21 +12,21 @@ import Handler.Browse (renderFeedsList, addFeedsLinks)
 getDirectoryR :: Handler RepHtml
 getDirectoryR = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory)
-  let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
+  --let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
   defaultLayout $ do
     setTitleI MsgTitleDirectory
-    let links = [("Feeds", [("OPML", DirectoryOpmlR, BC.unpack typeOpml)])]
+    let 
+        links :: [(Text, [(Text, Route UIApp, String)])]
+        links = [("Feeds", [("OPML", DirectoryOpmlR, BC.unpack typeOpml)])]
     addFeedsLinks links
-    [whamlet|
+    [whamlet|$newline always
               <h2>_{MsgHeadingDirectory}
               ^{renderFeedsList links}
-              <section class="col1 directory">
-                ^{renderEntries dir1}
-              <section class="col2 directory">
-                ^{renderEntries dir2}
+              <section class="directory">
+                ^{renderEntries dir}
               |]
     where renderEntries entries =
-              [hamlet|
+              [hamlet|$newline always
                $forall es <- entries
                  <article class="meta">
                    <img class="logo"
@@ -57,7 +57,7 @@ getDirectoryOpmlR = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory)
   url <- getFullUrlRender
   RepOpml `fmap`
-         hamletToContent [xhamlet|
+         hamletToContent [xhamlet|$newline always
 <opml version="2.0">
   <head title="Bitlove.org directory"
         ownerId="#{url DirectoryR}">

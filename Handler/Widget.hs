@@ -3,11 +3,13 @@ module Handler.Widget where
 import Prelude
 import Data.FileEmbed (embedFile)
 import Blaze.ByteString.Builder (fromByteString)
+import Blaze.ByteString.Builder.Internal.Types (Builder)
 import Data.Monoid
 
 import Import
 
 
+cacheWidget :: GHandler a b ()
 cacheWidget = cacheSeconds $ 60 * 60
 
 newtype RepJs = RepJs Content
@@ -15,8 +17,10 @@ newtype RepJs = RepJs Content
 instance HasReps RepJs where
     chooseRep (RepJs content) _ = return (typeJavascript, content)
 
+serveJs :: Monad m => Builder -> m RepJs
 serveJs = return . RepJs . flip ContentBuilder Nothing
 
+wrapJs :: Builder -> Builder
 wrapJs js = mconcat
             [ fromByteString "(function() { "
             , js

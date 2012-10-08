@@ -1,6 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-name-shadowing #-}
 module Application
     ( makeApplication
+    , getApplicationDev
     , makeUIFoundation
     ) where
 
@@ -21,7 +22,7 @@ import Network.HTTP.Types (Status (Status, statusCode))
 import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
-import Data.Monoid
+--import Data.Monoid
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
 import Control.Monad.Trans.Resource (register)
@@ -48,6 +49,7 @@ import Stats
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see
 -- the comments there for more details.
+-- TODO: remove -fno-warn-name-shadowing
 mkYesodDispatch "UIApp" resourcesUIApp
 
 -- This function allocates resources (such as a database connection pool),
@@ -93,7 +95,7 @@ makeApplication conf = do
     enforceVhost :: Wai.Middleware
     enforceVhost app req =
         let proceed = app req
-            redirect location = return $
+            getRedirectResponse location = return $
                                 Wai.ResponseBuilder (Status 301 "Wrong vhost")
                                 [("Location", location)]
                                 mempty
@@ -104,7 +106,7 @@ makeApplication conf = do
                  | any (`BC.isPrefixOf` vhost) ["localhost", "bitlove.org", "api.bitlove.org"] ->
                      proceed
              Just _ ->
-                 redirect $ 
+                 getRedirectResponse $ 
                  "http://bitlove.org" `BC.append` Wai.rawPathInfo req
     measureDuration :: Wai.Middleware
     measureDuration app req =
@@ -128,6 +130,14 @@ makeApplication conf = do
                       , Wai.rawPathInfo req
                       ]
            return $ res'
+
+getApplicationDev :: IO (Int, Application)
+getApplicationDev =
+    defaultDevelApp loader makeApplication
+  where
+    loader = loadConfig (configSettings Settings.Development)
+        { csParseExtra = parseExtra 
+        }
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
 makeUIFoundation conf pool = do

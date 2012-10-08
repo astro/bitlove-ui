@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes, FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Model.Query where
 
 import Prelude
@@ -12,11 +13,9 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Numeric (showOct, readOct)
 import Data.Char (chr, ord)
-import Control.Monad (mapM)
 import qualified Control.Exception as E
 import System.IO
 import Control.Applicative
-import Data.Either
 import Data.Default
 
 import Utils

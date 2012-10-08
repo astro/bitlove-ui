@@ -1,29 +1,56 @@
-<header class="site">
+<header>
   <h1>
     <a href="@{FrontR}">Bitlove
-  <p class="slogan">Peer-to-Peer Love for Your Podcast Downloads
-  <p class="siteflattr">
+  <p id="slogan">Peer-to-Peer Love for Your Podcast Downloads.
+  <p id="siteflattr">
     <a class="FlattrButton" style="display:none;" href="http://bitlove.org/" rev="flattr;button:large;">
       <img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0"/>
-<nav class="navtabs">
-  <ul>
+<nav>
+  <div id="top-nav">
+    <div class="content-wrapper">
+      <p id="search">
+        <input type="search" id="search-field" placeholder="Suchen…">
+      <ul id="user-nav">
+        <li>
+          <a href="#">Meine Feeds
+        <li>
+          <a href="#">Einstellungen
+        <li>
+          Eingeloggt mit <em>FlexibleFriend</em>,
+          <a href="#">Ausloggen
+
+  <ul id="main-nav">
+    <li>
+      <a href=@{FrontR}>_{MsgFront}
     <li>
       <a href=@{NewR}>_{MsgNew}
-    <li class="navtop">
+    <li class="parent-menu">
       <a href=@{TopR}>_{MsgTop}
-      <div class="navDownloaded">
-        <ul>
-          <li>
-            <a href=@{TopDownloadedR $ PeriodDays 1}>1
-          <li>
-            <a href="@{TopDownloadedR $ PeriodDays 7}">7
-          <li>
-            <a href="@{TopDownloadedR $ PeriodDays 30}">30
-          <li>
-            <a href="@{TopDownloadedR PeriodAll}">∞
-          <li>_{MsgDays}
+      <div class="sub-menu">
+        <div class="clickzone">
+          <ul>
+            <li>_{MsgWithin}
+            <li>
+              <a href=@{TopDownloadedR $ PeriodDays 1}>1
+            <li>
+              <a href="@{TopDownloadedR $ PeriodDays 7}">7
+            <li>
+              <a href="@{TopDownloadedR $ PeriodDays 30}">30
+            <li>
+              <a href="@{TopDownloadedR PeriodAll}">∞
+            <li>_{MsgDays}
     <li>
       <a href="@{DirectoryR}">_{MsgDirectory}
+    <li class="parent-menu">
+      <a href="@{HelpPodcasterR}">_{MsgGettingStarted}
+      <div class="sub-menu">
+        <div class="clickzone">
+          <ul>
+            <li>Für
+            <li>
+              <a href="#">Nutzer
+            <li>
+              <a href="#">Podcaster
 <div class="content">
   $maybe msg <- mmsg
     <div #message>#{msg}
@@ -37,20 +64,17 @@ $maybe user <- msu
         <a href="@{LogoutR}">_{MsgLogout}
 <footer>
   <div>
-    <p>Twitter:
-    <p>
-      <a href="http://twitter.com/bitlove_org">@bitlove_org
-    <p>Contact:
-    <p>
-      <a href="mailto:mail@bitlove.org">mail@bitlove.org
+    <dl>
+      <dt>Twitter
+      <dd><a href="http://twitter.com/bitlove_org">@bitlove_org</a>
+      <dt>Contact
+      <dd><a href="mailto:mail@bitlove.org">mail@bitlove.org</a>
   <div>
-    <p>Help:
-    <p>
-      <a href="@{HelpPodcasterR}">Getting started
-    <p>
-      <a href="@{HelpWidgetR}">Widget
-    <p>
-      <a href="@{HelpApiR}">API
+    <dl>
+      <dt>Help
+      <dd><a href="@{HelpPodcasterR}">Getting started</a>
+      <dd><a href="@{HelpWidgetR}">Widget</a>
+      <dd><a href="@{HelpApiR}">API</a>
   <div>
     <p>
       100% #

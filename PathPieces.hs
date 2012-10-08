@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module PathPieces where
 
 import Prelude

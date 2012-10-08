@@ -59,7 +59,7 @@ increaseCounter pool tBuf key increment = do
                  return False
                  
   when isNew $ do
-    forkIO $ do
+    _ <- forkIO $ do
       threadDelay second
       flushCounter pool tBuf key
     return ()
@@ -79,10 +79,10 @@ flushCounter pool tBuf key = do
           
   let (kind, info) = key
   case increment of
-    increment 
-        | increment > 0 ->
+    increment'
+        | increment' > 0 ->
             runResourceT $
             withDBPool pool $ 
-            addCounter kind (InfoHash info) increment
+            addCounter kind (InfoHash info) increment'
     _ ->
         putStrLn $ "Warning: stale counter for " ++ show key

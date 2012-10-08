@@ -6,12 +6,14 @@ import qualified Data.Text as T
 
 import Import
 
+getHelpR :: GHandler sub UIApp RepHtml
 getHelpR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpNavigation
     $(whamletFile "templates/help.hamlet")
 
+getHelpPodcasterR :: GHandler sub UIApp RepHtml
 getHelpPodcasterR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -19,6 +21,7 @@ getHelpPodcasterR =
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-podcaster.hamlet")
 
+getHelpFeedsR :: GHandler sub UIApp RepHtml
 getHelpFeedsR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -26,6 +29,7 @@ getHelpFeedsR =
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-feeds.hamlet")
 
+getHelpApiR :: GHandler sub UIApp RepHtml
 getHelpApiR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -35,6 +39,7 @@ getHelpApiR =
                   BC.unpack $(embedFile "templates/help-api-example.text")
     $(whamletFile "templates/help-api.hamlet")
 
+getHelpWidgetR :: GHandler sub UIApp RepHtml
 getHelpWidgetR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -44,8 +49,9 @@ getHelpWidgetR =
                   BC.unpack $(embedFile "templates/help-widget-example.text")
     $(whamletFile "templates/help-widget.hamlet")
 
+renderHelpNavigation :: GWidget sub UIApp ()
 renderHelpNavigation =
-    toWidget [hamlet|
+    toWidget [hamlet|$newline always
               <h2>Help
               <div class="navtabs">
                 <ul>
@@ -55,8 +61,9 @@ renderHelpNavigation =
                     <a href="@{HelpPodcasterR}">Podcasters</a>
               |]
 
+renderHelpPodcasterNavigation :: GWidget sub UIApp ()
 renderHelpPodcasterNavigation =
-    toWidget [hamlet|
+    toWidget [hamlet|$newline always
               <h2>Help for Podcasters</h2>
               <div class="navtabs">
                 <ul>

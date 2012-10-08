@@ -3,14 +3,17 @@ module Handler.Browse where
 
 import qualified Data.Text as T
 import Data.Maybe
+import Data.Foldable (Foldable)
 import Data.Time.Format
 import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
+import Text.Blaze.Internal (MarkupM)
 import Text.Blaze.Html5 hiding (div, details, map)
 import Text.Blaze.Html5.Attributes hiding (item, min, max, id)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
+import Settings.StaticFiles
 
 import PathPieces
 import qualified Model
@@ -22,24 +25,29 @@ data Page = Page { pageNumber :: Int
                  , pageNext :: Maybe Text
                  }
 
+pageSize :: Int
 pageSize = 30
 
 withPage :: Page -> (Model.QueryPage -> a) -> a
-withPage p f =
-    f $ Model.QueryPage pageSize $ (pageNumber p - 1) * pageSize
+withPage page f =
+    f $ Model.QueryPage pageSize $ (pageNumber page - 1) * pageSize
 
 
 getFrontR :: Handler RepHtml
 getFrontR = do
   downloads <- withDB $
-               Model.mostDownloaded 1 (Model.QueryPage 4 0)
+               Model.mostDownloaded 1 (Model.QueryPage 20 0)
   defaultLayout $ do
     setTitleI MsgTitle
     $(whamletFile "templates/front.hamlet")
-    [whamlet|
-<section class="col2">
-  ^{renderDownloads downloads True}
-|]
+    [whamlet|$newline always
+     <section class="downloads">
+       <ul>
+         $forall item <- Model.groupDownloads downloads
+           <li>
+             <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">
+               <img src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 64)}">
+     |]
 
 getNewR :: Handler RepHtml
 getNewR = do
@@ -50,17 +58,19 @@ getNewR = do
     defaultLayout $ do
         setTitleI MsgTitleNew
         addFilterScript
-        let links = [("Downloads", [("RSS", NewRssR, BC.unpack typeRss),
+        let 
+            links :: [(Text, [(Text, Route UIApp, String)])]
+            links = [("Downloads", [("RSS", NewRssR, BC.unpack typeRss),
                                     ("ATOM", NewAtomR, BC.unpack typeAtom)
                                    ])]
         addFeedsLinks links
-        [whamlet|
-<section class="col">
-  <h2>_{MsgNewTorrents}
-  ^{renderFeedsList links}
-  ^{renderDownloads downloads True}
-  ^{renderPagination page}
-|]
+        [whamlet|$newline always
+         <section class="col">
+           <h2>_{MsgNewTorrents}
+           ^{renderFeedsList links}
+           ^{renderDownloads downloads True}
+           ^{renderPagination page}
+         |]
 
 getTopR :: Handler RepHtml
 getTopR = do
@@ -71,17 +81,19 @@ getTopR = do
     defaultLayout $ do
         setTitleI MsgTitleTop
         addFilterScript
-        let links = [("Downloads", [("RSS", TopRssR, BC.unpack typeRss),
+        let 
+            links :: [(Text, [(Text, Route UIApp, String)])]
+            links = [("Downloads", [("RSS", TopRssR, BC.unpack typeRss),
                                     ("ATOM", TopAtomR, BC.unpack typeAtom)
                                    ])]
         addFeedsLinks links
-        [whamlet|
-<section class="col">
-  <h2>_{MsgTopTorrents}
-  ^{renderFeedsList links}
-  ^{renderDownloads downloads True}
-  ^{renderPagination page}
-|]
+        [whamlet|$newline always
+         <section class="col">
+           <h2>_{MsgTopTorrents}
+           ^{renderFeedsList links}
+           ^{renderDownloads downloads True}
+           ^{renderPagination page}
+         |]
 
 getTopDownloadedR :: Period -> Handler RepHtml
 getTopDownloadedR period = do
@@ -102,21 +114,21 @@ getTopDownloadedR period = do
                                 ("ATOM", TopDownloadedAtomR period, BC.unpack typeAtom)
                                ])]
     addFeedsLinks links
-    [whamlet|
-<section class="col">
-  <h2>
-    $case period
-      $of PeriodDays n
-        $if n == 1
-          \ _{MsgTopDownloadedDay}
-        $else
-          \ _{MsgTopDownloadedDays n}
-      $of PeriodAll
-        \ _{MsgTopDownloadedAll}
-  ^{renderFeedsList links}
-  ^{renderDownloads downloads True}
-  ^{renderPagination page}
-|]
+    [whamlet|$newline always
+     <section class="col">
+       <h2>
+         $case period
+           $of PeriodDays n
+             $if n == 1
+               \ _{MsgTopDownloadedDay}
+             $else
+               \ _{MsgTopDownloadedDays n}
+           $of PeriodAll
+             \ _{MsgTopDownloadedAll}
+       ^{renderFeedsList links}
+       ^{renderDownloads downloads True}
+       ^{renderPagination page}
+     |]
 
 getUserR :: UserName -> Handler RepHtml
 getUserR user = do
@@ -136,45 +148,45 @@ getUserR user = do
           defaultLayout $ do 
                   setTitleI $ MsgTitleUser $ userName user
                   when canEdit' $
-                       addScript $ StaticR $ StaticRoute ["edit-user.js"] []
+                       addScript $ StaticR js_edit_user_js
                   let links = [("Downloads", [("RSS", UserDownloadsRssR user, BC.unpack typeRss),
                                               ("ATOM", UserDownloadsAtomR user, BC.unpack typeAtom)
                                              ])]
                   addFeedsLinks links
-                  [whamlet|
-<header class="user">
-  <div class="meta">
-    $if not (T.null $ userImage details)
-        <img class="logo"
-             src=@{UserThumbnailR user (Thumbnail 64)}>
-    <div class="title">
-      <h2>#{userTitle details}
-      $if not (T.null $ userHomepage details)
-          <p class="homepage">
-            <a rel="me"
-               href=#{userHomepage details}>#{userHomepage details}
-<section class="col1">
-  <h2>Feeds
-  $forall feed <- feeds
-    <article class="feed">
-      <img class="logo"
-           src="@{UserFeedThumbnailR user (feedSlug feed) (Thumbnail 64)}">
-      <div>
-        <h3>
-          <a href="@{UserFeedR user (feedSlug feed)}">#{feedTitle feed}
-        $if not (T.null $ feedHomepage feed)
-          <p class="homepage">
-            <a rel="me"
-               href="#{feedHomepage feed}">#{feedHomepage feed}
-        $if not (feedPublic feed)
-          <p .note>_{MsgPrivate}
-
-<section class="col2">
-  <h2>Recent Torrents
-  ^{renderFeedsList links}
-  ^{renderDownloads downloads False}
-  ^{renderPagination page}
-      |]
+                  [whamlet|$newline always
+                   <header class="user">
+                     <div class="meta">
+                       $if not (T.null $ userImage details)
+                           <img class="logo"
+                                src=@{UserThumbnailR user (Thumbnail 64)}>
+                       <div class="title">
+                         <h2>#{userTitle details}
+                         $if not (T.null $ userHomepage details)
+                             <p class="homepage">
+                               <a rel="me"
+                                  href=#{userHomepage details}>#{userHomepage details}
+                   <section class="col1">
+                     <h2>Feeds
+                     $forall feed <- feeds
+                       <article class="feed">
+                         <img class="logo"
+                              src="@{UserFeedThumbnailR user (feedSlug feed) (Thumbnail 64)}">
+                         <div>
+                           <h3>
+                             <a href="@{UserFeedR user (feedSlug feed)}">#{feedTitle feed}
+                           $if not (T.null $ feedHomepage feed)
+                             <p class="homepage">
+                               <a rel="me"
+                                  href="#{feedHomepage feed}">#{feedHomepage feed}
+                           $if not (feedPublic feed)
+                             <p .note>_{MsgPrivate}
+                   
+                   <section class="col2">
+                     <h2>Recent Torrents
+                     ^{renderFeedsList links}
+                     ^{renderDownloads downloads False}
+                     ^{renderPagination page}
+                   |]
   
   fetch >>= maybe notFound render
   
@@ -192,16 +204,16 @@ getUserFeedR user slug = do
           (feed:_) ->
               do downloads <-
                      withPage page (Model.feedDownloads $ feedUrl feed) db
-                 enclosureErrors <-
+                 enclosureErrs <-
                      if canEdit'
                      then Model.enclosureErrors (feedUrl feed) db
                      else return []
-                 return $ Just (feed, downloads, enclosureErrors)
+                 return $ Just (feed, downloads, enclosureErrs)
 
   case mFeedDownloadsErrors of          
     Nothing ->
         notFound
-    Just (feed, downloads, enclosureErrors) ->
+    Just (feed, downloads, enclosureErrs) ->
         do let links = [("Subscribe",
                          [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
                         ("Just Downloads", 
@@ -216,58 +228,60 @@ getUserFeedR user slug = do
            defaultLayout $
                       do setTitleI $ MsgTitleFeed $ feedTitle feed
                          when canEdit' $
-                              addScript $ StaticR $ StaticRoute ["edit-feed.js"] []
+                              addScript $ StaticR js_edit_feed_js
                          addFeedsLinks links
-                         [whamlet|
-<section class="col">
-  <header class="feed">
-    <div class="meta">
-      <img class="logo"
-           src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
-      <div class="title">
-        <div>
-          <h2>#{feedTitle feed}
-          <span class="publisher">
-            \ _{MsgBy} #
-            <a href="@{UserR user}">#{userName user}
-        $if canEdit'
-          <p .note>#{feedUrl feed}
-        $if not (T.null $ feedHomepage feed)
-          <p class="homepage">
-            <a rel="me"
-               href="#{feedHomepage feed}">#{feedHomepage feed}
-        $if not (feedPublic feed)
-          <p class="hint">_{MsgPrivateExplain}
-        $maybe error <- mError
-          <div class="error">
-             <h3>Feed Error
-             <p><pre>#{error}
-             <p .hint>_{MsgErrorExplain}
+                         [whamlet|$newline always
+                          <section class="col">
+                            <header class="feed">
+                              <div class="meta">
+                                <img class="logo"
+                                     src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
+                                <div class="title">
+                                  <div>
+                                    <h2>#{feedTitle feed}
+                                    <p class="publisher">
+                                      \ _{MsgBy} #
+                                      <a href="@{UserR user}">#{userName user}
+                                  $if canEdit'
+                                    <p .note>#{feedUrl feed}
+                                  $if not (T.null $ feedHomepage feed)
+                                    <p class="homepage">
+                                      <a rel="me"
+                                         href="#{feedHomepage feed}">#{feedHomepage feed}
+                                  $if not (feedPublic feed)
+                                    <p class="hint">_{MsgPrivateExplain}
+                                  $maybe err <- mError
+                                    <div class="error">
+                                       <h3>Feed Error
+                                       <p><pre>#{err}
+                                       <p .hint>_{MsgErrorExplain}
+                          
+                            $if not (null enclosureErrs)
+                              <div .error>
+                                 <h3>_{MsgEnclosureErrors}
+                                 <dl .enclosureErrors>
+                                   $forall enclosureError <- enclosureErrs
+                                     <dt>#{fst enclosureError}
+                                     <dd><pre>#{snd enclosureError}
+                            ^{renderFeedsList links}
+                            ^{renderDownloads downloads False}
+                            ^{renderPagination page}
+                          |]
 
-  $if not (null enclosureErrors)
-    <div .error>
-       <h3>_{MsgEnclosureErrors}
-       <dl .enclosureErrors>
-         $forall enclosureError <- enclosureErrors
-           <dt>#{fst enclosureError}
-           <dd><pre>#{snd enclosureError}
-  ^{renderFeedsList links}
-  ^{renderDownloads downloads False}
-  ^{renderPagination page}
-    |]
-
+renderDownloads :: forall sub. [Download] -> Bool -> GWidget sub UIApp () 
 renderDownloads downloads showOrigin =
-    [whamlet|
-$forall item <- Model.groupDownloads downloads
-  ^{renderItem item showOrigin}
-      |]
+    [whamlet|$newline always
+     $forall item <- Model.groupDownloads downloads
+       ^{renderItem item showOrigin}
+     |]
 
+renderItem :: forall sub. Item -> Bool -> GWidget sub UIApp ()
 renderItem item showOrigin = do
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
-      isOnlyDownload = length (itemDownloads item) == 1
+      --isOnlyDownload = length (itemDownloads item) == 1
       stats :: Text -> Text -> Integer -> t -> Markup
-      stats c t n = [hamlet|
+      stats c t n = [hamlet|$newline always
                      <dl class=#{c}>
                        <dt>
                          #{n}
@@ -286,15 +300,15 @@ renderItem item showOrigin = do
                               downloadDownspeed d
                   n' :: String
                   n' | n < 10 = 
-                         show (fromIntegral (truncate $ n * 10) / 10 :: Double)
+                         show (fromIntegral (truncate $ n * 10 :: Integer) / 10 :: Double)
                      | otherwise = 
-                         show $ truncate n
+                         show $ (truncate n :: Integer)
               in (n', unit ++ "B/s")
       seeders = (+ 1) . downloadSeeders
       types = map downloadType $ itemDownloads item
       countType t = length $ filter (== t) types
       isOnlyType = (== 1) . countType
-  [whamlet|
+  [whamlet|$newline always
   <article class="item"
            id="#{itemId item}"
            xml:lang="#{fromMaybe "" $ itemLang item}">
@@ -303,10 +317,10 @@ renderItem item showOrigin = do
         <img class="logo"
              src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}">
       <div class="right">
-        <p class="published">#{date}
         $if not (T.null $ itemPayment item)
           <div class="flattr">
             #{renderPayment}
+        <p class="published">#{date}
       <div class="title">
         <h3>
           <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
@@ -322,15 +336,15 @@ renderItem item showOrigin = do
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
+          <i class="icon-download"></i>
           <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              data-type="#{downloadType d}">
-            $if isOnlyType (downloadType d)
-              <span>#{downloadLabel d}
-            $else
-              <span>#{downloadName d}
-            \ #
+            <span class="type">#{downloadLabel d}
+            $if not (isOnlyType (downloadType d))
+              <span class="name-info icon-info-sign">
+                <span class="file-name">#{downloadName d}
             <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">
@@ -392,23 +406,30 @@ renderItem item showOrigin = do
                   ! href (toValue payment) $
                   "[Support]"
 
+addFilterScript :: forall sub. GWidget sub UIApp ()
 addFilterScript =
-    addScript $ StaticR $ StaticRoute ["filter.js"] []
+    addScript $ StaticR js_filter_js
 
 -- | <link rel="alternate"> to <head>
+addFeedsLinks :: forall sub master a a1.
+                 ToMarkup a =>
+                 [(a1, [(Text, Route master, a)])] -> GWidget sub master ()
 addFeedsLinks lists = do
-  let addFeedsLink (title :: Text, route, type_) =
-          [hamlet|
+  let addFeedsLink (linkTitle :: Text, route, linkType) =
+          [hamlet|$newline always
            <link rel="alternate"
-                 type="#{type_}"
+                 type="#{linkType}"
                  href="@{route}"
-                 title="#{title}">
+                 title="#{linkTitle}">
            |]
-  addHamletHead [hamlet|
+  toWidgetHead [hamlet|$newline always
      $forall feed <- concat $ map snd lists
        ^{addFeedsLink feed}
                  |]
 
+renderFeedsList :: forall a (t :: * -> *) sub (t1 :: * -> *).
+                   (Foldable t1, Foldable t, ToMarkup a) =>
+                   t1 (Text, t (Text, Route UIApp, a)) -> GWidget sub UIApp ()
 renderFeedsList lists = do
   renderRoute <-
     lift $
@@ -418,21 +439,21 @@ renderFeedsList lists = do
      then (("http://subscribe.getmiro.com/?type=video&url1=" `T.append`) <$>)
      else id) <$>
     getFullUrlRender
-  let renderFeedsList' (title :: Text, feeds) =
-              [hamlet|
-               <dt>#{title}:
+  let renderFeedsList' (fTitle :: Text, feeds) =
+              [hamlet|$newline always
+               <dt>#{fTitle}:
                $forall feed <- feeds
                  <dd>^{renderFeedsList'' feed}
                |]
-      renderFeedsList'' (title :: Text, route, type_) =
-              [hamlet|
+      renderFeedsList'' (fTitle :: Text, route, fType) =
+              [hamlet|$newline always
                <a href="#{renderRoute route}"
-                  type=#{type_}>#{title}
+                  type=#{fType}>#{fTitle}
                |]
-  [whamlet|
+  [whamlet|$newline always
      <dl class="feedslist">
-       $forall list <- lists
-         ^{renderFeedsList' list}
+       $forall fList <- lists
+         ^{renderFeedsList' fList}
      |]
 
 pageParameter :: Handler Int
@@ -440,27 +461,30 @@ pageParameter = (clamp . fromInt 1 . T.unpack . fromMaybe "") <$>
                 lookupGetParam "page"
     where fromInt d s =
               case reads s of
-                [(i, "")] -> i
+                [(j, "")] -> j
                 _ -> d
           clamp = min maxPages .
                   max 1
-                
+
+maxPages :: Int
 maxPages = 10
-                
+
+
+renderPagination :: forall t. Page -> t -> MarkupM ()
 renderPagination page =
-    [hamlet|
+    [hamlet|$newline always
      <nav .pagination>
        $maybe previous <- pagePrevious page
          <p .previous>
-           <a href="#{previous}">⟸
+           <a href="#{previous}"><i class="icon-arrow-left"></i> Previous
        $maybe next <- pageNext page
          <p .next>
-           <a href="#{next}">⟹
+           <a href="#{next}">Next <i class="icon-arrow-right"></i>
      |]
 
 makePage :: Handler Page
 makePage = do 
-  p <- pageParameter
+  pageParam <- pageParameter
   url <- getUrlRender
   mRoute <- getCurrentRoute
   let pageLink p' =
@@ -474,16 +498,16 @@ makePage = do
             | otherwise =
                 Just n
   return $
-         Page { pageNumber = p
-              , pagePrevious = clamp (p - 1) >>= pageLink
-              , pageNext = clamp (p + 1) >>= pageLink
+         Page { pageNumber = pageParam
+              , pagePrevious = clamp (pageParam - 1) >>= pageLink
+              , pageNext = clamp (pageParam + 1) >>= pageLink
               }
                                     
 humanSize :: (Integral a, Show a) => a -> String
 humanSize n = let (n', unit) = humanSize' $ fromIntegral n
                   ns | n' < 10 = show $
-                                 fromIntegral (truncate $ n' * 10) / 10
-                     | otherwise = show $ truncate n'
+                                 (fromIntegral (truncate $ n' * 10 :: Integer) / 10 :: Double)
+                     | otherwise = show $ (truncate n' :: Integer)
               in ns ++ " " ++ unit ++ "B"
 
 humanSize' :: Double -> (Double, String)

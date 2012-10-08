@@ -45,8 +45,8 @@ sessionBackend withDB =
                  mSidCookie
              | otherwise = 
                  Nothing
-           session :: IO BackendSession
-           session =
+           getBackendSession :: IO BackendSession
+           getBackendSession =
                case mSid of
                  Nothing ->
                      return []
@@ -59,7 +59,7 @@ sessionBackend withDB =
                                  _ ->
                                      []
 
-       oldSession <- session
+       oldSession <- getBackendSession
        let saveSession :: BackendSession -> time -> IO [Header]
            saveSession newSession _time =
                let mOldUser = "user" `lookup` oldSession
@@ -81,7 +81,7 @@ sessionBackend withDB =
                                                             session
                                    }]
                     -- Logout
-                    (Just user, Nothing) ->
+                    (Just _user, Nothing) ->
                         do case mSid of
                              Just sid ->
                                  withDB $ invalidateSession sid

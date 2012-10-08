@@ -1,7 +1,7 @@
 $(function() {
-    $('.navtop').each(function() {
+    $('.parent-menu').each(function() {
         var a = $(this).outerWidth();
-        var sub = $('.navDownloaded', this);
+        var sub = $('.sub-menu', this);
         sub.css({'left': (-(sub.outerWidth() - a)/2) + 'px'});
     })
 });

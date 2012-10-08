@@ -1,8 +1,10 @@
+$newline always
 $doctype 5
 <html>
   <head>
     <title>^{const $ pageTitle pc}
     <link rel="stylesheet" type="text/css" href="/static/style.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/font-awesome.css"/>
     <meta name="viewport" content="width=480"/>
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
     $maybe currentRoute <- mCurrentRoute

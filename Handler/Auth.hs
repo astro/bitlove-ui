@@ -93,7 +93,7 @@ Thanks for sharing
     True ->
         defaultLayout $ do
               setTitleI MsgTitleSignup
-              toWidget [hamlet|
+              toWidget [hamlet|$newline always
                         <h2>Account activation pending
                         <p>Please check your mail to activate your account.
                         |]
@@ -101,7 +101,7 @@ Thanks for sharing
         -- TODO: unregister & rm token
         defaultLayout $ do
               setTitleI MsgTitleError
-              toWidget [hamlet|
+              toWidget [hamlet|$newline always
                         <h2>Sorry
                         <p>Sending mail failed. Please #
                           <a href="mailto:mail@bitlove.org">contact support!
@@ -116,7 +116,7 @@ Thanks for sharing
           sendError :: Text -> Handler a
           sendError e = defaultLayout (do
                                         setTitleI MsgTitleError
-                                        toWidget [hamlet|
+                                        toWidget [hamlet|$newline always
                                                   <h2>Error
                                                   <p>#{e}
                                                   <p>
@@ -202,7 +202,7 @@ getActivateR token = do
     Nothing ->
         defaultLayout $ do
                        setTitleI MsgTitleError
-                       toWidget [hamlet|
+                       toWidget [hamlet|$newline always
                                  <h2>Error
                                  <p>Invalid activation token
                                  |]
@@ -283,18 +283,18 @@ Thanks for sharing
     setTitleI MsgTitleReactivate
     case sent of
       _ | null userTokens ->
-            toWidget [hamlet|
+            toWidget [hamlet|$newline always
                       <h2>Error
                       <p>No user with that email address was found.
                       |]
       False ->
-          toWidget [hamlet|
+          toWidget [hamlet|$newline always
                     <h2>Sorry
                     <p>Sending mail failed. Please #
                       <a href="mailto:mail@bitlove.org">contact support!
                     |]
       True ->
-          toWidget [hamlet|
+          toWidget [hamlet|$newline always
                     <h2>Account activation pending
                     <p>Please check your mail to activate your account.
                     |]

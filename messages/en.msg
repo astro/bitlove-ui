@@ -2,11 +2,14 @@ NoScript: JavaScript is mandatory beyond this point
 Password: Password
 PasswordRepeat: Repeat
 Activate: Activate
+Within: Within
 Days: days
 LoggedInAs: Logged in as
 Logout: Logout
+Front: About
 New: New
 Top: Top
+GettingStarted: Getting started
 Directory: Directory
 NewTorrents: New Torrents
 TopTorrents: Popular Torrents
