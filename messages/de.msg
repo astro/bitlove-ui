@@ -23,7 +23,7 @@ In: bei
 By: von
 FrontAbout: Bitlove erstellt für alle Mediendateien eines RSS-Feeds Torrents und ist zugleich Seeder
 FrontUserH: Was heißt das für Nutzer?
-FrontUser1a: High-speed downloads von
+FrontUser1a: High-speed Downloads von
 FrontUser1b: vielen Peers
 FrontUser2a: Datenintegrität mit
 FrontUser2b: SHA1-Hashes
@@ -37,7 +37,7 @@ FrontPodcaster1b: P2P-Technologie!
 FrontPodcaster2a: Spare Bandbreite durch
 FrontPodcaster2b: viele Seeder
 FrontPodcaster3a: Umso mehr Downloader,
-FrontPodcaster3b: desto höhere Geschwindigkeit
+FrontPodcaster3b: desto schneller
 FrontPodcaster4a: Werde im
 FrontPodcaster4b: Verzeichnis gefunden
 LearnMore: Erfahre mehr…
