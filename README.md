@@ -41,7 +41,6 @@ Now point your browser to `http://localhost:8081/`.
 * New layout
 * Search
 * Filter for directory
-* Fix pagination
 * Per-item pages
 * MapFeed content-type
 * URL longener?

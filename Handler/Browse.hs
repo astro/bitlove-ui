@@ -26,12 +26,47 @@ data Page = Page { pageNumber :: Int
                  }
 
 pageSize :: Int
-pageSize = 30
+pageSize = 20
 
 withPage :: Page -> (Model.QueryPage -> a) -> a
 withPage page f =
-    f $ Model.QueryPage pageSize $ (pageNumber page - 1) * pageSize
+    f $ Model.QueryPage (pageSize * 2) $ (pageNumber page - 1) * pageSize
 
+makePage :: Handler Page
+makePage = do 
+  pageParam <- pageParameter
+  url <- getUrlRender
+  mRoute <- getCurrentRoute
+  let pageLink p' =
+          ((`T.append`
+            ("?page=" `T.append`
+             T.pack (show p'))) . url) <$> 
+          mRoute
+      clamp n
+            | n < 1 || n > maxPages = 
+                Nothing
+            | otherwise =
+                Just n
+  return $
+         Page { pageNumber = pageParam
+              , pagePrevious = clamp (pageParam - 1) >>= pageLink
+              , pageNext = clamp (pageParam + 1) >>= pageLink
+              }
+
+paginate :: (Model.QueryPage -> Transaction [a]) -> Handler (Page, [a])
+paginate f = do
+  page <- makePage
+  xs <- withDB $ withPage page $ f
+  return $ updatePagination page xs
+  
+updatePagination :: Page -> [a] -> (Page, [a])
+updatePagination page xs
+    | length xs <= pageSize =
+        (page { pageNext = Nothing }, 
+         xs)
+    | otherwise =
+        (page, 
+         take pageSize xs)
 
 getFrontR :: Handler RepHtml
 getFrontR = do
@@ -51,10 +86,7 @@ getFrontR = do
 
 getNewR :: Handler RepHtml
 getNewR = do
-    page <- makePage
-    downloads <- withDB $
-                 withPage page $
-                 Model.recentDownloads
+    (page, downloads) <- paginate Model.recentDownloads
     defaultLayout $ do
         setTitleI MsgTitleNew
         addFilterScript
@@ -74,10 +106,8 @@ getNewR = do
 
 getTopR :: Handler RepHtml
 getTopR = do
-    page <- makePage
-    downloads <- withDB $
-                 withPage page $
-                 Model.popularDownloads
+    (page, downloads) <- paginate
+                         Model.popularDownloads
     defaultLayout $ do
         setTitleI MsgTitleTop
         addFilterScript
@@ -102,10 +132,8 @@ getTopDownloadedR period = do
           PeriodDays 1 -> 1
           PeriodDays days -> days
           PeriodAll -> 10000
-  page <- makePage
-  downloads <- withDB $
-               withPage page $
-               Model.mostDownloaded period_days
+  (page, downloads) <- paginate $
+                       Model.mostDownloaded period_days
   lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitleI MsgTitleTopDownloaded
@@ -133,8 +161,8 @@ getTopDownloadedR period = do
 getUserR :: UserName -> Handler RepHtml
 getUserR user = do
   canEdit' <- canEdit user
-  page <- makePage
-  let fetch =
+  let fetch = do
+          page <- makePage
           withDB $ \db -> do
                   detailss <- Model.userDetailsByName user db
                   case detailss of
@@ -143,8 +171,9 @@ getUserR user = do
                     (details:_) -> 
                         do feeds <- Model.userFeeds user canEdit' db
                            downloads <- withPage page (Model.userDownloads user) db
-                           return $ Just (details, feeds, downloads)
-      render (details, feeds, downloads) =
+                           let (page', downloads') = updatePagination page downloads
+                           return $ Just (page', details, feeds, downloads')
+      render (page, details, feeds, downloads) =
           defaultLayout $ do 
                   setTitleI $ MsgTitleUser $ userName user
                   when canEdit' $
@@ -184,7 +213,7 @@ getUserR user = do
                    <section class="col2">
                      <h2>Recent Torrents
                      ^{renderFeedsList links}
-                     ^{renderDownloads downloads False}
+                     ^{renderDownloads (take pageSize downloads) False}
                      ^{renderPagination page}
                    |]
   
@@ -194,8 +223,8 @@ getUserR user = do
 getUserFeedR :: UserName -> Text -> Handler RepHtml
 getUserFeedR user slug = do
   canEdit' <- canEdit user
-  page <- makePage
-  mFeedDownloadsErrors <-
+  mPageFeedDownloadsErrors <- do
+      page <- makePage
       withDB $ \db -> do
         feeds <- Model.userFeedInfo user slug db
         case feeds of
@@ -204,16 +233,17 @@ getUserFeedR user slug = do
           (feed:_) ->
               do downloads <-
                      withPage page (Model.feedDownloads $ feedUrl feed) db
+                 let (page', downloads') = updatePagination page downloads
                  enclosureErrs <-
                      if canEdit'
                      then Model.enclosureErrors (feedUrl feed) db
                      else return []
-                 return $ Just (feed, downloads, enclosureErrs)
+                 return $ Just (page', feed, downloads', enclosureErrs)
 
-  case mFeedDownloadsErrors of          
+  case mPageFeedDownloadsErrors of          
     Nothing ->
         notFound
-    Just (feed, downloads, enclosureErrs) ->
+    Just (page, feed, downloads, enclosureErrs) ->
         do let links = [("Subscribe",
                          [("Feed", MapFeedR user slug, BC.unpack typeRss)]),
                         ("Just Downloads", 
@@ -264,7 +294,7 @@ getUserFeedR user slug = do
                                      <dt>#{fst enclosureError}
                                      <dd><pre>#{snd enclosureError}
                             ^{renderFeedsList links}
-                            ^{renderDownloads downloads False}
+                            ^{renderDownloads (take pageSize downloads) False}
                             ^{renderPagination page}
                           |]
 
@@ -481,27 +511,6 @@ renderPagination page =
          <p .next>
            <a href="#{next}">Next <i class="icon-arrow-right"></i>
      |]
-
-makePage :: Handler Page
-makePage = do 
-  pageParam <- pageParameter
-  url <- getUrlRender
-  mRoute <- getCurrentRoute
-  let pageLink p' =
-          ((`T.append`
-            ("?page=" `T.append`
-             T.pack (show p'))) . url) <$> 
-          mRoute
-      clamp n
-            | n < 1 || n > maxPages = 
-                Nothing
-            | otherwise =
-                Just n
-  return $
-         Page { pageNumber = pageParam
-              , pagePrevious = clamp (pageParam - 1) >>= pageLink
-              , pageNext = clamp (pageParam + 1) >>= pageLink
-              }
                                     
 humanSize :: (Integral a, Show a) => a -> String
 humanSize n = let (n', unit) = humanSize' $ fromIntegral n
