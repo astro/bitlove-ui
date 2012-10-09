@@ -1,26 +1,26 @@
 $newline always
-<p id="teaser">Bitlove erstellt für alle Mediendateien<br> eines RSS-Feeds Torrents und ist zugleich Seeder
+<p id="teaser">_{MsgFrontAbout}
 <section class="col1 about">
-  <h2>Was heißt das für Nutzer?
+  <h2>_{MsgFrontUserH}
   <ul>
     <li>
-      Your bones don't break, mine do. <em>That's clear.</em>
+      _{MsgFrontUser1a} <em>_{MsgFrontUser1b}
     <li>
-      You don't get sick, I do. <em>That's also clear.</em>
+      _{MsgFrontUser2a} <em>_{MsgFrontUser2b}
     <li>
-      We swallow it too fast, <em>we choke.</em>
+      _{MsgFrontUser3a} <em>_{MsgFrontUser3b}
     <li>
-      We're on the same curve, <em>just on opposite ends.</em>
-  <p><a href="#">Mehr Informationen</a>
+      _{MsgFrontUser4a} <em>_{MsgFrontUser4b}
+  <p><a href=@{HelpR}>_{MsgLearnMore}</a>
 <section class="col2 about">
-  <h2>…und für Podcaster?
+  <h2>_{MsgFrontPodcasterH}
   <ul>
     <li>
-      Your bones don't break, mine do. <em>That's clear.</em>
+      _{MsgFrontPodcaster1a} <em>_{MsgFrontPodcaster1b}
     <li>
-      You don't get sick, I do. <em>That's also clear.</em>
+      _{MsgFrontPodcaster2a} <em>_{MsgFrontPodcaster2b}
     <li>
-      We swallow it too fast, <em>we choke.</em>
+      _{MsgFrontPodcaster3a} <em>_{MsgFrontPodcaster3b}
     <li>
-      We're on the same curve, <em>just on opposite ends.</em>
-  <p><a href="#">Mehr Informationen</a>
+      _{MsgFrontPodcaster4a} <em>_{MsgFrontPodcaster4b}
+  <p><a href=@{HelpPodcasterR}>_{MsgLearnMore}</a>

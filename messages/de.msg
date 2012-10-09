@@ -6,10 +6,13 @@ Within: Innerhalb
 Days: Tage
 LoggedInAs: Eingeloggt als
 Logout: Logout
-Front: Was ist Bitlove?
+Front: Über Bitlove
 New: Neue Folgen
 Top: Top-Folgen
-Directory: Alle Folgen
+For: Für
+Users: Nutzer
+Podcasters: Podcaster
+Directory: Verzeichnis
 GettingStarted: Kurzanleitung
 NewTorrents: Neue Torrents
 TopTorrents: Beliebte Torrents
@@ -18,7 +21,25 @@ TopDownloadedDays n@Int: Meist heruntergeladen in #{show n} Tagen
 TopDownloadedAll: Meist heruntergeladen jeher
 In: bei
 By: von
-FrontAbout: Bitlove ist das Rundumsorglospaket für Podcast-Downloads mit P2P-Geschwindigkeit. Für alle Mediendateien im RSS-Feed erstellen wir einen Torrent, um die Daten auch mit anderen Herunterladenden zu teilen. Ein eigener Seeder sorgt dabei für garantierte Verteilung und Mindestgeschwindigkeit.
+FrontAbout: Bitlove erstellt für alle Mediendateien eines RSS-Feeds Torrents und ist zugleich Seeder
+FrontUserH: Was heißt das für Nutzer?
+FrontUser1a: High-speed downloads von
+FrontUser1b: vielen Peers
+FrontUser2a: Datenintegrität mit
+FrontUser2b: SHA1-Hashes
+FrontUser3a: Feeds für
+FrontUser3b: automatische Abonnements
+FrontUser4a: Viele Podcasts auf
+FrontUser4b: einen Blick
+FrontPodcasterH: …und für Podcaster?
+FrontPodcaster1a: Unterstütze
+FrontPodcaster1b: P2P-Technologie!
+FrontPodcaster2a: Spare Bandbreite durch
+FrontPodcaster2b: viele Seeder
+FrontPodcaster3a: Umso mehr Downloader,
+FrontPodcaster3b: desto höhere Geschwindigkeit
+FrontPodcaster4a: Werde im
+FrontPodcaster4b: Verzeichnis gefunden
 LearnMore: Erfahre mehr…
 AreYouPublisher: Bist Du ein Podcast Publisher?
 SignUp: Anmelden

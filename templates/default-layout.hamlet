@@ -53,11 +53,11 @@
       <div class="sub-menu">
         <div class="clickzone">
           <ul>
-            <li>Für
+            <li>_{MsgFor}
             <li>
-              <a href="#">Nutzer
+              <a href=@{HelpR}>_{MsgUsers}
             <li>
-              <a href="#">Podcaster
+              <a href=@{HelpPodcasterR}>_{MsgPodcasters}
 <div class="content">
   $maybe msg <- mmsg
     <div #message>#{msg}

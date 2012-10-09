@@ -248,6 +248,7 @@ nav a { font-style: normal; }
   color: #3C2F53;
   font-weight: 200;
   font-style: italic;
+  max-width: 20em;
 }
 
 .col1.about ul, .col2.about ul {

@@ -9,6 +9,9 @@ Logout: Logout
 Front: About
 New: New
 Top: Top
+For: For
+Users: Users
+Podcasters: Podcasters
 GettingStarted: Getting started
 Directory: Directory
 NewTorrents: New Torrents
@@ -18,7 +21,25 @@ TopDownloadedDays n@Int: Top downloaded in #{show n} days
 TopDownloadedAll: Top downloaded all time
 In: in
 By: by
-FrontAbout: Bitlove is the fully automatic Podcast download service on P2P speed. We generate a Torrent for all media files of an RSS feed and will seed them all the time.
+FrontAbout: Bitlove creates Torrents for all enclosures of an RSS/ATOM feed and seeds them
+FrontUserH: What's in for users?
+FrontUser1a: High-speed downloads from
+FrontUser1b: many peers
+FrontUser2a: Data Integrity through
+FrontUser2b: SHA1 hashes
+FrontUser3a: Feeds for
+FrontUser3b: automatic subscription
+FrontUser4a: Many podcasts at
+FrontUser4b: a glance
+FrontPodcasterH: …and for Podcasters?
+FrontPodcaster1a: Support
+FrontPodcaster1b: P2P technology!
+FrontPodcaster2a: Save bandwidth with
+FrontPodcaster2b: many seeders
+FrontPodcaster3a: The more downloaders
+FrontPodcaster3b: the more throughput
+FrontPodcaster4a: Be discovered in
+FrontPodcaster4b: our directory
 LearnMore: Learn more…
 AreYouPublisher: Are You a Podcast Publisher?
 SignUp: Sign up
