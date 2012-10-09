@@ -164,7 +164,7 @@ nav a { font-style: normal; }
   text-align: center;
   display: table;
   list-style-type: none;
-  margin: 1.8em auto 3.5em;
+  margin: 1.8em auto;
   padding: 0;
   background-color: #282828;
   border-radius: .2em;
@@ -489,7 +489,7 @@ article:first-child {
   font-size: 60%;
   color: #555;
   text-align: center;
-  margin: 1em 0.5em 0;
+  margin: 0 0.5em;
 }
 .feedslist dt, .feedslist dd {
   display: inline-block;
@@ -774,7 +774,7 @@ ul.feeds li {
 .filter {
   position: relative;
   text-align: right;
-  margin: 0.5em 0 0 auto;
+  margin: -1.5em 0 0 auto;
 }
 /***
    * This button has been copied from
