@@ -527,7 +527,7 @@ h3 a:hover { color: #464646; }
   list-style-type: none;
   padding: 0;
   margin: 0 0 0.1em 58px;
-  text-align: left;
+  text-align: right;
   /* meta & flattr floats above */
   display: block;
   min-height: 2em;
@@ -539,70 +539,103 @@ h3 a:hover { color: #464646; }
 }
 
 .torrent {
-  border: 1px solid #505050;
-  padding-left: 1.5em;
-  width: 12em;
-  position: relative;
-}
-
-.torrent a {
-  display: block;
-  background: #A5A5A5;
-  margin: 1px;
-  padding: 2px 4px;
-  font-size: 0.8em;
-  color: #EDEDED;
-}
-
-.torrent .type:after { content: " Torrent"; }
-
-.torrent .name-info {
   float: left;
-  margin-right: .2em;
-  position: relative;
-}
-
-/* see also filter.js for a[title] supression */
-.torrent .name-info:hover .file-name { display: block; }
-
-.torrent .name-info .file-name {
-  display: none;
-  position: absolute;
-  top: 1em;
-  left: -1em;
-  background: #2C2C2C;
-  padding: .2em 1em .3em;
-  color: #EBEBEB;
-  font-style: italic;
-  border: 1px #545454 solid;
   white-space: nowrap;
+}
+/***
+   * This button has been copied from
+   *   https://github.com/samcollins/css-social-buttons/blob/master/css/zocial.css
+   * by Sam Collins (@smcllns) of www.eventasaur.us
+   ***/
+.torrent a {
+  border: 1px solid #777;
+  border-color: rgba(0,0,0,0.2);
+  border-bottom-color: #333;
+  border-bottom-color: rgba(0,0,0,0.4);
+  color: #fff;
+  -moz-box-shadow: inset 0 0.08em 0 rgba(255,255,255,0.4), inset 0 0 0.1em rgba(255,255,255,0.9);
+  -webkit-box-shadow: inset 0 0.08em 0 rgba(255,255,255,0.4), inset 0 0 0.1em rgba(255,255,255,0.9);
+  box-shadow: inset 0 0.08em 0 rgba(255,255,255,0.4), inset 0 0 0.1em rgba(255,255,255,0.9);
+  cursor: pointer;
+  display: inline-block;
+  font: bold 95%/1.8 "Lucida Grande", Tahoma, sans-serif;
+  padding: 0 .95em 0 0;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  position: relative;
   z-index: 100;
-  margin-top: .6em;
-  -mox-border-radius: .3em;
+
+  -moz-border-radius: .3em;
   -webkit-border-radius: .3em;
   border-radius: .3em;
-  box-shadow: 3px 3px 4px #555;
+  background-color: #60af00;
+}
+.torrent a:before {
+  content: "⟱";
+  width: 1em;
+  border-right: 0.075em solid rgba(0,0,0,0.1);
+  float: left;
+  font: 125%/1.4 sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  margin: 0 0.5em 0 0;
+  padding: 0 0.5em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+
+  -moz-box-shadow: 0.075em 0 0 rgba(255,255,255,0.25);
+  -webkit-box-shadow: 0.075em 0 0 rgba(255,255,255,0.25);
+  box-shadow: 0.075em 0 0 rgba(255,255,255,0.25);
+
+  -webkit-font-smoothing: antialiased;
+}
+.torrent a:active {
+  outline: none; /* outline is visible on :focus */
+}
+.torrent a {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
+  background-image: -ms-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
+  background-image: -o-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,.1)), color-stop(49%, rgba(255,255,255,.05)), color-stop(51%, rgba(0,0,0,.05)), to(rgba(0,0,0,.1)));
+  background-image: -webkit-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
+  background-image: linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
+}
+
+.torrent a:hover, .torrent a:focus {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
+  background-image: -ms-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
+  background-image: -o-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,.15)), color-stop(49%, rgba(255,255,255,.15)), color-stop(51%, rgba(0,0,0,.1)), to(rgba(0,0,0,.15)));
+  background-image: -webkit-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
+  background-image: linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
+}
+
+.torrent a:active {
+  background-image: -moz-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
+  background-image: -ms-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
+  background-image: -o-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,.1)), color-stop(30%, rgba(255,255,255,0)), color-stop(50%, transparent), to(rgba(0,0,0,.1)));
+  background-image: -webkit-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
+  background-image: linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
 }
 
 .torrent .size {
-  position: absolute;
-  right: .5em;
-  color: #DFDFDF;
-  font-style: italic;
-}
-.torrent .size:before { content: "("; margin-right: 3px; font-style: normal; }
-.torrent .size:after {  content: ")"; margin-left:  2px; font-style: normal; }
-
-.torrent i.icon-download {
-  float: left;
-  margin-left: -1.35em;
-  margin-top: .1em;
-  color: #797983;
+  padding-left: 0.5em;
+  font-size: 75%;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .stats {
+  display: inline-block;
   color: #999;
-  margin-left: 1em;
 }
 .stats dl {
   display: inline-block;

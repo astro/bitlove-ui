@@ -366,15 +366,14 @@ renderItem item showOrigin = do
     $forall d <- itemDownloads item
       <ul class="download">
         <li class="torrent">
-          <i class="icon-download"></i>
           <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              data-type="#{downloadType d}">
-            <span class="type">#{downloadLabel d}
-            $if not (isOnlyType (downloadType d))
-              <span class="name-info icon-info-sign">
-                <span class="file-name">#{downloadName d}
+            $if isOnlyType (downloadType d)
+              #{downloadLabel d} Torrent
+            $else
+              #{downloadName d}
             <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">
