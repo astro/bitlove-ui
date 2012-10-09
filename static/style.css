@@ -393,17 +393,6 @@ header .meta, header .meta div {
   margin: .2em auto;
 }
 
-h2 .feedicon {
-  font-size: 0;
-  color: rgba(255, 255, 255, 0);
-  width: 0px;
-  height: 0px;
-  vertical-align: top;
-  padding-top: 16px;
-  padding-left: 16px;
-  background: url('rss.png') no-repeat center top;
-}
-
 p.feed {
   font-size: 80%;
   color: #666;
