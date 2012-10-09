@@ -25,7 +25,7 @@ FrontAbout: Bitlove creates Torrents for all enclosures of an RSS/ATOM feed and 
 FrontUserH: What's in for users?
 FrontUser1a: High-speed downloads from
 FrontUser1b: many peers
-FrontUser2a: Data Integrity through
+FrontUser2a: Data integrity through
 FrontUser2b: SHA1 hashes
 FrontUser3a: Feeds for
 FrontUser3b: automatic subscription
