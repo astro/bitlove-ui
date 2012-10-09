@@ -51,7 +51,7 @@ h2 {
   font-size: 2em;
   font-weight: normal;
   color: #161616;
-  padding: 0.4em 0 0;
+  padding: 0.4em 0;
   margin: 0;
 }
 
@@ -183,7 +183,6 @@ nav a { font-style: normal; }
 }
 
 .parent-menu {
- 
   position: relative;
 }
 #main-nav .sub-menu {
@@ -236,6 +235,16 @@ nav a { font-style: normal; }
   display: inline-block;
   margin: 0 0.5em;
   padding: 0.1em 0 0.2em 0.5em;
+}
+
+#podcaster-help-nav {
+  margin: 0 auto;
+  padding: 0;
+  list-style-type: none;
+}
+#podcaster-help-nav li {
+  display: inline-block;
+  margin: 0 1em;
 }
 
 /***************************************************************************
