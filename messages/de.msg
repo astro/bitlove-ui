@@ -23,6 +23,8 @@ LearnMore: Erfahre mehr…
 AreYouPublisher: Bist Du ein Podcast Publisher?
 SignUp: Anmelden
 Login: Login
+MyFeeds: Meine Feeds
+Search: Suchen
 Private: Privat
 PrivateExplain: Privat — Nicht im Verzeichnis aufgeführt.
 ErrorExplain: Momentan bleibt der Fehlerstatus bei HTTP 304 Not modified erhalten. Das ist nicht weiter schlimm wenn die Torrents stimmen.

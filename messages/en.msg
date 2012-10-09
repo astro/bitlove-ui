@@ -23,6 +23,8 @@ LearnMore: Learn more…
 AreYouPublisher: Are You a Podcast Publisher?
 SignUp: Sign up
 Login: Login
+MyFeeds: My feeds
+Search: Search
 Private: Private
 PrivateExplain: Private — Not included in directory or public torrent listings
 ErrorExplain: Right now, the error message will not be cleared in case of HTTP 304 Not modified. Don't worry too much if your torrents appear to be fine.

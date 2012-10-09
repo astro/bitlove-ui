@@ -9,15 +9,22 @@
   <div id="top-nav">
     <div class="content-wrapper">
       <p id="search">
-        <input type="search" id="search-field" placeholder="Suchen…">
+        _{MsgSearch}:
+        <input type="search" id="search-field">
       <ul id="user-nav">
-        <li>
-          <a href="#">Meine Feeds
-        <li>
-          <a href="#">Einstellungen
-        <li>
-          Eingeloggt mit <em>FlexibleFriend</em>,
-          <a href="#">Ausloggen
+        $maybe user <- msu
+          <li>
+            <a href=@{UserR user}>_{MsgMyFeeds}
+          <li>
+            _{MsgLoggedInAs} #
+            <em>#{userName user}
+          <li>
+            <a href=@{LogoutR}>_{MsgLogout}
+        $nothing
+          <li>
+            <a href=@{LoginR}>_{MsgLogin}
+          <li>
+            <a href=@{SignupR}>_{MsgSignUp}
 
   <ul id="main-nav">
     <li>
@@ -55,13 +62,6 @@
   $maybe msg <- mmsg
     <div #message>#{msg}
   ^{widget}
-$maybe user <- msu
-    <nav id="navbar">
-      <p>
-        _{MsgLoggedInAs} #
-        <a href="@{UserR user}">#{userName user}
-      <p>
-        <a href="@{LogoutR}">_{MsgLogout}
 <footer>
   <div>
     <dl>
