@@ -114,7 +114,7 @@ makeApplication conf = do
            utc1 <- liftIO getCurrentTime
            res <- app req
            let res' = res `seq` res
-           register $ do
+           _ <- register $ do
              cpu2 <- liftIO getCPUTime
              utc2 <- liftIO getCurrentTime
              liftIO $ BC.hPutStrLn stderr $ BC.concat

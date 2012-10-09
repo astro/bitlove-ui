@@ -5,14 +5,13 @@ module Model.Query where
 import Prelude
 import Database.HDBC
 import Data.Convertible
-import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Numeric (showOct, readOct)
-import Data.Char (chr, ord)
+import Data.Char (chr)
 import qualified Control.Exception as E
 import System.IO
 import Control.Applicative
@@ -20,7 +19,7 @@ import Data.Default
 
 import Utils
 
-instance Convertible [SqlValue] Text where
+instance Convertible [SqlValue] T.Text where
   safeConvert = safeConvert . head
 
 type Query e = IConnection conn => conn -> IO [e]

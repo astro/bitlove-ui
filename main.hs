@@ -3,7 +3,6 @@ import Yesod.Default.Config (AppConfig (..), loadConfig, configSettings, csParse
 import Settings
 import Application          (makeApplication)
 import System.Environment (getArgs)
-import Foundation (BitloveEnv)
 import Network.Wai.Handler.Warp (runSettings, defaultSettings, settingsHost, settingsPort)
 import Network.Wai.Handler.WarpTLS (runTLS, TLSSettings (..))
 

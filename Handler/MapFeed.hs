@@ -8,7 +8,7 @@ import Data.XML.Types
 import Text.XML.Stream.Render
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import Blaze.ByteString.Builder (Builder, fromByteString)
+import Blaze.ByteString.Builder (Builder)
 import Data.Maybe
 import qualified Data.ByteString.Lazy as LB
 
