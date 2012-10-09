@@ -23,4 +23,4 @@ $newline always
       _{MsgFrontPodcaster3a} <em>_{MsgFrontPodcaster3b}
     <li>
       _{MsgFrontPodcaster4a} <em>_{MsgFrontPodcaster4b}
-  <p><a href=@{HelpPodcasterR}>_{MsgLearnMore}</a>
+  <p><a href=@{SignupR}>_{MsgSignUp}</a>
