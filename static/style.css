@@ -28,7 +28,7 @@ body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 16px;
   margin: 0 auto;
-  width: 60em;
+  max-width: 60em;
   padding: 0;
 }
 body > * {
@@ -91,7 +91,7 @@ header h1 a {
 #siteflattr {
   position: absolute;
   top: 0;
-  right: -5em;
+  right: 0;
   margin: 0;
 }
 
@@ -119,7 +119,7 @@ header h1 a {
 
 #top-nav .content-wrapper {
   height: 100%;
-  width: 60em;
+  max-width: 60em;
   margin: auto;
 }
 
