@@ -316,24 +316,54 @@ getSearchR needle = do
           setTitleI $ MsgTitleSearch needle
           [whamlet|$newline always
            <h1>_{MsgSearchHeading needle}
-           <section class="col1">
-             <h2>Feeds
-             $forall feed <- feeds
-               <article class="feed">
-                 <img class="logo"
-                      src="@{UserFeedThumbnailR (feedUser feed) (feedSlug feed) (Thumbnail 64)}">
-                 <div>
-                   <h3>
-                     <a href="@{UserFeedR (feedUser feed) (feedSlug feed)}">#{feedTitle feed}
-                   $if not (T.null $ feedHomepage feed)
-                     <p class="homepage">
-                       <a rel="me"
-                          href="#{feedHomepage feed}">#{feedHomepage feed}
-           <section class="col2">
-             <h2>Torrents
-             ^{renderDownloads downloads False}
-             ^{renderPagination page}
            |]
+          let renderFeeds =
+                  [whamlet|
+                   <h2>Feeds
+                   $forall feed <- feeds
+                     <article class="feed">
+                       <img class="logo"
+                            src="@{UserFeedThumbnailR (feedUser feed) (feedSlug feed) (Thumbnail 64)}">
+                       <div>
+                         <h3>
+                           <a href="@{UserFeedR (feedUser feed) (feedSlug feed)}">#{feedTitle feed}
+                         <p .feed>
+                           \ _{MsgBy} #
+                           <a href="@{UserR (feedUser feed)}">#{userName $ feedUser feed}
+                         $if not (T.null $ feedHomepage feed)
+                           <p class="homepage">
+                             <a rel="me"
+                                href="#{feedHomepage feed}">#{feedHomepage feed}
+                   |]
+              renderTorrents =
+                  [whamlet|
+                   <h2>Torrents
+                   ^{renderDownloads downloads True}
+                   ^{renderPagination page}
+                   |]
+          case (feeds, downloads) of
+            ([], []) ->
+                [whamlet|$newline always
+                 <section .col>
+                   <h2>_{MsgNothingFound}
+                 |]
+            (_:_, _:_) ->
+                [whamlet|$newline always
+                 <section .col1>
+                   ^{renderFeeds}
+                 <section .col2>
+                   ^{renderTorrents}
+                 |]
+            ([], _) ->
+                [whamlet|$newline always
+                 <section .col>
+                   ^{renderTorrents}
+                 |]
+            (_, []) ->
+                [whamlet|$newline always
+                 <section .col>
+                   ^{renderFeeds}
+                 |]
 
 renderDownloads :: forall sub. [Download] -> Bool -> GWidget sub UIApp () 
 renderDownloads downloads showOrigin =

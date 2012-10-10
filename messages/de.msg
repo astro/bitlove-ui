@@ -47,6 +47,7 @@ SignUp: Anmelden
 Login: Login
 MyFeeds: Meine Feeds
 Search: Suchen
+NothingFound: Nichts gefunden
 Private: Privat
 PrivateExplain: Privat — Nicht im Verzeichnis aufgeführt.
 ErrorExplain: Momentan bleibt der Fehlerstatus bei HTTP 304 Not modified erhalten. Das ist nicht weiter schlimm wenn die Torrents stimmen.
