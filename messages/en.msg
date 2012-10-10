@@ -19,6 +19,7 @@ TopTorrents: Popular Torrents
 TopDownloadedDay: Top downloaded in 1 day
 TopDownloadedDays n@Int: Top downloaded in #{show n} days
 TopDownloadedAll: Top downloaded all time
+SearchHeading needle@Text: Search for: #{needle}
 In: in
 By: by
 FrontAbout: Bitlove creates Torrents for all enclosures of an RSS/ATOM feed and seeds them
@@ -62,6 +63,7 @@ TitleSignup: Bitlove: Signup
 TitleError: Error
 TitleReactivate: Bitlove: Recover your password
 TitleDirectory: Bitlove: Directory
+TitleSearch needle@Text: Bitlove: Search for #{needle}
 HeadingDirectory: Directory of torrentified Podcasters
 TitleHelp: Bitlove: Help
 HeadingSignup: Podcaster Signup

@@ -8,9 +8,10 @@
 <nav>
   <div id="top-nav">
     <div class="content-wrapper">
-      <p id="search">
-        _{MsgSearch}:
-        <input type="search" id="search-field">
+      <form #search action=@{SearchRedirectR}>
+        <label for="search-field">
+          _{MsgSearch}:
+        <input name="q" type="search" id="search-field">
       <ul id="user-nav">
         $maybe user <- msu
           <li>

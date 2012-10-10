@@ -24,6 +24,7 @@ module Model (
   userDownloads,
   enclosureDownloads,
   feedDownloads,
+  searchDownloads,
   -- Model.Item
   Item (..),
   groupDownloads,
@@ -52,6 +53,7 @@ module Model (
   FeedDetails (..),
   userFeedDetails,
   setUserFeedDetails,
+  searchFeeds,
   -- Model.Token
   Token (..),
   generateToken,

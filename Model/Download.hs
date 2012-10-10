@@ -125,3 +125,8 @@ feedDownloads url page =
   query "SELECT * FROM get_recent_downloads(?, ?, ?)" $
   convert page ++ [toSql url]
   
+searchDownloads :: Text -> QueryPage -> Query Download
+searchDownloads needle page =
+  query "SELECT * FROM search_feed_items(?, ?, ?)" $
+  convert page ++ [toSql needle]
+  

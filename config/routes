@@ -21,6 +21,8 @@
 /top/#Period TopDownloadedR GET
 /top.rss/#Period TopDownloadedRssR GET
 /top.atom/#Period TopDownloadedAtomR GET
+/search/#Text SearchR GET
+/search SearchRedirectR GET
 
 /help HelpR GET
 /help/podcaster HelpPodcasterR GET

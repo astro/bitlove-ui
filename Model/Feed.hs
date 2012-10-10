@@ -124,3 +124,6 @@ setUserFeedDetails user slug details db =
           [toSql $ fdPublic details, toSql $ fdTitle details,
            toSql user, toSql slug]
                   
+searchFeeds :: Text -> Query FeedInfo
+searchFeeds needle =
+  query "SELECT feeds.\"url\", user_feeds.\"user\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\"  FROM search_feeds(?) AS feeds JOIN user_feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"public\"" [toSql needle]

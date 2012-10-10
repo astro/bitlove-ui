@@ -19,6 +19,7 @@ TopTorrents: Beliebte Torrents
 TopDownloadedDay: Meist heruntergeladen an einem Tag
 TopDownloadedDays n@Int: Meist heruntergeladen in #{show n} Tagen
 TopDownloadedAll: Meist heruntergeladen jeher
+SearchHeading needle@Text: Suche nach: #{needle}
 In: bei
 By: von
 FrontAbout: Bitlove erstellt für alle Mediendateien eines RSS-Feeds Torrents und ist zugleich Seeder
@@ -61,6 +62,7 @@ TitleSignup: Bitlove: Anmeldung
 TitleError: Fehler
 TitleReactivate: Bitlove: Passwortwiederherstellung
 TitleDirectory: Bitlove: Verzeichnis
+TitleSearch needle@Text: Bitlove: Suche nach #{needle}
 HeadingDirectory: Verzeichnis torrentifizierter Podcaster
 TitleHelp: Bitlove: Hilfe
 HeadingSignup: Podcaster-Anmeldung
