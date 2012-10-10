@@ -48,6 +48,7 @@ enclosureErrors url =
   
 data FeedInfo = FeedInfo {
       feedUrl :: Text
+    , feedUser :: UserName
     , feedSlug :: Text
     , feedTitle :: Text
     , feedHomepage :: Text
@@ -58,9 +59,10 @@ data FeedInfo = FeedInfo {
     } deriving (Show, Typeable)
                
 instance Convertible [SqlValue] FeedInfo where
-  safeConvert (url:slug:title:homepage:image:public:torrentify:error_text:[]) =
+  safeConvert (url:user:slug:title:homepage:image:public:torrentify:error_text:[]) =
     FeedInfo <$>
     safeFromSql url <*>
+    safeFromSql user <*>
     safeFromSql slug <*>
     safeFromSql title <*>
     safeFromSql homepage <*>
@@ -72,7 +74,7 @@ instance Convertible [SqlValue] FeedInfo where
 
 userFeeds :: UserName -> Bool -> Query FeedInfo
 userFeeds user isOwner =
-  query ("SELECT feeds.\"url\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
+  query ("SELECT feeds.\"url\", user_feeds.\"user\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? " ++
          (if isOwner
           then ""
           else "AND user_feeds.\"public\" ") ++
@@ -81,7 +83,7 @@ userFeeds user isOwner =
 
 userFeedInfo :: UserName -> Text -> Query FeedInfo
 userFeedInfo user slug =
-  query "SELECT feeds.\"url\", ?::TEXT, COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql slug, toSql user, toSql slug]
+  query "SELECT feeds.\"url\", user_feeds.\"user\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM user_feeds INNER JOIN feeds ON user_feeds.feed=feeds.url WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=?" [toSql user, toSql slug]
 
 addUserFeed :: IConnection conn => 
                UserName -> Text -> Text -> conn -> IO Bool
