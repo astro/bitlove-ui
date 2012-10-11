@@ -72,9 +72,9 @@ header h1 {
 
 header h1 a {
   display: block;
-  width: 355px;
-  height: 161px;
-  background: url(header_logo.png);
+  width: 450px;
+  height: 118px;
+  background: url(header_logo.png) no-repeat;
   margin: auto;
   text-indent: 1000px;
   overflow: hidden;
