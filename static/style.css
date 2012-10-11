@@ -490,6 +490,13 @@ article:first-child {
 .feedslist dt:first-child {
   margin-left: 0.3em;
 }
+.feedslist a:before {
+  font-family: FontAwesome;
+  font-weight: normal;
+  font-style: none;
+  content: "\f09e";
+  margin-right: 0.2em;
+}
 
 article.item {
   min-height: 48px;

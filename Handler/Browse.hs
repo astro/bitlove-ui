@@ -544,7 +544,6 @@ renderFeedsList lists = do
               [hamlet|$newline always
                <a href="#{renderRoute route}"
                   type=#{fType}>
-                 <i .icon-rss>
                  #{fTitle}
                |]
   [whamlet|$newline always
