@@ -4,23 +4,31 @@ $newline always
   <h2>_{MsgFrontUserH}
   <ul>
     <li>
-      _{MsgFrontUser1a} <em>_{MsgFrontUser1b}
+      _{MsgFrontUser1a} #
+      <em>_{MsgFrontUser1b}
     <li>
-      _{MsgFrontUser2a} <em>_{MsgFrontUser2b}
+      _{MsgFrontUser2a} #
+      <em>_{MsgFrontUser2b}
     <li>
-      _{MsgFrontUser3a} <em>_{MsgFrontUser3b}
+      _{MsgFrontUser3a} #
+      <em>_{MsgFrontUser3b}
     <li>
-      _{MsgFrontUser4a} <em>_{MsgFrontUser4b}
+      _{MsgFrontUser4a} #
+      <em>_{MsgFrontUser4b}
   <p><a href=@{HelpR}>_{MsgLearnMore}</a>
 <section class="col2 about">
   <h2>_{MsgFrontPodcasterH}
   <ul>
     <li>
-      _{MsgFrontPodcaster1a} <em>_{MsgFrontPodcaster1b}
+      _{MsgFrontPodcaster1a} #
+      <em>_{MsgFrontPodcaster1b}
     <li>
-      _{MsgFrontPodcaster2a} <em>_{MsgFrontPodcaster2b}
+      _{MsgFrontPodcaster2a} #
+      <em>_{MsgFrontPodcaster2b}
     <li>
-      _{MsgFrontPodcaster3a} <em>_{MsgFrontPodcaster3b}
+      _{MsgFrontPodcaster3a} #
+      <em>_{MsgFrontPodcaster3b}
     <li>
-      _{MsgFrontPodcaster4a} <em>_{MsgFrontPodcaster4b}
+      _{MsgFrontPodcaster4a} #
+      <em>_{MsgFrontPodcaster4b}
   <p><a href=@{SignupR}>_{MsgSignUp}</a>

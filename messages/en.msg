@@ -39,7 +39,7 @@ FrontPodcaster2a: Save bandwidth with
 FrontPodcaster2b: many seeders
 FrontPodcaster3a: The more downloaders
 FrontPodcaster3b: the more throughput
-FrontPodcaster4a: Be discovered in
+FrontPodcaster4a: Get discovered in
 FrontPodcaster4b: our directory
 LearnMore: Learn more…
 AreYouPublisher: Are You a Podcast Publisher?
