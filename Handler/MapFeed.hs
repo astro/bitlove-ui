@@ -11,6 +11,7 @@ import qualified Data.Conduit.List as CL
 import Blaze.ByteString.Builder (Builder)
 import Data.Maybe
 import qualified Data.ByteString.Lazy as LB
+import Data.Text.Encoding (encodeUtf8)
 
 import qualified Model
 import Import hiding (Content)
@@ -18,25 +19,32 @@ import Import hiding (Content)
 getMapFeedR :: UserName -> Text -> Handler RepXml
 getMapFeedR user slug = do
   fullUrlRender <- getFullUrlRender
-  m_data <- withDB $ \db -> do
+  mXmlEnclosures <- withDB $ \db -> do
     urls <- Model.userFeed user slug db
     case urls of
       (url:_) -> do
         xml:_ <- Model.feedXml url db
-        enclosures <- HM.fromList `fmap`
-                      Model.feedEnclosures url db
-        let getEnclosureLink enclosure = 
-                (fullUrlRender . TorrentFileR user slug . TorrentName) `fmap`
-                ({-# SCC "enclosureLookup" #-} enclosure `HM.lookup` enclosures)
-        return $ Just (xml, enclosures `seq` getEnclosureLink)
+        enclosures <- Model.feedEnclosures url db
+        return $ Just (xml, enclosures)
       _ ->
         return Nothing
-  case m_data of
+  case mXmlEnclosures of
     Nothing ->
-      notFound
-    Just (xml, enclosures) ->
-      return $ RepXml $ ContentSource $
-      mapFeed xml enclosures
+        notFound
+    Just (xml, enclosures) -> 
+        do generateETag $
+                      LB.fromChunks $
+                      concatMap (\(t, t') ->
+                                     [ encodeUtf8 t
+                                     , encodeUtf8 t'
+                                     ]
+                                ) enclosures
+           let enclosures' = HM.fromList enclosures
+               getEnclosureLink enclosure = 
+                   (fullUrlRender . TorrentFileR user slug . TorrentName) <$>
+                   (enclosure `HM.lookup` enclosures')
+           return $ RepXml $ ContentSource $
+                  mapFeed xml getEnclosureLink
   
   
 type Attrs = [(Name, [Content])]

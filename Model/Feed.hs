@@ -40,7 +40,7 @@ instance Convertible [SqlValue] (Text, Text) where
 
 feedEnclosures :: Text -> Query (Text, Text)
 feedEnclosures url =
-  query "SELECT enclosures.url, torrents.name FROM enclosures JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE enclosures.feed=$1" [toSql url]
+  query "SELECT enclosures.url, torrents.name FROM enclosures JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE enclosures.feed=$1 ORDER BY enclosures.url ASC" [toSql url]
   
 enclosureErrors :: Text -> Query (Text, Text)
 enclosureErrors url =

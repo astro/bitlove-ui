@@ -10,6 +10,7 @@ module Foundation
     , Form
     , getFullUrlRender
     , isMiro
+    , generateETag
     , withDB, withDBPool, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
@@ -42,7 +43,10 @@ import qualified Data.Text as T
 import qualified Control.Exception as E
 import qualified Network.Wai as Wai
 import Data.ByteString.Char8 (isInfixOf)
+import qualified Data.ByteString.Lazy as LB
+import qualified Crypto.Hash.SHA1 as SHA1
 
+import Utils
 import PathPieces
 import BitloveAuth
 
@@ -215,6 +219,15 @@ errorHandler' e = do
                    <h2>Oops
                    <img src="@{img}">
                  |]
+
+generateETag :: LB.ByteString -> GHandler sub master ()
+generateETag = setHeader "ETag" . 
+               quote . 
+               toHex . 
+               SHA1.hashlazy
+  where quote t = T.concat ["\"", t, "\""]
+
+-- | Database interface
 
 class HasDB y where
     getDBPool :: GHandler y' y DBPool

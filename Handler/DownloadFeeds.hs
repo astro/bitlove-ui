@@ -6,6 +6,7 @@ import Data.Maybe
 import Data.Time (getCurrentTimeZone)
 import Data.Default (def)
 import Blaze.ByteString.Builder
+import qualified Data.ByteString.Lazy as LB
 
 import qualified Model
 import Import
@@ -33,8 +34,13 @@ class RepFeed c where
   renderFeed :: FeedParameters -> [Item] -> Handler c
   
   renderFeed' :: FeedParameters -> [Download] -> Handler c
-  renderFeed' params downloads = renderFeed params $
-                                 groupDownloads downloads
+  renderFeed' params downloads =
+      do generateETag $
+                LB.fromChunks $
+                map (unInfoHash . downloadInfoHash)
+                downloads
+         renderFeed params $
+                groupDownloads downloads
   
 withXmlDecl :: Content -> Content
 withXmlDecl (ContentBuilder b _) =

@@ -18,7 +18,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
 import qualified Network.Wai as Wai
-import Network.HTTP.Types (Status (Status, statusCode))
+import Network.HTTP.Types.Status
 import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
@@ -67,7 +67,7 @@ makeApplication conf = do
     foundation <- makeUIFoundation conf uiPool
     tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- (enforceVhost . stats . autohead) `fmap` 
+    ui <- (enforceVhost . stats . autohead . etagMiddleware) <$>
           toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
@@ -130,6 +130,31 @@ makeApplication conf = do
                       , Wai.rawPathInfo req
                       ]
            return $ res'
+           
+    etagMiddleware app req =
+      do let reqETags = 
+                 "If-None-Match" `lookup` Wai.requestHeaders req
+             matches etag = 
+                 case (etag `BC.breakSubstring`) <$> reqETags of
+                   Just (_, reqEtags')
+                       | not (BC.null reqEtags') ->
+                           True
+                   _ ->
+                       False
+         res <- app req
+         let may304 res s hs
+                 | statusCode s == 200 &&
+                   maybe False matches ("ETag" `lookup` hs) =
+                       return $ Wai.ResponseBuilder notModified304 hs mempty
+                 | otherwise =
+                       return res
+         case res of
+           Wai.ResponseFile s hs _ _ -> 
+               may304 res s hs
+           Wai.ResponseBuilder s hs _ -> 
+               may304 res s hs
+           Wai.ResponseSource s hs _ -> 
+               may304 res s hs
 
 getApplicationDev :: IO (Int, Application)
 getApplicationDev =
