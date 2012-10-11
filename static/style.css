@@ -872,8 +872,8 @@ background-color: #efefeb; color: #312c2a;
   background-image: -ms-linear-gradient(bottom, rgba(255,255,255,0), rgba(255,255,255,0) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.1));
   background-image: linear-gradient(bottom, rgba(255,255,255,0), rgba(255,255,255,0) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.1));
 }
-.filterbutton i.icon-caret-down, .filterbutton i.icon-caret-up {
-  display: inline-block;
+.filterbutton:after {
+  content: "\25BE";
   border-left: 1px solid rgba(0,0,0,0.1);
 
   margin: 0 0 0 0.5em;
@@ -884,6 +884,10 @@ background-color: #efefeb; color: #312c2a;
 
   -webkit-font-smoothing: antialiased;
 }
+.filterbutton.toggled:after {
+  content: '\25B4';
+}
+
 
 .filterdialog {
   position: absolute;
