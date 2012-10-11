@@ -437,10 +437,11 @@ renderItem item showOrigin = do
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              data-type="#{downloadType d}">
-            $if isOnlyType (downloadType d)
-              #{downloadLabel d} Torrent
-            $else
-              #{downloadName d}
+            <span .file-name>
+              $if isOnlyType (downloadType d)
+                #{downloadLabel d}
+              $else
+                #{downloadName d}
             <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">

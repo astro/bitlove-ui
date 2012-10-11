@@ -549,6 +549,9 @@ h3 a:hover { color: #464646; }
   float: left;
   white-space: nowrap;
 }
+.col .torrent .file-name:after {
+    content: " Torrent";
+}
 /***
    * This button has been copied from
    *   https://github.com/samcollins/css-social-buttons/blob/master/css/zocial.css
@@ -941,7 +944,7 @@ footer {
   right: 0;
   clear: both;
   margin: 0;
-  margin-top: 1em;
+  margin-top: 5em;
   padding: 1em 0 2em;
   text-align: center;
   background: #EDEDED;
