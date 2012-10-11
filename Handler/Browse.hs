@@ -14,6 +14,7 @@ import Text.Blaze.Html5.Attributes hiding (item, min, max, id)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 import Settings.StaticFiles
+import Data.List (nub)
 
 import PathPieces
 import qualified Model
@@ -71,17 +72,23 @@ updatePagination page xs
 getFrontR :: Handler RepHtml
 getFrontR = do
   downloads <- withDB $
-               Model.mostDownloaded 1 (Model.QueryPage 20 0)
+               Model.mostDownloaded 1 (Model.QueryPage 40 0)
+  let previews = take 20 $
+                 nub $
+                 map (\item ->
+                       (itemUser item, itemSlug item)
+                     ) $
+                 Model.groupDownloads downloads
   defaultLayout $ do
     setTitleI MsgTitle
     $(whamletFile "templates/front.hamlet")
     [whamlet|$newline always
      <section class="downloads">
        <ul>
-         $forall item <- Model.groupDownloads downloads
+         $forall (user, slug) <- previews
            <li>
-             <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">
-               <img src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 64)}">
+             <a href="@{UserFeedR user slug}">
+               <img src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
      |]
 
 getNewR :: Handler RepHtml
