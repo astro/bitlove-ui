@@ -543,7 +543,9 @@ renderFeedsList lists = do
       renderFeedsList'' (fTitle :: Text, route, fType) =
               [hamlet|$newline always
                <a href="#{renderRoute route}"
-                  type=#{fType}>#{fTitle}
+                  type=#{fType}>
+                 <i .icon-rss>
+                 #{fTitle}
                |]
   [whamlet|$newline always
      <dl class="feedslist">

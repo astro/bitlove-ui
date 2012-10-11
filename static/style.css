@@ -577,11 +577,15 @@ h3 a:hover { color: #464646; }
   background-color: #60af00;
 }
 .torrent a:before {
-  content: "⟱";
+  font-family: FontAwesome;
+  font-weight: normal;
+  font-style: none;
+  content: "\f019";
   width: 1em;
   border-right: 0.075em solid rgba(0,0,0,0.1);
   float: left;
-  font: 125%/1.4 sans-serif;
+  font-size: 115%;
+  line-height: 1.6em;
   font-style: normal;
   font-weight: normal;
   margin: 0 0.5em 0 0;
@@ -797,6 +801,7 @@ ul.feeds li {
   position: relative;
   text-align: right;
   margin: -1.5em 0 0 auto;
+  max-width: 6em;
 }
 /***
    * This button has been copied from
