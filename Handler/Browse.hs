@@ -530,7 +530,6 @@ renderFeedsList lists = do
   renderRoute <-
     lift $
     isMiro >>= \isMiro' ->
-    (liftIO $ putStrLn $ "isMiro=" ++ show isMiro') >>
     (if isMiro'
      then (("http://subscribe.getmiro.com/?type=video&url1=" `T.append`) <$>)
      else id) <$>
