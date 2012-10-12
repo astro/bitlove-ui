@@ -37,9 +37,6 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* Feed etags
-* New layout
-* Search
 * Filter for directory
 * Per-item pages
 * MapFeed content-type
