@@ -31,7 +31,7 @@ pageSize = 20
 
 withPage :: Page -> (Model.QueryPage -> a) -> a
 withPage page f =
-    f $ Model.QueryPage (pageSize * 2) $ (pageNumber page - 1) * pageSize
+    f $ Model.QueryPage (pageSize + 1) $ (pageNumber page - 1) * pageSize
 
 makePage :: Handler Page
 makePage = do 
@@ -67,7 +67,7 @@ updatePagination page xs
          xs)
     | otherwise =
         (page, 
-         take pageSize xs)
+         xs)
 
 getFrontR :: Handler RepHtml
 getFrontR = do
@@ -93,7 +93,8 @@ getFrontR = do
 
 getNewR :: Handler RepHtml
 getNewR = do
-    (page, downloads) <- paginate Model.recentDownloads
+    page <- makePage
+    downloads <- withDB $ withPage page Model.recentDownloads
     defaultLayout $ do
         setTitleI MsgTitleNew
         addFilterScript
@@ -220,7 +221,7 @@ getUserR user = do
                    <section class="col2">
                      <h2>Recent Torrents
                      ^{renderFeedsList links}
-                     ^{renderDownloads (take pageSize downloads) False}
+                     ^{renderDownloads downloads False}
                      ^{renderPagination page}
                    |]
   
@@ -301,7 +302,7 @@ getUserFeedR user slug = do
                                      <dt>#{fst enclosureError}
                                      <dd><pre>#{snd enclosureError}
                             ^{renderFeedsList links}
-                            ^{renderDownloads (take pageSize downloads) False}
+                            ^{renderDownloads downloads False}
                             ^{renderPagination page}
                           |]
 
