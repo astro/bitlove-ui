@@ -52,10 +52,11 @@ type Attrs = [(Name, [Content])]
              
 mapFeed :: FeedXml -> (Text -> Maybe Text) -> Source (ResourceT IO) (Flush Builder)
 mapFeed (FeedXml xml) getEnclosureLink =
-  ({-# SCC "parseLBS" #-} parseLBS def $ LB.concat $ chunkify 64 xml) $= 
+  parseLBS def (LB.concat $ chunkify 64 xml) $= 
   mapEnclosures =$=
-  ({-# SCC "renderBuilder" #-} renderBuilder def) =$=
-  CL.map Chunk
+  renderBuilder def =$=
+  CL.sequence (CL.take 2048) =$=
+  CL.map (Chunk . mconcat)
   where mapEnclosures :: Monad m => Conduit Event m Event
         mapEnclosures =
           CL.map (\event ->
