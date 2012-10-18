@@ -929,6 +929,7 @@ background-color: #efefeb; color: #312c2a;
 .filterdialog .all {
   font-size: 90%;
   margin-left: 0.5em;
+  cursor: pointer;
 }
 .filterdialog .counter {
   font-size: 70%;
