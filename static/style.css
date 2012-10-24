@@ -490,6 +490,14 @@ article:first-child {
 .feedslist dt:first-child {
   margin-left: 0.3em;
 }
+.feedslist a {
+  padding: 0 .2em 0 .2em;
+  border-radius: 0.2em;
+}
+.feedslist a:hover {
+  background-color: #1067B9;
+  color: #F4F4F4;
+}
 .feedslist a:before {
   font-family: FontAwesome;
   font-weight: normal;
