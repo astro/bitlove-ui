@@ -76,7 +76,7 @@ getFrontR = do
   let previews = take 20 $
                  nub $
                  map (\item ->
-                       (itemUser item, itemSlug item)
+                       (itemUser item, itemSlug item, itemFeedTitle item)
                      ) $
                  Model.groupDownloads downloads
   defaultLayout $ do
@@ -85,10 +85,12 @@ getFrontR = do
     [whamlet|$newline always
      <section class="downloads">
        <ul>
-         $forall (user, slug) <- previews
+         $forall (user, slug, title) <- previews
            <li>
-             <a href="@{UserFeedR user slug}">
-               <img src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
+             <a href="@{UserFeedR user slug}"
+                title="#{fromMaybe "Feed" title}">
+               <img src="@{UserFeedThumbnailR user slug (Thumbnail 64)}"
+                    alt="#{fromMaybe "Feed logo" title}">
      |]
 
 getNewR :: Handler RepHtml
