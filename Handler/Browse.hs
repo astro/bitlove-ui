@@ -513,10 +513,6 @@ renderItem item showOrigin = do
                   ! href (toValue payment) $
                   "[Support]"
 
-addFilterScript :: forall sub. GWidget sub UIApp ()
-addFilterScript =
-    addScript $ StaticR js_filter_js
-
 -- | <link rel="alternate"> to <head>
 addFeedsLinks :: forall sub master a a1.
                  ToMarkup a =>

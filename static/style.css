@@ -730,16 +730,18 @@ h3 a:hover { color: #464646; }
 
 .item {
   border: 1px solid #C4C4C4;
-  opacity: 1;
   padding: 1em 1.2em;
+}
+.filteredin {
+  opacity: 1;
   transition: opacity 0.2s ease-out;
   -webkit-transition: opacity 0.2s ease-out;
   -moz-transition: opacity 0.2s ease-out;
   -ms-transition: opacity 0.2s ease-out;
   -o-transition: opacity 0.2s ease-out;
 }
-.item.filteredout {
-  opacity: 0.1;
+.filteredout {
+  opacity: 0.15;
   transition: opacity 0.5s ease-out;
   -webkit-transition: opacity 0.5s ease-out;
   -moz-transition: opacity 0.5s ease-out;

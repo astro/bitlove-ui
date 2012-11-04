@@ -11,6 +11,7 @@ module Foundation
     , getFullUrlRender
     , isMiro
     , generateETag
+    , addFilterScript
     , withDB, withDBPool, DBPool, HasDB (..), Transaction
     , Period (..)
     --, maybeAuth
@@ -226,6 +227,10 @@ generateETag = setHeader "ETag" .
                toHex . 
                SHA1.hashlazy
   where quote t = T.concat ["\"", t, "\""]
+
+addFilterScript :: forall sub. GWidget sub UIApp ()
+addFilterScript =
+    addScript $ StaticR js_filter_js
 
 -- | Database interface
 

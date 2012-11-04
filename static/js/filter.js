@@ -1,19 +1,13 @@
 (function() {
 
-function FilterableItem(el) {
+function Filterable(el) {
     this.el = el;
-    this.lang = el.attr('xml:lang') || '';
-    var types = [];
-    el.find('.torrent a').each(function() {
-	var type = $(this).data('type');
-	/* Split MIME type */
-	types.push(type ? type.split('/')[0] : '');
-    });
-    this.types = types;
 }
-FilterableItem.prototype = {
+Filterable.prototype = {
     applyMask: function(mask) {
-	var langMatch = !mask.lang[this.lang];
+	var langMatch = this.langs.some(function(lang) {
+	    return !mask.lang[lang];
+	});
 	var typeMatch = this.types.some(function(type) {
 	    return !mask.type[type];
 	});
@@ -25,9 +19,71 @@ FilterableItem.prototype = {
     },
     show: function() {
 	this.el.removeClass('filteredout');
+	this.el.addClass('filteredin');
     },
     hide: function() {
 	this.el.addClass('filteredout');
+	this.el.removeClass('filteredin');
+    },
+    isVisible: function() {
+	return this.el.hasClass('filteredin');
+    }
+};
+
+function FilterableItem(el) {
+    Filterable.call(this, el);
+
+    var lang = el.attr('xml:lang');
+    this.langs = lang ? [lang] : [];
+    var types = this.types = [];
+    el.find('.torrent a').each(function() {
+	var type = $(this).data('type');
+	/* Split MIME type */
+	types.push(type ? type.split('/')[0] : '');
+    });
+}
+FilterableItem.prototype = new Filterable();
+
+function FilterableFeed(el) {
+    Filterable.call(this, el);
+
+    this.el = el;
+    var lang = el.attr('xml:lang');
+    this.langs = lang ? [lang] : [];
+    this.types = ("" + el.data('types')).split(',').map(function(s) {
+	/* Split MIME type */
+	return s.split('/')[0];
+    });
+}
+FilterableFeed.prototype = new Filterable();
+
+function FilterableUser(el) {
+    Filterable.call(this, el);
+
+    var langs = this.langs = [];
+    var types = this.types = [];
+    this.feeds = el.find('ul.feeds > li').map(function() {
+	var feed = new FilterableFeed($(this));
+	langs.push.apply(langs, feed.langs);
+	types.push.apply(types, feed.types);
+	return feed;
+    }).toArray();
+}
+FilterableUser.prototype = new Filterable();
+FilterableUser.prototype.applyMask = function(mask) {
+    var anyVisible = false;
+    this.feeds.forEach(function(feed) {
+	feed.applyMask(mask);
+	anyVisible = anyVisible || feed.isVisible();
+    });
+    if (anyVisible)
+	this.show();
+    else {
+	this.hide();
+	/* Avoid double opacity drop */
+	this.feeds.forEach(function(feed) {
+	    feed.show();
+	});
     }
 };
 
@@ -38,14 +94,23 @@ $('.item').each(function() {
 });
 var Filter = {
     items: $('.item').map(function() {
-	return new FilterableItem($(this));
-    }),
+	    return new FilterableItem($(this));
+        }).toArray().concat($('.directory .meta').map(function() {
+	    return new FilterableUser($(this));
+	}).toArray()),
+
+    isAllowedType: function(type) {
+	return ["text", "application", "audio", "video", "message", "image"
+	       ].indexOf(type) >= 0;
+    },
 
     getAllTypes: function() {
 	var types = {}, i, j;
 	for(i = 0; i < Filter.items.length; i++)
 	    for(j = 0; j < Filter.items[i].types.length; j++) {
 		var type = Filter.items[i].types[j];
+		if (!Filter.isAllowedType(type))
+		    continue;
 		if (!types.hasOwnProperty(type))
 		    types[type] = 0;
 		types[type]++;
@@ -53,13 +118,14 @@ var Filter = {
 	return types;
     },
     getAllLangs: function() {
-	var langs = {}, i;
-	for(i = 0; i < Filter.items.length; i++) {
-	    var lang = Filter.items[i].lang;
-	    if (!langs.hasOwnProperty(lang))
-		langs[lang] = 0;
-	    langs[lang]++;
-	}
+	var langs = {}, i, j;
+	for(i = 0; i < Filter.items.length; i++)
+	    for(j = 0; j < Filter.items[i].langs.length; j++) {
+		var lang = Filter.items[i].langs[j];
+		if (!langs.hasOwnProperty(lang))
+		    langs[lang] = 0;
+		langs[lang]++;
+	    }
 	return langs;
     },
 

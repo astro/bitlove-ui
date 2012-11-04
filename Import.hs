@@ -10,6 +10,7 @@ module Import
 #if __GLASGOW_HASKELL__ < 704
     , (<>)
 #endif
+    , addFilterScript
     , TorrentName (..)
     , iso8601, rfc822, localTimeToZonedTime
     , fromHex, fromHex', toHex, isHex

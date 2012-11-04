@@ -15,6 +15,7 @@ getDirectoryR = do
   --let (dir1, dir2) = splitAt ((length dir + 1) `div` 2) dir
   defaultLayout $ do
     setTitleI MsgTitleDirectory
+    addFilterScript
     let 
         links :: [(Text, [(Text, Route UIApp, String)])]
         links = [("Feeds", [("OPML", DirectoryOpmlR, BC.unpack typeOpml)])]
