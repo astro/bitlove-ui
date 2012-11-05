@@ -1,5 +1,16 @@
 (function() {
 
+function mapType(type) {
+    switch(type) {
+	case 'application/ogg':
+	    return 'audio';
+	case 'application/pdf':
+	    return 'text';
+	default:
+	    return type.split('/')[0];
+    }
+}
+
 function Filterable(el) {
     this.el = el;
 }
@@ -37,9 +48,7 @@ function FilterableItem(el) {
     this.langs = lang ? [lang] : [];
     var types = this.types = [];
     el.find('.torrent a').each(function() {
-	var type = $(this).data('type');
-	/* Split MIME type */
-	types.push(type ? type.split('/')[0] : '');
+	types.push(mapType($(this).data('type')));
     });
 }
 FilterableItem.prototype = new Filterable();
@@ -50,10 +59,7 @@ function FilterableFeed(el) {
     this.el = el;
     var lang = el.attr('xml:lang');
     this.langs = lang ? [lang] : [];
-    this.types = ("" + el.data('types')).split(',').map(function(s) {
-	/* Split MIME type */
-	return s.split('/')[0];
-    });
+    this.types = ("" + el.data('types')).split(',').map(mapType);
 }
 FilterableFeed.prototype = new Filterable();
 
