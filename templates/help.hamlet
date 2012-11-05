@@ -10,5 +10,18 @@ $newline always
     If you tune in to podcasts regularly, you will probably want to subscribe to feeds. We wholeheartedly recommend #
     <a href="http://www.getmiro.com/">Miro!
 
+  <p>
+    There are now several tools that evaluate Bitlove feeds to leech Torrents and maps them back to ordinary feeds for syndication in any podcatcher. Install them on your own server for exclusive bandwidth.
+  <ul>
+    <li>
+      <a href="http://qrios.de/2012/06/bitlove-proxy-lauft/">bitlove-proxy
+      \ by Qrios
+    <li>
+      <a href="https://bitbucket.org/faldrian/feedreconstructor">FeedReconstructor
+      \ by Faldrian
+    <li>
+      <a href="http://ubahnverleih.wordpress.com/2012/11/04/bitlove-fur-alle/">Podprox
+      \ for Synology DiskStations by Ubahnverleih, based on the above
+
   <h3>Is file-sharing legal (here)?
   <p>Yes. Bitlove distributes only content which publishers explicitly ordered. If you get caught because of file-sharing activities, it's due to content, not technology.
