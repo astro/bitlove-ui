@@ -44,8 +44,7 @@ Filterable.prototype = {
 function FilterableItem(el) {
     Filterable.call(this, el);
 
-    var lang = el.attr('xml:lang');
-    this.langs = lang ? [lang] : [];
+    this.langs = [el.attr('xml:lang')];
     var types = this.types = [];
     el.find('.torrent a').each(function() {
 	types.push(mapType($(this).data('type')));
