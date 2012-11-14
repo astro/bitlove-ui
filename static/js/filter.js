@@ -56,8 +56,7 @@ function FilterableFeed(el) {
     Filterable.call(this, el);
 
     this.el = el;
-    var lang = el.attr('xml:lang');
-    this.langs = lang ? [lang] : [];
+    this.langs = [el.attr('xml:lang')];
     this.types = ("" + el.data('types')).split(',').map(mapType);
 }
 FilterableFeed.prototype = new Filterable();
