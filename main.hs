@@ -4,7 +4,7 @@ import Settings
 import Application          (makeApplication)
 import System.Environment (getArgs)
 import Network.Wai.Handler.Warp (runSettings, defaultSettings, settingsHost, settingsPort)
-import Network.Wai.Handler.WarpTLS (runTLS, TLSSettings (..))
+import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 
 fromArgs :: IO (AppConfig BitloveEnv Settings.Extra)
 fromArgs = do
@@ -34,7 +34,7 @@ main = do
               (Nothing, Nothing) ->
                   runSettings
               (Just cert, Just key) ->
-                  runTLS $ TLSSettings cert key
+                  runTLS $ tlsSettings cert key
               _ ->
                   error "Specify both cert and key for SSL"
   run settings app

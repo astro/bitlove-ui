@@ -145,7 +145,7 @@ executable         ui
                      , yesod-default
                      , yesod-core
                      , warp                  >= 1.3.3     && < 2
-                     , warp-tls              >= 1.3       && < 2
+                     , warp-tls              >= 1.4.0     && < 2
 
 test-suite test
     type:              exitcode-stdio-1.0
