@@ -56,7 +56,7 @@ mapFeed (FeedXml xml) getEnclosureLink =
   mapEnclosures =$=
   renderBuilder def =$=
   CL.sequence (CL.take 2048) =$=
-  CL.map (Chunk . mconcat)
+  CL.concatMap (\builders -> [Chunk $ mconcat builders, Flush])
   where mapEnclosures :: Monad m => Conduit Event m Event
         mapEnclosures =
           CL.map (\event ->
