@@ -38,9 +38,8 @@ generateThumbnail url size =
           req <- lift $ parseUrl $ T.unpack url
           res <- lift $ http req manager
           case res of
-            Response _ _ _ src
-                | statusCode (responseStatus res) == 200 ->
-                    return $ Just src
+            _ | statusCode (responseStatus res) == 200 ->
+                return $ Just $ responseBody res
             _ ->
                 return Nothing
         resize :: Conduit B.ByteString (ResourceT IO) B.ByteString
