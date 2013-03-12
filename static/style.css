@@ -344,6 +344,9 @@ section.downloads li a img {
   padding: 0;
   text-align: center;
 }
+.content:after {
+  clear: both;
+}
 
 .col, .col1, .col2 {
   margin: 0 0 2em;
