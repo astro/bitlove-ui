@@ -123,6 +123,8 @@ makeApplication conf = do
                       , "ms real "
                       , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
                       , "ms cpu] "
+                      , BC.pack $ show $ Wai.remoteHost req
+                      , " "
                       , BC.pack $ show $ statusCode $ Wai.responseStatus res
                       , " "
                       , Wai.requestMethod req
