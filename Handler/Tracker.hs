@@ -135,7 +135,7 @@ getAnnounceR = do
                             [g peerId addr' port'
                              | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
                           )
-           interval <- liftIO $ randomRIO (540, 600)
+           interval <- liftIO $ randomRIO (1620, 1800)
            return $ RepBenc $
                   Benc.BDict [ ("peers", peers4)
                              , ("peers6", peers6)
