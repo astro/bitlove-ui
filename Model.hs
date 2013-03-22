@@ -5,6 +5,8 @@ module Model (
   Torrent (..),
   torrentByName,
   purgeTorrent,
+  ActiveUser (..),
+  getActiveUsers,
   DirectoryEntry (..),
   getDirectory,
   -- Model.Query
@@ -77,6 +79,7 @@ import Model.Feed
 import Model.User
 import Model.Token
 import Model.Stats                        
+import PathPieces (DirectoryPage (..))
 
 
 infoHashByName :: UserName -> Text -> Text -> Query InfoHash
@@ -110,7 +113,26 @@ purgeTorrent user slug name db =
   quickQuery' db "SELECT * FROM purge_download(?, ?, ?)"
               [toSql user, toSql slug, toSql name]
 
-
+data ActiveUser = ActiveUser
+    { activeUser :: UserName
+    , activeFeeds :: Int
+    , activeFeedLangs :: Text
+    , activeFeedTypes :: Text
+    } deriving (Show, Typeable)
+    
+instance Convertible [SqlValue] ActiveUser where
+    safeConvert (userVal:feedsVal:langsVal:typesVal:[]) =
+        ActiveUser <$>
+        safeFromSql userVal <*>
+        safeFromSql feedsVal <*>
+        safeFromSql langsVal <*>
+        safeFromSql typesVal
+    safeConvert vals = convError "ActiveUser" vals
+    
+getActiveUsers :: Query ActiveUser 
+getActiveUsers =
+  query "SELECT \"user\", \"feeds\", array_to_string(\"langs\", ','), array_to_string(\"types\", ',') FROM active_users" []
+    
 data DirectoryEntry = DirectoryEntry
     { dirUser :: UserName
     , dirUserTitle :: Text
@@ -134,7 +156,15 @@ instance Convertible [SqlValue] DirectoryEntry where
       safeFromSql feedTypesVal
     safeConvert vals = convError "DirectoryEntry" vals
       
-getDirectory :: Query DirectoryEntry
-getDirectory =
-  query "SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',') FROM directory" []
+getDirectory :: Maybe DirectoryPage -> Query DirectoryEntry
+getDirectory mPage =
+  let (cond, params) =
+          case mPage of
+            Nothing ->
+                ("", [])
+            Just DirectoryDigit -> 
+                (" WHERE \"user\" ~* E'^[^a-z]'", [])
+            Just (DirectoryLetter c) ->
+                (" WHERE LOWER(LEFT(\"user\", 1)) = ?", [toSql [c]])
+  in query ("SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',') FROM directory" ++ cond) params
 

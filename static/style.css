@@ -820,6 +820,37 @@ ul.feeds li {
 .directory .meta .title { margin-bottom: 1em; }
 .directory h3 { text-align: left; }
 
+.directory .letter {
+  float: left;
+  width: 1em;
+  height: 1em;
+  font-family: "Patua One";
+  text-align: center;
+  font-size: 3em;
+  line-height: 1em;
+  padding: 0;
+  margin: 0;
+}
+.directory .letter a {
+  color: black;
+}
+.directory .letter a:hover {
+  color: #1067B9;
+  text-decoration: none;
+}
+.directory .users {
+  text-align: left;
+  margin: 0 0 0 2em;
+  min-height: 3.3em;
+}
+.directory .users li {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0.1em 1em 0.2em 0;
+}
+.directory .feedcount {
+  color: #666;
+}
 /***************************************************************************
  *        FILTER (BUTTON/DIALOG) SECTION
  ***************************************************************************/

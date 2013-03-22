@@ -5,6 +5,7 @@ module PathPieces where
 import Prelude
 import Yesod (PathPiece (..))
 import qualified Data.Text as T
+import Data.Char
 
 import Utils
 import Model.User
@@ -102,3 +103,22 @@ instance PathPiece Thumbnail where
                     , ".png"
                     ]
     
+data DirectoryPage = DirectoryDigit
+                   | DirectoryLetter Char
+                     deriving (Ord, Eq, Read)
+                     
+instance Show DirectoryPage where
+    show (DirectoryLetter c) = [toUpper c]
+    show DirectoryDigit = "#"
+                     
+instance PathPiece DirectoryPage where
+    fromPathPiece c =
+        case T.unpack c of
+          [c] | isAlpha c -> 
+              Just $ DirectoryLetter c
+          "0-9" -> 
+              Just DirectoryDigit
+          _ -> 
+              Nothing
+    toPathPiece (DirectoryLetter c) = T.singleton c
+    toPathPiece DirectoryDigit = "0-9"

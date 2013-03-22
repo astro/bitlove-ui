@@ -35,6 +35,7 @@
 /widget/powerpress.js WidgetPowerpressR GET
 
 /directory DirectoryR GET
+/directory/#DirectoryPage DirectoryPageR GET
 /directory.opml DirectoryOpmlR GET
 
 /#UserName UserR GET

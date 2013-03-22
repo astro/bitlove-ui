@@ -37,7 +37,12 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* Filter for directory
+* Paginated directory
+* Filter for directory?
+
+* GET .torrent stats
+* event=complete heuristics
+
 * Per-item pages
 * MapFeed content-type
 * URL longener?
