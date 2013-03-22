@@ -32,7 +32,7 @@ function Graph(basepath, type, published) {
     this.basepath = basepath;
     this.type = type;
 
-    this.el = $('<li class="graph"><select class="timeselect"><option value="day">Day</option><option value="week">Week</option><option value="month" selected>Month</option><option value="year">Year</option></select><h4></h4><div class="placeholder"></div></li>');
+    this.el = $('<li class="graph"><select class="timeselect"><option value="day">Day</option><option value="week">Week</option><option value="month" selected>Month</option><option value="year">Year</option></select><h4></h4><div class="placeholder"><img src="/static/throbber.gif"></div></li>');
     switch(type) {
 	case 'swarm':
 	    this.el.find('h4').text("Swarm");
@@ -212,7 +212,7 @@ Graph.prototype.setData = function(response) {
         }
     });
 
-    this.el.slideDown(200);
+    this.el.fadeIn(200);
 };
 
 Graph.prototype.remove = function() {
@@ -256,7 +256,7 @@ StatsHook.prototype.toggleGraph = function(type, toggle) {
 	toggle.addClass('toggled');
 	var graph = this.graphs[type] =
 	    new Graph(this.basepath, type, this.getPublished());
-	graph.el.hide();
+	graph.el.slideDown(200);
 	this.stats.after(graph.el);
     }
 };
