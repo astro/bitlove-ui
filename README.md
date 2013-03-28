@@ -43,6 +43,22 @@ Now point your browser to `http://localhost:8081/`.
 * GET .torrent stats
 * event=complete heuristics
 
+* global statistics numbers
+* feed by feed lookup api
+* change feed URL
+* Feed Links größer
+* <itunes:new-feed-url/>
+* "My feeds" -> clickable username
+* User -> Shows -> Feeds
+  * Default-Feed
+* Subscribers zählen: Hash(IP + User-Agent) über 24h
+* RFC5005: Feed Archiving
+* Feeds: gzip
+* OAuth für writing API (automatisch Feeds aus Podlove)
+* Overwrite title: current title as template
+* Filter: not only what is on current page
+* de-ch choosable machen
+
 * Per-item pages
 * MapFeed content-type
 * URL longener?
