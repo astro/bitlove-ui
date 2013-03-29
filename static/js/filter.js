@@ -13,9 +13,38 @@ function mapType(type) {
 
 function Filterable(el) {
     this.el = el;
+    var children = this.children = [];
+    el.find('.filterable').each(function() {
+	children.push(new Filterable($(this)));
+    });
+
+    this.langs = [];
+    var l = el.attr('xml:lang');
+    l && this.langs.push(l);
+    l = el.data('langs');
+    l && this.langs.push.apply(this.langs, l.split(','));
+
+    var types = [];
+    el.find('.torrent a').each(function() {
+	types.push($(this).attr('type'));
+    });
+    var t = el.data('types');
+    t && types.push.apply(types, t.split(','));
+    this.types = types.map(mapType);
 }
 Filterable.prototype = {
     applyMask: function(mask) {
+	var anyVisible = false;
+	this.children.forEach(function(child) {
+	    child.applyMask(mask);
+	    anyVisible = anyVisible || child.isVisible();
+	});
+	if (anyVisible) {
+	    this.show();
+	    /* Avoid any double-hiding */
+	    return;
+	}
+
 	var langMatch = this.langs.some(function(lang) {
 	    return !mask.lang[lang];
 	});
@@ -23,10 +52,15 @@ Filterable.prototype = {
 	    return !mask.type[type];
 	});
 
-	if (typeMatch && langMatch)
+	if (typeMatch && langMatch) {
 	    this.show();
-	else
+	} else {
 	    this.hide();
+	    /* Avoid any double-hiding */
+	    this.children.forEach(function(child) {
+		child.show();
+	    });
+	}
     },
     show: function() {
 	this.el.removeClass('filteredout');
@@ -41,67 +75,10 @@ Filterable.prototype = {
     }
 };
 
-function FilterableItem(el) {
-    Filterable.call(this, el);
-
-    this.langs = [el.attr('xml:lang')];
-    var types = this.types = [];
-    el.find('.torrent a').each(function() {
-	types.push(mapType($(this).data('type')));
-    });
-}
-FilterableItem.prototype = new Filterable();
-
-function FilterableFeed(el) {
-    Filterable.call(this, el);
-
-    this.el = el;
-    this.langs = [el.attr('xml:lang')];
-    this.types = ("" + el.data('types')).split(',').map(mapType);
-}
-FilterableFeed.prototype = new Filterable();
-
-function FilterableUser(el) {
-    Filterable.call(this, el);
-
-    var langs = this.langs = [];
-    var types = this.types = [];
-    this.feeds = el.find('ul.feeds > li').map(function() {
-	var feed = new FilterableFeed($(this));
-	langs.push.apply(langs, feed.langs);
-	types.push.apply(types, feed.types);
-	return feed;
-    }).toArray();
-}
-FilterableUser.prototype = new Filterable();
-FilterableUser.prototype.applyMask = function(mask) {
-    var anyVisible = false;
-    this.feeds.forEach(function(feed) {
-	feed.applyMask(mask);
-	anyVisible = anyVisible || feed.isVisible();
-    });
-    if (anyVisible)
-	this.show();
-    else {
-	this.hide();
-	/* Avoid double opacity drop */
-	this.feeds.forEach(function(feed) {
-	    feed.show();
-	});
-    }
-};
-
-var filterItems = [];
-$('.item').each(function() {
-    var el = $(this);
-    filterItems.push(new FilterableItem($(this)));
-});
 var Filter = {
-    items: $('.item').map(function() {
-	    return new FilterableItem($(this));
-        }).toArray().concat($('.directory .meta').map(function() {
-	    return new FilterableUser($(this));
-	}).toArray()),
+    items: $('.filterable').map(function() {
+	    return new Filterable($(this));
+        }),
 
     isAllowedType: function(type) {
 	return ["text", "application", "audio", "video", "message", "image"

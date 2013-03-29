@@ -9,8 +9,8 @@ import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
 import Text.Blaze.Internal (MarkupM)
-import Text.Blaze.Html5 hiding (div, details, map)
-import Text.Blaze.Html5.Attributes hiding (item, min, max, id)
+import Text.Blaze.Html5 hiding (div, details, map, title)
+import Text.Blaze.Html5.Attributes hiding (item, min, max, id, title)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 import Settings.StaticFiles
@@ -416,7 +416,7 @@ renderItem item showOrigin = do
       countType t = length $ filter (== t) types
       isOnlyType = (== 1) . countType
   [whamlet|$newline always
-  <article class="item"
+  <article .item .filterable
            id="#{itemId item}"
            xml:lang="#{fromMaybe "" $ itemLang item}">
     <div>
@@ -441,12 +441,12 @@ renderItem item showOrigin = do
            <p class="homepage">
              <a href="#{itemHomepage item}">#{itemHomepage item}
     $forall d <- itemDownloads item
-      <ul class="download">
-        <li class="torrent">
+      <ul .download>
+        <li .torrent>
           <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
-             data-type="#{downloadType d}">
+             type="#{downloadType d}">
             <span .file-name>
               $if isOnlyType (downloadType d)
                 #{downloadLabel d}

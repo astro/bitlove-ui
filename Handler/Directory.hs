@@ -31,13 +31,14 @@ getDirectoryR = do
               |]
     where renderLetter (letter, users) =
               [hamlet|$newline always
-               <article class="directory-page">
-                 <p class="letter">
+               <article .directory-page .filterable>
+                 <p .letter>
                    <a href="@{DirectoryPageR letter}">
                      #{show letter}
-                 <ul class="users">
+                 <ul .users>
                    $forall u <- users
-                     <li xml:lang="#{Model.activeFeedLangs u}"
+                     <li .filterable
+                         data-langs="#{Model.activeFeedLangs u}"
                          data-types="#{Model.activeFeedTypes u}">
                        <a href="@{UserR $ Model.activeUser u}">
                          #{T.unpack $ Model.userName $ Model.activeUser u}
@@ -67,21 +68,24 @@ getDirectoryPageR page = do
     addFilterScript
     [whamlet|$newline always
               <h2>_{MsgHeadingDirectory}: #{show page}
+              <p .feedslist>
+                <a href=@{DirectoryR}>_{MsgDirectoryIndexBack}
               <section class="directory">
                 $forall es <- dir
                   ^{renderEntry es}
               |]
     where renderEntry es =
               [hamlet|$newline always
-               <article class="meta">
-                 <img class="logo"
+               <article .meta .filterable>
+                 <img .logo
                       src="@{UserThumbnailR (Model.dirUser $ head es) (Thumbnail 64)}">
-                 <div class="title">
+                 <div .title>
                    <h3>
                      <a href="@{UserR $ Model.dirUser $ head es}">#{Model.dirUserTitle $ head es}
-                 <ul class="feeds">
+                 <ul .feeds>
                    $forall e <- es
-                     <li xml:lang="#{Model.dirFeedLang e}"
+                     <li .filterable
+                         xml:lang="#{Model.dirFeedLang e}"
                          data-types="#{Model.dirFeedTypes e}">
                        <a href="@{UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}">
                          #{Model.dirFeedTitle e}

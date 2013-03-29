@@ -14,6 +14,7 @@ Users: Users
 Podcasters: Podcasters
 GettingStarted: Getting started
 Directory: Directory
+DirectoryIndexBack: Back to directory index
 NewTorrents: New Torrents
 TopTorrents: Popular Torrents
 TopDownloadedDay: Top downloaded in 1 day

@@ -13,6 +13,7 @@ For: Für
 Users: Nutzer
 Podcasters: Podcaster
 Directory: Verzeichnis
+DirectoryIndexBack: Zurück zur Verzeichnisübersicht
 GettingStarted: Kurzanleitung
 NewTorrents: Neue Torrents
 TopTorrents: Beliebte Torrents
