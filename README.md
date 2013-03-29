@@ -37,9 +37,6 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* Paginated directory
-* Filter for directory?
-
 * GET .torrent stats
 * event=complete heuristics
 
