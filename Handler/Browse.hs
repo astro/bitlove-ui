@@ -554,7 +554,7 @@ renderFeedsList lists = do
                  #{fTitle}
                |]
   [whamlet|$newline always
-     <dl class="feedslist">
+     <dl .feedslist .before-filter>
        $forall fList <- lists
          ^{renderFeedsList' fList}
      |]

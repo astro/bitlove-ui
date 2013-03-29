@@ -250,7 +250,7 @@ FilterDialog.prototype = {
 };
 
 var container = $('<div class="filter"></div>');
-$('.feedslist').after(container);
+$('.before-filter').after(container);
 var filterButton = $('<a class="filterbutton">Filter</a>');
 container.append(filterButton);
 

@@ -68,7 +68,7 @@ getDirectoryPageR page = do
     addFilterScript
     [whamlet|$newline always
               <h2>_{MsgHeadingDirectory}: #{show page}
-              <p .feedslist>
+              <p .before-filter>
                 <a href=@{DirectoryR}>_{MsgDirectoryIndexBack}
               <section class="directory">
                 $forall es <- dir
