@@ -20,19 +20,33 @@ function Filterable(el) {
 
     this.langs = [];
     var l = el.attr('xml:lang');
-    l && this.langs.push(l);
+    (l !== undefined) && this.langs.push(l);
     l = el.data('langs');
-    l && this.langs.push.apply(this.langs, l.split(','));
+    (l !== undefined) && this.langs.push.apply(this.langs, l.split(','));
 
     var types = [];
     el.find('.torrent a').each(function() {
 	types.push($(this).attr('type'));
     });
     var t = el.data('types');
-    t && types.push.apply(types, t.split(','));
+    (t !== undefined) && types.push.apply(types, t.split(','));
     this.types = types.map(mapType);
 }
 Filterable.prototype = {
+    getAllTypes: function() {
+	var types = this.types;
+	this.children.forEach(function(child) {
+	    types = types.concat(child.getAllTypes());
+	});
+	return types;
+    },
+    getAllLangs: function() {
+	var langs = this.langs;
+	this.children.forEach(function(child) {
+	    langs = langs.concat(child.getAllLangs());
+	});
+	return langs;
+    },
     applyMask: function(mask) {
 	var anyVisible = false;
 	this.children.forEach(function(child) {
@@ -81,33 +95,37 @@ var Filter = {
         }),
 
     isAllowedType: function(type) {
-	return ["text", "application", "audio", "video", "message", "image"
+	return ["text", "application", "audio", "video", "message", "image", ""
 	       ].indexOf(type) >= 0;
     },
 
     getAllTypes: function() {
-	var types = {}, i, j;
-	for(i = 0; i < Filter.items.length; i++)
-	    for(j = 0; j < Filter.items[i].types.length; j++) {
-		var type = Filter.items[i].types[j];
+	var r = {}, i, j;
+	for(i = 0; i < Filter.items.length; i++) {
+	    var types = Filter.items[i].getAllTypes();
+	    for(j = 0; j < types.length; j++) {
+		var type = types[j];
 		if (!Filter.isAllowedType(type))
 		    continue;
-		if (!types.hasOwnProperty(type))
-		    types[type] = 0;
-		types[type]++;
+		if (!r.hasOwnProperty(type))
+		    r[type] = 0;
+		r[type]++;
 	    }
-	return types;
+	}
+	return r;
     },
     getAllLangs: function() {
-	var langs = {}, i, j;
-	for(i = 0; i < Filter.items.length; i++)
-	    for(j = 0; j < Filter.items[i].langs.length; j++) {
-		var lang = Filter.items[i].langs[j];
-		if (!langs.hasOwnProperty(lang))
-		    langs[lang] = 0;
-		langs[lang]++;
+	var r = {}, i, j;
+	for(i = 0; i < Filter.items.length; i++) {
+	    var langs = Filter.items[i].getAllLangs();
+	    for(j = 0; j < langs.length; j++) {
+		var lang = langs[j];
+		if (!r.hasOwnProperty(lang))
+		    r[lang] = 0;
+		r[lang]++;
 	    }
-	return langs;
+	}
+	return r;
     },
 
     /* Inverted: */
