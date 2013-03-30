@@ -109,9 +109,9 @@ announcePeer tr db =
           do let m :: Convertible a SqlValue => (TrackerRequest -> a) -> SqlValue
                  m = toSql . ($ tr)
              _ <-
-                 run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?)" $
+                 run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)" $
                  [m trInfoHash, m trHost, m trPort, m trPeerId, 
-                  m trUploaded, m trDownloaded, m trLeft]
+                  m trUploaded, m trDownloaded, m trLeft, m trEvent]
              return ()
              
 updateScraped :: IConnection conn => 
