@@ -38,10 +38,10 @@ function Graph(basepath, type, published) {
 	    this.el.find('h4').text("Swarm");
 	    break;
 	case 'traffic':
-	    this.el.find('h4').text("Peer traffic");
+	    this.el.find('h4').text("Peer Traffic");
 	    break;
 	case 'downloads':
-	    this.el.find('h4').text("Complete downloads");
+	    this.el.find('h4').text("Complete Downloads");
 	    break;
     }
 
