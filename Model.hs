@@ -14,6 +14,7 @@ module Model (
   -- Model.Stats
   StatsValue (..),
   getCounter,
+  getDownloadCounter,
   addCounter,
   getGauge,
   -- Model.Download

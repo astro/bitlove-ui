@@ -97,7 +97,7 @@ Graph.prototype.setData = function(response) {
     var data = [];
     var type = this.type;
     var interval = response.interval * 1000;
-    ["downloads", "down", "up_seeder", "up", "leechers", "seeders"].forEach(function(name) {
+    ["torrent", "downloads", "down", "up_seeder", "up", "leechers", "seeders"].forEach(function(name) {
 	if (!response.hasOwnProperty(name))
 	    return;
 
@@ -155,12 +155,21 @@ Graph.prototype.setData = function(response) {
 		}
 		break;
 	    case 'downloads':
-		series.label = "Downloads";
-		series.color = '#5faf1f';
 		series.bars = { show: true,
-				barWidth: interval,
-				fillColor: '#afef3f'
+				barWidth: interval
 			      };
+		switch(name) {
+		    case 'downloads':
+			series.label = "Complete";
+			series.color = '#5faf1f';
+			series.bars.fillColor = '#afef3f';
+			break;
+		    case 'torrent':
+		    	series.label = ".torrent files";
+		    	series.color = '#1f5faf';
+		    	series.bars.fillColor = '#3fafef';
+		    	break;
+		}
 		break;
 	}
 

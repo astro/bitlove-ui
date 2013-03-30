@@ -107,10 +107,7 @@ getAnnounceR = do
            sQ <- trackerScrapeQueue `fmap` getYesod
            pool <- getDBPool
            liftIO $ WQ.enqueue aQ $
-                  do withDBPool pool $ \db ->
-                         do announcePeer tr db
-                            when (trEvent tr == Just "completed") $
-                                 addCounter "complete" (trInfoHash tr) 1 db
+                  do withDBPool pool $ announcePeer tr
                      liftIO $ WQ.enqueue sQ $
                        withDBPool pool $ updateScraped $ trInfoHash tr
            -- Assemble response

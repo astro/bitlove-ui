@@ -9,6 +9,7 @@ import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import Import
 import PathPieces
 import qualified Model as Model
+import BitloveAuth
 
 
 getTorrentStatsR :: UserName -> Text -> Text -> StatsPeriod -> StatsJSON -> Handler RepJson
@@ -34,35 +35,43 @@ getTorrentStatsR user slug name statsPeriod stats = do
           baseJson = ["start" .= iso8601 zonedStart,
                       "stop" .= iso8601 zonedStop,
                       "interval" .= interval]
-          withStats :: (((Model.InfoHash -> LocalTime -> LocalTime -> 
-                          Integer -> PostgreSQL.Connection
-                          -> IO b) 
-                         -> IO b)
-                        -> IO a)
+          withStats :: (LocalTime -> LocalTime -> Integer -> Transaction a)
                      -> Handler a
-          withStats f = withDB $ \db ->
-                        let q f' = f' info_hash 
-                                   localStart localStop
-                                   interval db
-                        in f q
+          withStats f = withDB $ 
+                        f localStart localStop interval
+          withStats' :: (((LocalTime -> LocalTime -> Integer -> Transaction a) -> IO a) -> IO b) -> Handler b
+          withStats' f = withDB $ \db ->
+                         f $ \f' ->
+                         f' localStart localStop interval db
   
-      (RepJson . toContent . object) `fmap` case stats of
+      (RepJson . toContent . object) <$> case stats of
         StatsDownloads -> do
-          downloads <- withStats ($ Model.getCounter "complete")
-          return $ ("downloads" .= statsToJson tz downloads) : baseJson
+          canEdit <- canEdit user
+          json <- ("downloads" .=) <$> 
+                  statsToJson tz <$>
+                  withStats (Model.getCounter "complete" info_hash)
+          json' <- 
+            if canEdit
+            then do 
+              path <- ($ TorrentFileR user slug $ TorrentName name) <$>
+                      getUrlRender
+              stats <- withStats (Model.getDownloadCounter path)
+              return ["torrent" .= statsToJson tz stats]
+            else return []
+          return $ json : json' ++ baseJson
         StatsTraffic -> do
-          (down, up, up_seeder) <- withStats $ \q ->
-            do down <- q $ Model.getCounter "down"
-               up <- q $ Model.getCounter "up"
-               up_seeder <- q $ Model.getCounter "up_seeder"
+          (down, up, up_seeder) <- withStats' $ \q ->
+            do down <- q $ Model.getCounter "down" info_hash
+               up <- q $ Model.getCounter "up" info_hash
+               up_seeder <- q $ Model.getCounter "up_seeder" info_hash
                return (down, up, up_seeder)
           return $ ("down" .= statsToJson tz down) :
                    ("up" .= statsToJson tz up) :
                    ("up_seeder" .= statsToJson tz up_seeder) : baseJson
         StatsSwarm -> do
-          (seeders, leechers) <- withStats $ \q ->
-            do seeders <- q $ Model.getGauge "seeders"
-               leechers <- q $ Model.getGauge "leechers"
+          (seeders, leechers) <- withStats' $ \q ->
+            do seeders <- q $ Model.getGauge "seeders" info_hash
+               leechers <- q $ Model.getGauge "leechers" info_hash
                let completeGauge vs =
                        completeGauge' $
                        case vs of
@@ -85,7 +94,8 @@ getTorrentStatsR user slug name statsPeriod stats = do
                return (completeGauge $ map cheat seeders,
                        completeGauge $ leechers)
           return $ ("seeders" .= statsToJson tz seeders) :
-                   ("leechers" .= statsToJson tz leechers) : baseJson
+                   ("leechers" .= statsToJson tz leechers) : 
+                   baseJson
 
   -- Our seeder is actually not included in stats
   where cheat :: StatsValue -> StatsValue
