@@ -14,15 +14,14 @@ getFeedLookupJson = do
           filter (("url" `T.isPrefixOf`) . fst) <$>
           reqGetParams <$>
           getRequest
-  urlRender <- getUrlRender
+  fullUrlRender <- getFullUrlRender
   RepJson <$> toContent <$> object <$>
           withDB
           (\db ->
                forM urls $ \url ->
                    (url .=) <$>
                    map (\feed ->
-                            ("http://bitlove.org" `T.append`) <$>
-                            urlRender $
+                            fullUrlRender $
                             MapFeedR (feedUser feed) (feedSlug feed)
                    ) <$>
                    feedByUrl url db
