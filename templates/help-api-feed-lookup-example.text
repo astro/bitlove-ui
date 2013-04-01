@@ -1,0 +1,8 @@
+$ curl "http://localhost:8081/feed-lookup.json?url=http%3A%2F%2Fc3d2.de%2Fpentaradio.xml&url=http%3A%2F%2Fc3d2.de%2Fnews-rss.xml"
+{ "http://c3d2.de/news-rss.xml": [
+    "http://bitlove.org/c3d2/news/feed"
+  ],
+  "http://c3d2.de/pentaradio.xml": [
+    "http://bitlove.org/c3d2/pentaradio/feed"
+  ]
+}

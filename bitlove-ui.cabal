@@ -51,6 +51,7 @@ library
                      Handler.MapFeed
                      Handler.DownloadFeeds
                      Handler.ByEnclosureAPI
+                     Handler.FeedLookupAPI
                      Handler.Tracker
                      Handler.Help
                      Handler.Widget

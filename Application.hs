@@ -39,6 +39,7 @@ import Handler.TorrentStats
 import Handler.MapFeed
 import Handler.DownloadFeeds
 import Handler.ByEnclosureAPI
+import Handler.FeedLookupAPI
 import Handler.Tracker
 import Handler.Help
 import Handler.Widget

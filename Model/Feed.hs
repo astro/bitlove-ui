@@ -98,6 +98,10 @@ deleteUserFeed user slug db =
     (== 1) `fmap`
     run db "DELETE FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
         [toSql user, toSql slug]
+        
+feedByUrl :: Text -> Query FeedInfo
+feedByUrl url =
+  query "SELECT feeds.\"url\", user_feeds.\"user\", user_feeds.\"slug\", COALESCE(user_feeds.\"title\", feeds.\"title\", 'Untitled'), COALESCE(feeds.\"homepage\", ''), COALESCE(feeds.\"image\", ''), COALESCE(user_feeds.\"public\", FALSE), feeds.\"torrentify\", feeds.\"error\" FROM feeds INNER JOIN user_feeds ON feeds.url=user_feeds.feed WHERE feeds.url=? AND user_feeds.\"public\"=true" [toSql url]
                     
 data FeedDetails = FeedDetails {
       fdPublic :: Bool,

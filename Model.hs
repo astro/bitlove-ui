@@ -53,6 +53,7 @@ module Model (
   userFeedInfo,
   addUserFeed,
   deleteUserFeed,
+  feedByUrl,
   FeedDetails (..),
   userFeedDetails,
   setUserFeedDetails,

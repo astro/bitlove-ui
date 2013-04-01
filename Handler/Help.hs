@@ -31,8 +31,12 @@ getHelpApiR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpPodcasterNavigation
-    let example = T.pack $
-                  BC.unpack $(embedFile "templates/help-api-example.text")
+    let by_enclosure_example = 
+            T.pack $
+            BC.unpack $(embedFile "templates/help-api-by-enclosure-example.text")
+        feed_lookup_example = 
+            T.pack $
+            BC.unpack $(embedFile "templates/help-api-feed-lookup-example.text")
     $(whamletFile "templates/help-api.hamlet")
 
 getHelpWidgetR :: GHandler sub UIApp RepHtml

@@ -41,7 +41,6 @@ Now point your browser to `http://localhost:8081/`.
 * event=complete heuristics
 
 * global statistics numbers
-* feed by feed lookup api
 * change feed URL
 * Feed Links größer
 * <itunes:new-feed-url/>

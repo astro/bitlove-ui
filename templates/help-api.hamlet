@@ -1,24 +1,37 @@
 $newline always
 <section class="col">
   <h2>API</h2>
+
+  <h3>Contents
+  <ul .toc>
+    <li>
+      <a href="#crawling">Crawling the site
+    <li>
+      <a href="#by-enclosure">Torrent data by enclosure URL
+    <li>
+      <a href="#feed-lookup">Feed lookup by URL
   
-  <h3>Crawling the site</h3>
+  <h3 #crawling>Crawling the site</h3>
   <p>
     We try to put all publicly available data back #
     into feeds and OPML resources. That way you can reuse #
     standard software. You may #
     <a href="https://github.com/astro/bitlove-ui/issues">create an issue</a> if you need more functionality.
 
-  <h3>Torrent data by enclosure URL
+  <h3 #by-enclosure>Torrent data by enclosure URL
   <p>
     Obtain torrent (and source) information by URL #
     of the original podcast files. The endpoint allows multiple URLs #
     to be processed at once. They query key must start with #
     <code>url
     \ and you should URL-escape the values for safety.
-  <pre>#{example}
+  <pre>#{by_enclosure_example}
   <p>
     This API is #
     <a href="http://enable-cors.org/">CORS-enabled
     \ and in actual use by the widgets.
  
+  <h3 #feed-lookup>Feed lookup by URL
+  <p>
+    Discover the URL of public feeds with their enclosures mapped to torrents:
+  <pre>#{feed_lookup_example}

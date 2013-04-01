@@ -10,6 +10,7 @@
 /logout LogoutR GET
 
 /by-enclosure.json ByEnclosureJson GET
+/feed-lookup.json FeedLookupJson GET
 
 / FrontR GET
 /new NewR GET
