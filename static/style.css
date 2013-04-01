@@ -1189,7 +1189,15 @@ pre {
   font-size: 85%;
   color: #333;
   margin: 0.5em 0;
-  padding: 0.5em 4em;
-  background-color: #ccc;
+  padding: 0.5em 1em;
+  background-color: white;
   overflow: auto;
+}
+
+.toc {
+  list-style-type: none;
+  padding: 0.1em;
+  margin-left: 0.9em;
+  margin-right: 0.9em;
+  background: white;
 }
