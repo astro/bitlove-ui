@@ -43,9 +43,11 @@ PBKDF2 auth
 * graphs
   * .torrents checkbox
   * time navigation
+* filter counters still wrong
 
 * PSHB
 
+* css overflow fixes
 * global statistics numbers
 * change feed URL
 * Feed Links größer
