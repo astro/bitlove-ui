@@ -17,7 +17,6 @@ import System.Random (randomRIO)
 import Foundation (DBPool, HasDB (getDBPool), withDB, withDBPool, Transaction)
 import qualified Model as Model
 import Model.Tracker
-import Model.Stats
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
 
@@ -59,11 +58,15 @@ makeTrackerApp pool =
 
 newtype RepBenc = RepBenc Benc.BValue
 
-instance HasReps RepBenc where
-    chooseRep (RepBenc v) _ = 
-        return ("application/x-bittorrent",
-                ContentBuilder (Benc.toBuilder v) Nothing
-               )
+instance ToContent RepBenc where
+    toContent (RepBenc v) = 
+        ContentBuilder (Benc.toBuilder v) Nothing
+
+instance ToTypedContent RepBenc where
+    toTypedContent =
+        TypedContent "application/x-bittorrent" .
+        toContent
+
 
 -- TODO: support key parameter
 getAnnounceR :: Handler RepBenc

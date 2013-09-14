@@ -2,11 +2,10 @@
 module Handler.Auth where
 
 import Prelude
-import Yesod
+import Yesod hiding (returnJson)
 import Data.Conduit
-import Crypto.Conduit (sinkHmac)
-import Crypto.HMAC (MacKey (..))
-import Crypto.Hash.SHA1
+import Crypto.HMAC
+import Crypto.Hash.CryptoAPI (SHA1)
 import Data.ByteString (ByteString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Serialize (encode)
@@ -21,7 +20,7 @@ import Data.Maybe (fromMaybe)
 import Data.Aeson (ToJSON)
 import Data.Char
 
-import Import
+import Import hiding (returnJson)
 import BitloveAuth
 import qualified Model as Model
 import Model.User
@@ -167,7 +166,7 @@ postLoginR = do
                  user:_ -> 
                      do (UserSalt _ salted):_ <- userSalt user db
                         let hexSalted = toHex $ unSalted salted
-                        expected <- runResourceT $ hmacSHA1 (unToken token) (encodeUtf8 hexSalted)
+                            expected = hmacSHA1 (unToken token) (encodeUtf8 hexSalted)
                         case fromHex' $ T.unpack hexResponse of
                           response
                               | response == expected ->
@@ -330,20 +329,19 @@ sendMail toUser toEmail subject body =
                             }]]
             }
 
-returnJson :: forall (m :: * -> *) a.
-              (Monad m, ToJSON a) =>
-              [(Text, a)] -> m RepJson
-returnJson = return . RepJson . toContent . object
+-- returnJson :: forall (m :: * -> *) a.
+--               (Monad m, ToJSON a) =>
+--               [(Text, a)] -> m RepJson
+returnJson = return . repJson . object
 
 returnJsonError :: Text -> Handler RepJson
 returnJsonError = returnJson . (:[]) . ("error" .=)
 
 
-hmacSHA1 :: ByteString -> ByteString -> ResourceT IO ByteString
-hmacSHA1 keyData msgData = do
+hmacSHA1 :: ByteString -> ByteString -> ByteString
+hmacSHA1 keyData msgData =
     let key = MacKey keyData
-    d <-
-           yield msgData $$
-                     (sinkHmac key :: Sink ByteString (ResourceT IO) SHA1)
-    return $ encode d
+        sha1 :: SHA1
+        sha1 = hmac' key msgData
+    in encode sha1
     

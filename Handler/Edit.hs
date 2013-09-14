@@ -1,10 +1,9 @@
 module Handler.Edit where
 
 import Prelude
-import Import
+import Import hiding (returnJson)
 import Data.Maybe
 import qualified Data.Text as T
-import Data.Aeson (ToJSON)
 import Data.Char
 import Control.Monad (when)
 
@@ -97,5 +96,8 @@ deleteTorrentFileR user slug (TorrentName name) = do
   _ <- withDB $ Model.purgeTorrent user slug name
   returnJson ([] :: [(Text, Int)])
   
-returnJson :: (Monad m, ToJSON a) => [(Text, a)] -> m RepJson
-returnJson = return . RepJson . toContent . object 
+returnJson :: ToJSON v => [(Text, v)] -> Handler RepJson
+returnJson = return . repJson . object . 
+             map (\(k, v) ->
+                   (k, toJSON v)
+                 )

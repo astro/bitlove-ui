@@ -6,27 +6,27 @@ import qualified Data.Text as T
 
 import Import
 
-getHelpR :: GHandler sub UIApp RepHtml
+getHelpR :: HandlerT UIApp IO RepHtml
 getHelpR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     $(whamletFile "templates/help.hamlet")
 
-getHelpPodcasterR :: GHandler sub UIApp RepHtml
+getHelpPodcasterR :: HandlerT UIApp IO RepHtml
 getHelpPodcasterR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-podcaster.hamlet")
 
-getHelpFeedsR :: GHandler sub UIApp RepHtml
+getHelpFeedsR :: HandlerT UIApp IO RepHtml
 getHelpFeedsR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-feeds.hamlet")
 
-getHelpApiR :: GHandler sub UIApp RepHtml
+getHelpApiR :: HandlerT UIApp IO RepHtml
 getHelpApiR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -39,7 +39,7 @@ getHelpApiR =
             BC.unpack $(embedFile "templates/help-api-feed-lookup-example.text")
     $(whamletFile "templates/help-api.hamlet")
 
-getHelpWidgetR :: GHandler sub UIApp RepHtml
+getHelpWidgetR :: HandlerT UIApp IO RepHtml
 getHelpWidgetR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -48,7 +48,7 @@ getHelpWidgetR =
                   BC.unpack $(embedFile "templates/help-widget-example.text")
     $(whamletFile "templates/help-widget.hamlet")
 
-renderHelpPodcasterNavigation :: GWidget sub UIApp ()
+renderHelpPodcasterNavigation :: WidgetT UIApp IO ()
 renderHelpPodcasterNavigation =
     toWidget [hamlet|$newline always
               <ul #podcaster-help-nav>

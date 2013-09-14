@@ -9,13 +9,15 @@ import Data.Monoid
 import Import
 
 
-cacheWidget :: GHandler a b ()
+cacheWidget :: HandlerT a IO ()
 cacheWidget = cacheSeconds $ 60 * 60
 
 newtype RepJs = RepJs Content
+    deriving (ToContent)
 
-instance HasReps RepJs where
-    chooseRep (RepJs content) _ = return (typeJavascript, content)
+instance ToTypedContent RepJs where
+    toTypedContent =
+        TypedContent typeJavascript . toContent
 
 serveJs :: Monad m => Builder -> m RepJs
 serveJs = return . RepJs . flip ContentBuilder Nothing

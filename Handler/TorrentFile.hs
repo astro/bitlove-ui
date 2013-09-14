@@ -9,9 +9,12 @@ typeTorrent :: ContentType
 typeTorrent = "application/x-bittorrent"
 
 newtype RepTorrent = RepTorrent Content
+    deriving (ToContent)
 
-instance HasReps RepTorrent where
-  chooseRep (RepTorrent content) _ = return (typeTorrent, content)
+instance ToTypedContent RepTorrent where
+    toTypedContent =
+        TypedContent "application/x-bittorrent" .
+        toContent
 
 getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
 getTorrentFileR user slug (TorrentName name) = do

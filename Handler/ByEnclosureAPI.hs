@@ -100,7 +100,7 @@ getByEnclosureJson = do
                            , Just t
                            ]
 
-torrentLink :: Download -> GHandler y' UIApp Text
+torrentLink :: Download -> HandlerT UIApp IO Text
 torrentLink d = 
     ($ TorrentFileR 
            (downloadUser d) 
@@ -109,7 +109,7 @@ torrentLink d =
     ) `fmap`
     getFullUrlRender
 
-permaLink :: Download -> GHandler y' UIApp Text
+permaLink :: Download -> HandlerT UIApp IO Text
 permaLink d =
     ((`T.append` (downloadItem d)) .
      (`T.append` "#") .

@@ -50,16 +50,19 @@ withXmlDecl (ContentBuilder b _) =
 withXmlDecl c = c
 
 newtype RepRss = RepRss Content
+    deriving (ToContent)
 
-instance HasReps RepRss where
-    chooseRep (RepRss content) _cts =
-      return (typeRss, withXmlDecl content)
+instance ToTypedContent RepRss where
+    toTypedContent =
+        TypedContent typeRss .
+        withXmlDecl . toContent
       
 instance RepFeed RepRss where
   renderFeed params items = do
     url <- getFullUrlRender
     let image = pImage params
-    RepRss `fmap` hamletToContent [xhamlet|$newline always
+    return $ RepRss $ toContent $ 
+               [xhamlet|$newline always
 <rss version="2.0"
      xmlns:atom=#{nsAtom}>
   <channel>
@@ -89,20 +92,23 @@ instance RepFeed RepRss where
             <enclosure type="#{typeTorrent}"
                        length="#{downloadSize d}"
                        url="#{url $ torrentLink d}">
-    |]
+    |] url
 
 newtype RepAtom = RepAtom Content
+    deriving (ToContent)
 
-instance HasReps RepAtom where
-    chooseRep (RepAtom content) _cts =
-      return (typeAtom, withXmlDecl content)
+instance ToTypedContent RepAtom where
+    toTypedContent =
+        TypedContent typeAtom .
+        withXmlDecl . toContent
       
 instance RepFeed RepAtom where
   renderFeed params items = do
     let image = pImage params
     url <- getFullUrlRender
     tz <- liftIO getCurrentTimeZone
-    RepAtom `fmap` hamletToContent [xhamlet|$newline always
+    return $ RepAtom $ toContent $ 
+               [xhamlet|$newline always
 <feed version="1.0"
       xmlns=#{nsAtom}>
     <title>#{pTitle params}
@@ -141,7 +147,7 @@ instance RepFeed RepAtom where
                   size=#{downloadSize d}
                   href=#{url $ torrentLink d}
                   >
-    |]
+    |] url
 
 itemLink :: (Route UIApp -> Text) -> Item -> Text
 itemLink urlRender item =

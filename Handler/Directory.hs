@@ -100,18 +100,19 @@ typeOpml :: ContentType
 typeOpml = "text/x-opml"
 
 newtype RepOpml = RepOpml Content
+    deriving (ToContent)
 
-instance HasReps RepOpml where
-    chooseRep (RepOpml content) _cts =
-        return (typeOpml, content)
+instance ToTypedContent RepOpml where
+    toTypedContent (RepOpml content) =
+        TypedContent typeOpml content
 
 
 getDirectoryOpmlR :: Handler RepOpml
 getDirectoryOpmlR = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory Nothing)
   url <- getFullUrlRender
-  RepOpml `fmap`
-         hamletToContent [xhamlet|$newline always
+  return $ RepOpml $ toContent $
+             [xhamlet|$newline always
 <opml version="2.0">
   <head title="Bitlove.org directory"
         ownerId="#{url DirectoryR}">
@@ -124,5 +125,5 @@ getDirectoryOpmlR = do
                    type="rss"
                    htmlUrl="#{url $ UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}"
                    xmlUrl="#{url $ MapFeedR (Model.dirUser e) (Model.dirFeedSlug e)}">
-                          |]
+                          |] url
                  

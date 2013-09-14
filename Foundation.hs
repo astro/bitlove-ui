@@ -7,7 +7,6 @@ module Foundation
     , resourcesUIApp
     , Handler
     , Widget
-    , Form
     , getFullUrlRender
     , isMiro
     , generateETag
@@ -94,8 +93,6 @@ mkMessage "UIApp" "messages" "en"
 -- split these actions into two functions and place them in separate files.
 mkYesodData "UIApp" $(parseRoutesFileNoCheck "config/routes")
 
-type Form x = Html -> MForm UIApp UIApp (FormResult x, Widget)
-
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod UIApp where
@@ -118,9 +115,6 @@ instance Yesod UIApp where
         master <- getYesod
         mmsg <- getMessage
         msu <- sessionUser
-        routeToMaster <- getRouteToMaster
-        mCurrentRoute <- maybe Nothing (Just . routeToMaster) `fmap` 
-                         getCurrentRoute
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
@@ -134,7 +128,7 @@ instance Yesod UIApp where
           addScript $ StaticR js_graphs_js
           addScriptRemote "https://api.flattr.com/js/0.6/load.js?mode=auto&popout=0&button=compact"
           $(widgetFile "default-layout")
-        hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
+        giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     urlRenderOverride y s =
         Just $ uncurry (joinPath y "") $ renderRoute s
@@ -144,10 +138,6 @@ instance Yesod UIApp where
 
     -- The page to be redirected to when authentication is required.
     --authRoute _ = Just $ AuthR LoginR
-
-    messageLogger _y _loc _level _msg _ =
-      return ()
-      --formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -173,7 +163,7 @@ instance Yesod UIApp where
     -- Forbid by default
     isAuthorized _ True = return $ Unauthorized "Cannot modify this resource"
 
-authorizeFor :: UserName -> GHandler y' UIApp AuthResult
+authorizeFor :: MonadHandler m => UserName -> m AuthResult
 authorizeFor user = do
   canEdit' <- canEdit user
   return $ if canEdit'
@@ -181,21 +171,20 @@ authorizeFor user = do
            else Unauthorized "Authorization denied"
 
 -- We want full http://host URLs only in a few cases (feeds, API)
-getFullUrlRender :: GHandler sub UIApp (Route UIApp -> Text)
+getFullUrlRender :: HandlerT UIApp IO (Route UIApp -> Text)
 getFullUrlRender =
     do approot' <- appRoot <$> settings <$> getYesod
        (T.append approot' .) <$> getUrlRender
 
-isMiro :: GHandler sub master Bool
+isMiro :: MonadHandler m => m Bool
 isMiro = let
         userAgent = lookup "User-Agent" <$> Wai.requestHeaders <$> waiRequest
     in maybe False (isInfixOf "Miro/") <$> userAgent
     
 
-errorHandler' :: forall sub.
-                 ErrorResponse -> GHandler sub UIApp ChooseRep
+errorHandler' :: ErrorResponse -> HandlerT UIApp IO TypedContent
 errorHandler' NotFound =
-  fmap chooseRep $ defaultLayout $ do
+  fmap toTypedContent $ defaultLayout $ do
     setTitle "Bitlove: Not found"
     let img = StaticR $ StaticRoute ["404.jpg"] []
     toWidget [hamlet|$newline always
@@ -205,14 +194,14 @@ errorHandler' NotFound =
                 <p class="hint">Here's a kitten instead.
               |]
 errorHandler' (PermissionDenied _) =
-  fmap chooseRep $ defaultLayout $ do
+  fmap toTypedContent $ defaultLayout $ do
     setTitle "Bitlove: Permission denied"
     toWidget [hamlet|$newline always
               <h2>Permission denied
               |]
 errorHandler' e = do
   liftIO $ hPrint stderr e
-  fmap chooseRep $ defaultLayout $
+  fmap toTypedContent $ defaultLayout $
     do setTitle "Bitlove: Error"
        let img = StaticR $ StaticRoute ["500.jpg"] []
        toWidget [hamlet|$newline always
@@ -221,21 +210,21 @@ errorHandler' e = do
                    <img src="@{img}">
                  |]
 
-generateETag :: LB.ByteString -> GHandler sub master ()
-generateETag = setHeader "ETag" . 
+generateETag :: MonadHandler m => LB.ByteString -> m ()
+generateETag = addHeader "ETag" . 
                quote . 
                toHex . 
                SHA1.hashlazy
   where quote t = T.concat ["\"", t, "\""]
 
-addFilterScript :: forall sub. GWidget sub UIApp ()
+addFilterScript :: WidgetT UIApp IO ()
 addFilterScript =
     addScript $ StaticR js_filter_js
 
 -- | Database interface
 
 class HasDB y where
-    getDBPool :: GHandler y' y DBPool
+    getDBPool :: HandlerT y IO DBPool
   
 instance HasDB UIApp where
     getDBPool = uiDBPool <$> getYesod
@@ -243,10 +232,10 @@ instance HasDB UIApp where
 type Transaction a = PostgreSQL.Connection -> IO a
     
 -- How to run database actions.
-withDB :: HasDB y => Transaction a -> GHandler y' y a
+withDB :: HasDB y => Transaction a -> HandlerT y IO a
 withDB f = do
     pool <- getDBPool
-    lift $ withDBPool pool f
+    liftIO $ runResourceT $ withDBPool pool f
     
 withDBPool :: DBPool -> Transaction a -> ResourceT IO a
 withDBPool pool f = do

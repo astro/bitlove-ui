@@ -144,7 +144,7 @@ getTopDownloadedR period = do
           PeriodAll -> 10000
   (page, downloads) <- paginate $
                        Model.mostDownloaded period_days
-  lift $ lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
+  lift $ putStrLn $ "render " ++ (show $ length downloads) ++ " downloads"
   defaultLayout $ do
     setTitleI MsgTitleTopDownloaded
     addFilterScript
@@ -375,14 +375,14 @@ getSearchR needle = do
                    ^{renderFeeds}
                  |]
 
-renderDownloads :: forall sub. [Download] -> Bool -> GWidget sub UIApp () 
+renderDownloads :: forall sub. [Download] -> Bool -> WidgetT UIApp IO () 
 renderDownloads downloads showOrigin =
     [whamlet|$newline always
      $forall item <- Model.groupDownloads downloads
        ^{renderItem item showOrigin}
      |]
 
-renderItem :: forall sub. Item -> Bool -> GWidget sub UIApp ()
+renderItem :: forall sub. Item -> Bool -> WidgetT UIApp IO ()
 renderItem item showOrigin = do
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
@@ -516,7 +516,7 @@ renderItem item showOrigin = do
 -- | <link rel="alternate"> to <head>
 addFeedsLinks :: forall sub master a a1.
                  ToMarkup a =>
-                 [(a1, [(Text, Route master, a)])] -> GWidget sub master ()
+                 [(a1, [(Text, Route master, a)])] -> WidgetT master IO ()
 addFeedsLinks lists = do
   let addFeedsLink (linkTitle :: Text, route, linkType) =
           [hamlet|$newline always
@@ -532,15 +532,14 @@ addFeedsLinks lists = do
 
 renderFeedsList :: forall a (t :: * -> *) sub (t1 :: * -> *).
                    (Foldable t1, Foldable t, ToMarkup a) =>
-                   t1 (Text, t (Text, Route UIApp, a)) -> GWidget sub UIApp ()
+                   t1 (Text, t (Text, Route UIApp, a)) -> WidgetT UIApp IO ()
 renderFeedsList lists = do
   renderRoute <-
-    lift $
     isMiro >>= \isMiro' ->
     (if isMiro'
      then (("http://subscribe.getmiro.com/?type=video&url1=" `T.append`) <$>)
      else id) <$>
-    getFullUrlRender
+    handlerToWidget getFullUrlRender
   let renderFeedsList' (fTitle :: Text, feeds) =
               [hamlet|$newline always
                <dt>#{fTitle}:

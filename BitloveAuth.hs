@@ -2,6 +2,7 @@
 module BitloveAuth where
 
 import Prelude
+import Control.Applicative
 import Yesod
 import Data.Maybe
 import qualified Data.ByteString.Char8 as BC
@@ -9,30 +10,31 @@ import qualified Network.Wai as Wai
 import Web.Cookie
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import qualified Data.Text as T
+import qualified Data.Map as Map
 
 import Utils
 import Model.Session
 import Model.User
 
-login :: UserName -> GHandler y y' ()
+login :: UserName -> HandlerT y IO ()
 login = setSession "user" . userName
 
-sessionUser :: GHandler y y' (Maybe UserName)
-sessionUser = lookupSession "user" >>=
-              return . maybe Nothing (Just . UserName)
+sessionUser :: MonadHandler m => m (Maybe UserName)
+sessionUser = maybe Nothing (Just . UserName) <$>
+              lookupSession "user"
       
-canEdit :: UserName -> GHandler sub master Bool
-canEdit user = maybe False (`elem` [user, UserName "astro"]) `fmap`
+canEdit :: MonadHandler m => UserName -> m Bool
+canEdit user = maybe False (`elem` [user, UserName "astro"]) <$>
                sessionUser
   
-logout :: GHandler y y' ()
+logout :: MonadHandler m => m ()
 logout = deleteSession "user"
 
 
-sessionBackend :: (forall b. (PostgreSQL.Connection -> IO b) -> IO b) -> SessionBackend a
+sessionBackend :: (forall b. (PostgreSQL.Connection -> IO b) -> IO b) -> SessionBackend
 sessionBackend withDB =
     -- | App callback
-    SessionBackend $ \_app req _time ->
+    SessionBackend $ \req ->
     do let mSidCookie =
                listToMaybe
                [sid
@@ -45,25 +47,25 @@ sessionBackend withDB =
                  mSidCookie
              | otherwise = 
                  Nothing
-           getBackendSession :: IO BackendSession
-           getBackendSession =
-               case mSid of
-                 Nothing ->
-                     return []
-                 Just sid ->
-                     do users <- withDB $ validateSession sid
-                        return $
+           getSessionData :: IO SessionMap
+           getSessionData =
+                  case mSid of
+                    Nothing ->
+                        return Map.empty
+                    Just sid ->
+                        do users <- withDB $ validateSession sid
+                           return $ Map.fromList $
                                case users of
                                  (UserName user):_ ->
                                      [("user", BC.pack $ T.unpack user)]
                                  _ ->
                                      []
 
-       oldSession <- getBackendSession
-       let saveSession :: BackendSession -> time -> IO [Header]
-           saveSession newSession _time =
-               let mOldUser = "user" `lookup` oldSession
-                   mNewUser = "user" `lookup` newSession
+       oldSession <- getSessionData
+       let saveSession :: SessionMap -> IO [Header]
+           saveSession newSession =
+               let mOldUser = "user" `Map.lookup` oldSession
+                   mNewUser = "user" `Map.lookup` newSession
                in case (mOldUser, mNewUser) of
                     -- Login
                     (Nothing, Just user) ->

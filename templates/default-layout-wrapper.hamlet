@@ -7,8 +7,6 @@ $doctype 5
     <link rel="stylesheet" type="text/css" href="/static/font-awesome.css"/>
     <meta name="viewport" content="width=480"/>
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
-    $maybe currentRoute <- mCurrentRoute
-      <link rel="bookmark" type="text/html" href="@{currentRoute}">
     ^{pageHead pc}
   <body>
     ^{pageBody pc}
