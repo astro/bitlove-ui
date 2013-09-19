@@ -146,25 +146,3 @@ executable         ui
                      , yesod-core
                      , warp                  >= 1.3.9.2   && < 2
                      , warp-tls              >= 1.4.1.4   && < 2
-
-test-suite test
-    type:              exitcode-stdio-1.0
-    main-is:           main.hs
-    hs-source-dirs:    tests
-    ghc-options:       -Wall
-    extensions:        TemplateHaskell
-                       QuasiQuotes
-                       OverloadedStrings
-                       NoImplicitPrelude
-                       CPP
-                       OverloadedStrings
-                       MultiParamTypeClasses
-                       TypeFamilies
-                       GADTs
-                       GeneralizedNewtypeDeriving
-                       FlexibleContexts
-
-    build-depends: base
-                 , bitlove-ui
-                 , yesod
-                 , yesod-core
