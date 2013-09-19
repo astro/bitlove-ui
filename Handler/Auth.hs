@@ -3,7 +3,6 @@ module Handler.Auth where
 
 import Prelude
 import Yesod hiding (returnJson)
-import Data.Conduit
 import Crypto.HMAC
 import Crypto.Hash.CryptoAPI (SHA1)
 import Data.ByteString (ByteString)
@@ -17,7 +16,6 @@ import Network.Mail.Mime
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Control.Exception as E
 import Data.Maybe (fromMaybe)
-import Data.Aeson (ToJSON)
 import Data.Char
 
 import Import hiding (returnJson)
@@ -26,7 +24,7 @@ import qualified Model as Model
 import Model.User
 
 
-getSignupR :: Handler RepHtml
+getSignupR :: Handler Html
 getSignupR =
     defaultLayout $ do
       setTitleI MsgTitleSignup
@@ -34,7 +32,7 @@ getSignupR =
       
 data SignupStatus = SignupOk | SignupConflict | SignupError
       
-postSignupR :: Handler RepHtml
+postSignupR :: Handler Html
 postSignupR = do
   -- Validation
   mUsername <- lookupPostParam "username"
@@ -124,7 +122,7 @@ Thanks for sharing
                                       ) >>= 
                         sendResponse
   
-getLoginR :: Handler RepHtml
+getLoginR :: Handler Html
 getLoginR =
     defaultLayout $ do
       setTitleI MsgTitle
@@ -185,7 +183,7 @@ postLoginR = do
     _ ->
       returnJsonError "Protocol error"
       
-getActivateR :: Token -> Handler RepHtml
+getActivateR :: Token -> Handler Html
 getActivateR token = do
   mSalt <-
       withDB $ \db ->
@@ -241,13 +239,13 @@ postActivateR token = do
                           getUrlRender
            returnJson ["welcome" .= welcomeLink]
 
-getReactivateR :: Handler RepHtml
+getReactivateR :: Handler Html
 getReactivateR =
     defaultLayout $ do
       setTitleI MsgTitleReactivate
       $(whamletFile "templates/reactivate.hamlet")
       
-postReactivateR :: Handler RepHtml
+postReactivateR :: Handler Html
 postReactivateR = do
   email <- fromMaybe "" `fmap`
            lookupPostParam "email"
@@ -329,9 +327,8 @@ sendMail toUser toEmail subject body =
                             }]]
             }
 
--- returnJson :: forall (m :: * -> *) a.
---               (Monad m, ToJSON a) =>
---               [(Text, a)] -> m RepJson
+returnJson :: (Monad m, ToJSON a, a ~ Value) =>
+              [(Text, a)] -> m RepJson
 returnJson = return . repJson . object
 
 returnJsonError :: Text -> Handler RepJson

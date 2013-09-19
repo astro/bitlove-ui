@@ -15,7 +15,7 @@ import Import
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
   -- For CORS:
-  setHeader "Access-Control-Allow-Origin" "*"
+  addHeader "Access-Control-Allow-Origin" "*"
   
   urls <- map snd `fmap`
           filter (("url" `T.isPrefixOf`) . fst) `fmap`

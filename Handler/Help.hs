@@ -6,27 +6,27 @@ import qualified Data.Text as T
 
 import Import
 
-getHelpR :: HandlerT UIApp IO RepHtml
+getHelpR :: HandlerT UIApp IO Html
 getHelpR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     $(whamletFile "templates/help.hamlet")
 
-getHelpPodcasterR :: HandlerT UIApp IO RepHtml
+getHelpPodcasterR :: HandlerT UIApp IO Html
 getHelpPodcasterR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-podcaster.hamlet")
 
-getHelpFeedsR :: HandlerT UIApp IO RepHtml
+getHelpFeedsR :: HandlerT UIApp IO Html
 getHelpFeedsR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
     renderHelpPodcasterNavigation
     $(whamletFile "templates/help-feeds.hamlet")
 
-getHelpApiR :: HandlerT UIApp IO RepHtml
+getHelpApiR :: HandlerT UIApp IO Html
 getHelpApiR =
   defaultLayout $ do
     setTitleI MsgTitleHelp
@@ -39,7 +39,7 @@ getHelpApiR =
             BC.unpack $(embedFile "templates/help-api-feed-lookup-example.text")
     $(whamletFile "templates/help-api.hamlet")
 
-getHelpWidgetR :: HandlerT UIApp IO RepHtml
+getHelpWidgetR :: HandlerT UIApp IO Html
 getHelpWidgetR =
   defaultLayout $ do
     setTitleI MsgTitleHelp

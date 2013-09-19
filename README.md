@@ -37,9 +37,6 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* rm tests
-* rm warns
-
 PBKDF2 auth
 404 → search
 

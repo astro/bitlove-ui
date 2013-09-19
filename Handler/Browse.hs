@@ -69,7 +69,7 @@ updatePagination page xs
         (page, 
          xs)
 
-getFrontR :: Handler RepHtml
+getFrontR :: Handler Html
 getFrontR = do
   downloads <- withDB $
                Model.mostDownloaded 1 (Model.QueryPage 40 0)
@@ -93,7 +93,7 @@ getFrontR = do
                     alt="#{fromMaybe "Feed logo" title}">
      |]
 
-getNewR :: Handler RepHtml
+getNewR :: Handler Html
 getNewR = do
     page <- makePage
     downloads <- withDB $ withPage page Model.recentDownloads
@@ -114,7 +114,7 @@ getNewR = do
            ^{renderPagination page}
          |]
 
-getTopR :: Handler RepHtml
+getTopR :: Handler Html
 getTopR = do
     (page, downloads) <- paginate
                          Model.popularDownloads
@@ -135,7 +135,7 @@ getTopR = do
            ^{renderPagination page}
          |]
 
-getTopDownloadedR :: Period -> Handler RepHtml
+getTopDownloadedR :: Period -> Handler Html
 getTopDownloadedR period = do
   let period_days =
         case period of
@@ -168,7 +168,7 @@ getTopDownloadedR period = do
        ^{renderPagination page}
      |]
 
-getUserR :: UserName -> Handler RepHtml
+getUserR :: UserName -> Handler Html
 getUserR user = do
   canEdit' <- canEdit user
   let fetch = do
@@ -230,7 +230,7 @@ getUserR user = do
   fetch >>= maybe notFound render
   
 
-getUserFeedR :: UserName -> Text -> Handler RepHtml
+getUserFeedR :: UserName -> Text -> Handler Html
 getUserFeedR user slug = do
   canEdit' <- canEdit user
   mPageFeedDownloadsErrors <- do
@@ -308,12 +308,12 @@ getUserFeedR user slug = do
                             ^{renderPagination page}
                           |]
 
-getSearchRedirectR :: Handler RepHtml
+getSearchRedirectR :: Handler Html
 getSearchRedirectR = 
     lookupGetParam "q" >>=
     maybe notFound (redirect . SearchR)
 
-getSearchR :: Text -> Handler RepHtml
+getSearchR :: Text -> Handler Html
 getSearchR needle = do
         (page, feeds, downloads) <- do
           page <- makePage
@@ -375,14 +375,14 @@ getSearchR needle = do
                    ^{renderFeeds}
                  |]
 
-renderDownloads :: forall sub. [Download] -> Bool -> WidgetT UIApp IO () 
+renderDownloads :: [Download] -> Bool -> WidgetT UIApp IO () 
 renderDownloads downloads showOrigin =
     [whamlet|$newline always
      $forall item <- Model.groupDownloads downloads
        ^{renderItem item showOrigin}
      |]
 
-renderItem :: forall sub. Item -> Bool -> WidgetT UIApp IO ()
+renderItem :: Item -> Bool -> WidgetT UIApp IO ()
 renderItem item showOrigin = do
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
@@ -514,7 +514,7 @@ renderItem item showOrigin = do
                   "[Support]"
 
 -- | <link rel="alternate"> to <head>
-addFeedsLinks :: forall sub master a a1.
+addFeedsLinks :: forall master a a1.
                  ToMarkup a =>
                  [(a1, [(Text, Route master, a)])] -> WidgetT master IO ()
 addFeedsLinks lists = do
@@ -530,7 +530,7 @@ addFeedsLinks lists = do
        ^{addFeedsLink feed}
                  |]
 
-renderFeedsList :: forall a (t :: * -> *) sub (t1 :: * -> *).
+renderFeedsList :: forall a (t :: * -> *) (t1 :: * -> *).
                    (Foldable t1, Foldable t, ToMarkup a) =>
                    t1 (Text, t (Text, Route UIApp, a)) -> WidgetT UIApp IO ()
 renderFeedsList lists = do

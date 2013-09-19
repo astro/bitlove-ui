@@ -4,7 +4,6 @@ module Handler.TorrentStats where
 import Yesod
 import Data.Time
 import qualified Data.Text as T
-import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 
 import Import
 import PathPieces
@@ -46,17 +45,17 @@ getTorrentStatsR user slug name statsPeriod stats = do
   
       (RepJson . toContent . object) <$> case stats of
         StatsDownloads -> do
-          canEdit <- canEdit user
+          canEdit' <- canEdit user
           json <- ("downloads" .=) <$> 
                   statsToJson tz <$>
                   withStats (Model.getCounter "complete" info_hash)
           json' <- 
-            if canEdit
+            if canEdit'
             then do 
               path <- ($ TorrentFileR user slug $ TorrentName name) <$>
                       getUrlRender
-              stats <- withStats (Model.getDownloadCounter path)
-              return ["torrent" .= statsToJson tz stats]
+              stats' <- withStats (Model.getDownloadCounter path)
+              return ["torrent" .= statsToJson tz stats']
             else return []
           return $ json : json' ++ baseJson
         StatsTraffic -> do

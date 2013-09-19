@@ -11,7 +11,7 @@ import Import
 import Handler.Browse (renderFeedsList, addFeedsLinks)
 
 
-getDirectoryR :: Handler RepHtml
+getDirectoryR :: Handler Html
 getDirectoryR = do
   pages <- groupUsers `fmap` withDB Model.getActiveUsers
   liftIO $ putStrLn $ "pages: " ++ show (map fst pages)
@@ -60,7 +60,7 @@ groupUsers (u:us) =
       (us', us'') = break ((letter /=) . getLetter) us
   in (letter, (u : us')) : groupUsers us''
 
-getDirectoryPageR :: DirectoryPage -> Handler RepHtml
+getDirectoryPageR :: DirectoryPage -> Handler Html
 getDirectoryPageR page = do
   dir <- groupDirectory `fmap` withDB (Model.getDirectory $ Just page)
   defaultLayout $ do
