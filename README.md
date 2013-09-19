@@ -37,8 +37,17 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
-* GET .torrent stats
-* event=complete heuristics
+* rm tests
+* rm warns
+
+PBKDF2 auth
+404 → search
+
+* graphs
+  * .torrents checkbox
+  * time navigation
+
+* PSHB
 
 * global statistics numbers
 * change feed URL

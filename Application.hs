@@ -5,7 +5,7 @@ module Application
     , makeUIFoundation
     ) where
 
-import Import
+import Import hiding (loadConfig)
 import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
@@ -40,7 +40,7 @@ import Handler.MapFeed
 import Handler.DownloadFeeds
 import Handler.ByEnclosureAPI
 import Handler.FeedLookupAPI
-import Handler.Tracker
+import Handler.Tracker (makeTrackerApp)
 import Handler.Help
 import Handler.Widget
 import Handler.Thumbnails
@@ -206,7 +206,7 @@ makeDBPool dbconf =
      4 60 4
 
 
-getFaviconR :: GHandler sub UIApp ()
+getFaviconR :: Handler ()
 getFaviconR =
     redirectWith (Status 301 "Over there") $ StaticR $ StaticRoute ["favicon.png"] []
     

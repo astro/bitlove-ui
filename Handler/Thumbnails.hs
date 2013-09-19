@@ -22,21 +22,22 @@ import qualified Model
 import qualified Model.ImageCache as Cache
 
 
-generateThumbnail :: T.Text -> Int -> Handler (Maybe LB.ByteString)
+generateThumbnail :: T.Text -> Int -> Handler  (Maybe LB.ByteString)
 generateThumbnail url size = 
     do cacheSeconds $ 24 * 60 * 60
-       mSource <- download
-       case mSource of
-         Nothing ->
-             return Nothing
-         Just source ->
-             Just <$> LB.fromChunks <$>
-             lift (source $$+- (resize =$ CL.consume))
-  where download :: Handler (Maybe (ResumableSource (ResourceT IO) B.ByteString))
-        download = do
-          manager <- httpManager <$> getYesod
-          req <- lift $ parseUrl $ T.unpack url
-          res <- lift $ http req manager
+       manager <- httpManager <$> getYesod
+       lift $ runResourceT $
+            do mSource <- download manager
+               case mSource of
+                 Nothing ->
+                     return Nothing
+                 Just source ->
+                     Just <$> LB.fromChunks <$>
+                     (source $$+- resize =$ CL.consume)
+  where download :: Manager -> ResourceT IO (Maybe (ResumableSource (ResourceT IO) B.ByteString))
+        download manager = do
+          req <- parseUrl $ T.unpack url
+          res <- http req manager
           case res of
             _ | statusCode (responseStatus res) == 200 ->
                 return $ Just $ responseBody res
@@ -50,13 +51,14 @@ generateThumbnail url size =
 
 newtype RepPng = RepPng LB.ByteString
 
-instance HasReps RepPng where
-  chooseRep (RepPng src) _cts = do
-    let builder = fromLazyByteString src
-        len = fromIntegral $ LB.length src
-    return (typePng,
-            ContentBuilder builder (Just len)
-           )
+instance ToContent RepPng where
+    toContent (RepPng b) =
+        let builder = fromLazyByteString b
+            len = fromIntegral $ LB.length b
+        in ContentBuilder builder $ Just len
+
+instance ToTypedContent RepPng where
+    toTypedContent = TypedContent typePng . toContent
 
 data EmptyException = EmptyException
                     deriving (Show, Typeable)
