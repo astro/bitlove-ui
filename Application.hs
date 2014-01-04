@@ -10,14 +10,15 @@ import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
-import Network.HTTP.Conduit (newManager, def)
+import Network.HTTP.Conduit (newManager, conduitManagerSettings)
 import Data.Conduit.Pool
 import Database.HDBC as HDBC (disconnect)
 import Database.HDBC.PostgreSQL
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
-import qualified Network.Wai as Wai
+import Network.Wai
+import Network.Wai.Internal
 import Network.HTTP.Types.Status
 import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
@@ -25,7 +26,7 @@ import qualified Data.ByteString.Char8 as BC
 --import Data.Monoid
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
-import Control.Monad.Trans.Resource (register)
+import Control.Monad.Trans.Resource
 
 
 -- Import all relevant handler modules here.
@@ -78,11 +79,11 @@ makeApplication conf = do
         \req -> app req >>= \res ->
         let tryNext =
                 case res of
-                  Wai.ResponseFile (Status 404 _) _ _ _ ->
+                  ResponseFile (Status 404 _) _ _ _ ->
                       True
-                  Wai.ResponseBuilder (Status 404 _) _ _ ->
+                  ResponseBuilder (Status 404 _) _ _ ->
                       True
-                  Wai.ResponseSource (Status 404 _) _ _ ->
+                  ResponseSource (Status 404 _) _ _ ->
                       True
                   _ ->
                       False
@@ -92,15 +93,15 @@ makeApplication conf = do
     anyApp [] =
         return $ 
         return $ 
-        Wai.ResponseBuilder (Status 404 "Not found") [] mempty
-    enforceVhost :: Wai.Middleware
+        ResponseBuilder (Status 404 "Not found") [] mempty
+    enforceVhost :: Middleware
     enforceVhost app req =
         let proceed = app req
             getRedirectResponse location = return $
-                                Wai.ResponseBuilder (Status 301 "Wrong vhost")
+                                ResponseBuilder (Status 301 "Wrong vhost")
                                 [("Location", location)]
                                 mempty
-        in case "Host" `lookup` Wai.requestHeaders req of
+        in case "Host" `lookup` requestHeaders req of
              Nothing ->
                  proceed
              Just vhost
@@ -108,12 +109,13 @@ makeApplication conf = do
                      proceed
              Just _ ->
                  getRedirectResponse $ 
-                 "http://bitlove.org" `BC.append` Wai.rawPathInfo req
-    measureDuration :: Wai.Middleware
+                 "http://bitlove.org" `BC.append` rawPathInfo req
+    measureDuration :: Middleware
     measureDuration app req =
+        runResourceT $
         do cpu1 <- liftIO getCPUTime
            utc1 <- liftIO getCurrentTime
-           res <- app req
+           res <- lift $ app req
            let res' = res `seq` res
            _ <- register $ do
              cpu2 <- liftIO getCPUTime
@@ -124,19 +126,19 @@ makeApplication conf = do
                       , "ms real "
                       , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
                       , "ms cpu] "
-                      , BC.pack $ show $ Wai.remoteHost req
+                      , BC.pack $ show $ remoteHost req
                       , " "
-                      , BC.pack $ show $ statusCode $ Wai.responseStatus res
+                      , BC.pack $ show $ statusCode $ responseStatus res
                       , " "
-                      , Wai.requestMethod req
+                      , requestMethod req
                       , " "
-                      , Wai.rawPathInfo req
+                      , rawPathInfo req
                       ]
            return $ res'
            
     etagMiddleware app req =
       do let reqETags = 
-                 "If-None-Match" `lookup` Wai.requestHeaders req
+                 "If-None-Match" `lookup` requestHeaders req
              matches etag = 
                  case (etag `BC.breakSubstring`) <$> reqETags of
                    Just (_, reqEtags')
@@ -148,15 +150,15 @@ makeApplication conf = do
          let may304 res s hs
                  | statusCode s == 200 &&
                    maybe False matches ("ETag" `lookup` hs) =
-                       return $ Wai.ResponseBuilder notModified304 hs mempty
+                       return $ ResponseBuilder notModified304 hs mempty
                  | otherwise =
                        return res
          case res of
-           Wai.ResponseFile s hs _ _ -> 
+           ResponseFile s hs _ _ -> 
                may304 res s hs
-           Wai.ResponseBuilder s hs _ -> 
+           ResponseBuilder s hs _ -> 
                may304 res s hs
-           Wai.ResponseSource s hs _ -> 
+           ResponseSource s hs _ -> 
                may304 res s hs
 
 getApplicationDev :: IO (Int, Application)
@@ -169,7 +171,7 @@ getApplicationDev =
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
 makeUIFoundation conf pool = do
-    manager <- newManager def
+    manager <- newManager conduitManagerSettings
     s <- staticSite
     return $ UIApp conf s pool manager
     
