@@ -15,6 +15,7 @@ import qualified Control.Exception.Lifted as EX
 import System.IO
 import Control.Monad
 import Data.Data (Typeable)
+import Control.Monad.Trans.Resource
 
 import PathPieces
 import Import

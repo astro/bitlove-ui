@@ -1,6 +1,7 @@
 module Handler.MapFeed where
 
 import Control.Monad
+import Control.Monad.Trans.Resource
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as HM
 import Text.XML.Stream.Parse
