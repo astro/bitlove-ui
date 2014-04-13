@@ -10,6 +10,9 @@ import Import
 
 getFeedLookupJson :: Handler RepJson
 getFeedLookupJson = do
+  -- For CORS:
+  addHeader "Access-Control-Allow-Origin" "*"
+
   urls <- map snd <$>
           filter (("url" `T.isPrefixOf`) . fst) <$>
           reqGetParams <$>
