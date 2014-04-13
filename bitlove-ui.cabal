@@ -90,6 +90,7 @@ library
                  , text                          >= 0.11.3.1
                  , template-haskell              >= 2.8.0.0
                  , hamlet                        >= 1.1.7.2
+                 , shakespeare                   >= 1.0.0.0
                  , shakespeare-css               >= 1.0.6.3
                  , shakespeare-js                >= 1.2.0
                  , shakespeare-text              >= 1.0.0.7
