@@ -132,7 +132,7 @@ library
                  , file-embed                    >= 0.0.4.6
                  , process-conduit               >= 1.0.0.1
                  , lifted-base                   >= 0.2.1.0
-                 , pcre-light                    >= 0.4
+                 , regex-pcre                    >= 0.94.4
 
 executable         ui
     if flag(library-only)

@@ -5,10 +5,11 @@ import Prelude
 import Yesod
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
-import qualified Text.Regex.PCRE.Light as PCRE
+import qualified Text.Regex.PCRE.ByteString as PCRE
 import Control.Monad
 import Data.Time
 import Data.Maybe (catMaybes)
+import System.IO.Unsafe
 
 import Import
 
@@ -70,25 +71,34 @@ getByEnclosureJson = do
           rewriteUrl :: Text -> Text
           rewriteUrl t =
               let t' = encodeUtf8 t
-                  rePodpress = PCRE.compile "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$" []
+                  runRe re buf =
+                      unsafePerformIO $
+                      do Right regex <- PCRE.compile PCRE.compBlank PCRE.execBlank re
+                         result <- PCRE.regexec regex buf
+                         case result of
+                           Left (_, e) -> error e
+                           Right Nothing -> return Nothing
+                           Right (Just (_, _, _, matches)) -> return $ Just matches
+
+                  rePodpress = "^(.+?\\/podpress_trac\\/)web(\\/\\d+\\/\\d+\\/.+)$"
                   rewritePodpress =
-                      do [_, r1, r2] <- PCRE.match rePodpress t' []
+                      do [_, r1, r2] <- runRe rePodpress t'
                          return $
                                 T.concat [ decodeUtf8 r1
                                          , "feed"
                                          , decodeUtf8 r2
                                          ]
-                  reBlubrry1 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?\\/)p\\/(.+?)$" []
+                  reBlubrry1 = "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?\\/)p\\/(.+?)$"
                   rewriteBlubrry1 =
-                      do [_, r1, r2, r3] <- PCRE.match reBlubrry1 t' []
+                      do [_, r1, r2, r3] <- runRe reBlubrry1 t'
                          return $
                                 T.concat [ decodeUtf8 r1
                                          , decodeUtf8 r2
                                          , decodeUtf8 r3
                                          ]
-                  reBlubrry2 = PCRE.compile "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?)$" []
+                  reBlubrry2 = "^(https?:\\/\\/media\\.blubrry\\.com\\/.+?\\/)p\\/(.+?)$"
                   rewriteBlubrry2 =
-                      do [_, r1, r2] <- PCRE.match reBlubrry2 t' []
+                      do [_, r1, r2] <- runRe reBlubrry2 t'
                          return $
                                 T.concat [ decodeUtf8 r1
                                          , decodeUtf8 r2
