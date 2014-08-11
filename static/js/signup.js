@@ -9,7 +9,7 @@ function fixUsername() {
 	username.val(s);
 
     if (s.length > 0)
-	hint.text("http://bitlove.org/" + s);
+	hint.text("https://bitlove.org/" + s);
     else
 	hint.text("");
 }

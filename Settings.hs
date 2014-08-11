@@ -46,7 +46,7 @@ staticDir = "static"
 -- files, more easily set expires and cache values, and avoid possibly
 -- costly transference of cookies on static files. For more information,
 -- please see:
---   http://code.google.com/speed/page-speed/docs/request.html#ServeFromCookielessDomain
+--   https://developers.google.com/speed/docs/best-practices/request#ServeFromCookielessDomain
 --
 -- If you change the resource pattern for StaticR in Foundation.hs, you will
 -- have to make a corresponding change here.

@@ -4,7 +4,7 @@
  *
  * Version 1.3 Copyright Brian Turek 2008-2010
  * Distributed under the BSD License
- * See http://jssha.sourceforge.net/ for more information
+ * See https://caligatio.github.io/jsSHA/ for more information
  *
  * Several functions taken from Paul Johnson
  */

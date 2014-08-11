@@ -22,12 +22,12 @@ $newline always
   <img src="/static/podpress-widget.png">
   <p>
     Install
-    <a href="http://plugins.trac.wordpress.org/browser/podpress/trunk/optional_files/bitlove_scripts_for_podpress/bitlove_scripts_for_podpress.php">the plugin by Tim Berger.
+    <a href="https://plugins.trac.wordpress.org/browser/podpress/trunk/optional_files/bitlove_scripts_for_podpress/bitlove_scripts_for_podpress.php">the plugin by Tim Berger.
 
   <h3 #podpress>Manual installation for Podpress
   <p>
     Alternatively, include the following snippet in your site's template:
-  <pre>&lt;script src="http://bitlove.org/widget/podpress.js" type="text/javascript"&gt;&lt;/script&gt;
+  <pre>&lt;script src="https://bitlove.org/widget/podpress.js" type="text/javascript"&gt;&lt;/script&gt;
   <p>
     Make sure you put it after jQuery. Contact #
     <a href="mailto:mail@bitlove.org">mail@bitlove.org
@@ -39,7 +39,7 @@ $newline always
   <h3 #powerpress>Widget for Powerpress
   <img src="/static/powerpress-widget.png">
   <p>Include the following snippet in your site's template:
-  <pre>&lt;script src="http://bitlove.org/widget/powerpress.js" type="text/javascript"&gt;&lt;/script&gt;
+  <pre>&lt;script src="https://bitlove.org/widget/powerpress.js" type="text/javascript"&gt;&lt;/script&gt;
   <p>
     Please #
     <a href="mailto:mail@bitlove.org">contact us
@@ -49,7 +49,7 @@ $newline always
   <img src="/static/podlove-widget.png">
   <p>
     Haven't decided what to use for podcast publishing? We recommend
-    <a href="http://wordpress.org/extend/plugins/podlove-podcasting-plugin-for-wordpress/">
+    <a href="https://wordpress.org/plugins/podlove-podcasting-plugin-for-wordpress/">
       Podlove Podcast Publisher.
     One checkbox in its configuration enables built-in support for Bitlove downloads.
 

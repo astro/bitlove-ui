@@ -110,7 +110,7 @@ addButton.bind('click', function() {
 
 	box.find('#slughint').
 	    text((s.length > 0) ?
-		 "http://bitlove.org" + document.location.pathname + "/" + s:
+		 "https://bitlove.org" + document.location.pathname + "/" + s:
 		 "");
     }
     slugEl.bind('change', fixSlug);

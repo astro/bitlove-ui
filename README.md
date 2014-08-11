@@ -1,12 +1,12 @@
 # Bitlove (Web Interface)
 
-The Bitlove web interface is built with Haskell using the Yesod framework. See [Bitlove.org](http://bitlove.org/) for the actual site.
+The Bitlove web interface is built with Haskell using the Yesod framework. See [Bitlove.org](https://bitlove.org/) for the actual site.
 
 The Yesod project has [a little book](http://www.yesodweb.com/book). For beginners, read [Real World Haskell](http://book.realworldhaskell.org/read/).
 
 ## Installation (for the less experienced)
 
-You’ll need Haskell, Cabal, PostgreSQL and a UNIX OS. You might want to try the [Haskell Platform](http://hackage.haskell.org/platform/), available in most package managers.
+You’ll need Haskell, Cabal, PostgreSQL and a UNIX OS. You might want to try the [Haskell Platform](https://www.haskell.org/platform/), available in most package managers.
 
 Some commands need to be adjusted or left off. Start the installation by running the following ones:
 

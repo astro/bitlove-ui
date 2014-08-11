@@ -3,8 +3,8 @@
     <a href="@{FrontR}">Bitlove
   <p id="slogan">Peer-to-Peer Love for Your Podcast Downloads.
   <p id="siteflattr">
-    <a class="FlattrButton" style="display:none;" href="http://bitlove.org/" rev="flattr;button:large;">
-      <img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0"/>
+    <a class="FlattrButton" style="display:none;" href="https://bitlove.org/" rev="flattr;button:large;">
+      <img src="https://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0"/>
 <nav>
   <div id="top-nav">
     <div class="content-wrapper">
@@ -67,7 +67,7 @@
   <div>
     <dl>
       <dt>Twitter
-      <dd><a href="http://twitter.com/bitlove_org">@bitlove_org</a>
+      <dd><a href="https://twitter.com/bitlove_org">@bitlove_org</a>
       <dt>Contact
       <dd><a href="mailto:mail@bitlove.org">mail@bitlove.org</a>
   <div>

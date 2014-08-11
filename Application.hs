@@ -109,7 +109,7 @@ makeApplication conf = do
                      proceed
              Just _ ->
                  getRedirectResponse $ 
-                 "http://bitlove.org" `BC.append` rawPathInfo req
+                 "https://bitlove.org" `BC.append` rawPathInfo req
     measureDuration :: Middleware
     measureDuration app req =
         runResourceT $

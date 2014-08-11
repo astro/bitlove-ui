@@ -10,7 +10,7 @@ category:          Web
 stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
-homepage:          http://bitlove.org/
+homepage:          https://bitlove.org/
 
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.
