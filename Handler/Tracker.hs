@@ -13,6 +13,7 @@ import Network.Socket (SockAddr (..))
 import Data.Word (Word32)
 import Data.Bits
 import System.Random (randomRIO)
+import Data.Maybe (fromMaybe)
 
 import Foundation (DBPool, HasDB (getDBPool), withDB, withDBPool, Transaction)
 import qualified Model as Model
@@ -87,7 +88,7 @@ getAnnounceR = do
             qi "port" <*>
             qi "uploaded" <*>
             qi "downloaded" <*>
-            qi "left" <*>
+            pure (fromMaybe 1 $ qi "left") <*>
             pure (q "event") <*>
             pure (maybe False (const True) $ q "compact")
   case mTr of
