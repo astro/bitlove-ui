@@ -69,35 +69,35 @@ makeApplication conf = do
     foundation <- makeUIFoundation conf uiPool
     tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- (enforceVhost . stats . autohead . etagMiddleware) <$>
-          toWaiAppPlain foundation
+    ui <- enforceVhost <$> stats <$> etagMiddleware <$>
+          toWaiApp foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
     anyApp [app] = 
         app
     anyApp (app:apps) = 
-        \req -> app req >>= \res ->
-        let tryNext =
-                case res of
-                  ResponseFile (Status 404 _) _ _ _ ->
-                      True
-                  ResponseBuilder (Status 404 _) _ _ ->
-                      True
-                  ResponseSource (Status 404 _) _ _ ->
-                      True
-                  _ ->
-                      False
-        in if tryNext
-           then anyApp apps req
-           else return res
+        \req respond ->
+            app req $ \res ->
+                let tryNext =
+                        case res of
+                          ResponseFile (Status 404 _) _ _ _ ->
+                              True
+                          ResponseBuilder (Status 404 _) _ _ ->
+                              True
+                          ResponseStream (Status 404 _) _ _ ->
+                              True
+                          _ ->
+                              False
+                in if tryNext
+                   then anyApp apps req respond
+                   else respond res
     anyApp [] =
-        return $ 
-        return $ 
-        ResponseBuilder (Status 404 "Not found") [] mempty
+        \req respond ->
+            respond $ ResponseBuilder (Status 404 "Not found") [] mempty
     enforceVhost :: Middleware
-    enforceVhost app req =
-        let proceed = app req
-            getRedirectResponse location = return $
+    enforceVhost app req respond =
+        let proceed = app req respond
+            getRedirectResponse location = respond $
                                 ResponseBuilder (Status 301 "Wrong vhost")
                                 [("Location", location)]
                                 mempty
@@ -111,32 +111,32 @@ makeApplication conf = do
                  getRedirectResponse $ 
                  "https://bitlove.org" `BC.append` rawPathInfo req
     measureDuration :: Middleware
-    measureDuration app req =
-        runResourceT $
-        do cpu1 <- liftIO getCPUTime
-           utc1 <- liftIO getCurrentTime
-           res <- lift $ app req
-           let res' = res `seq` res
-           _ <- register $ do
-             cpu2 <- liftIO getCPUTime
-             utc2 <- liftIO getCurrentTime
-             liftIO $ BC.hPutStrLn stderr $ BC.concat
-                      [ "["
-                      , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
-                      , "ms real "
-                      , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
-                      , "ms cpu] "
-                      , BC.pack $ show $ remoteHost req
-                      , " "
-                      , BC.pack $ show $ statusCode $ responseStatus res
-                      , " "
-                      , requestMethod req
-                      , " "
-                      , rawPathInfo req
-                      ]
-           return $ res'
+    measureDuration app req respond =
+        do cpu1 <- getCPUTime
+           utc1 <- getCurrentTime
+           app req $ \res ->
+               do let res' = res `seq` res
+
+                  cpu2 <- getCPUTime
+                  utc2 <- getCurrentTime
+                  BC.hPutStrLn stderr $ BC.concat
+                             [ "["
+                             , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
+                             , "ms real "
+                             , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
+                             , "ms cpu] "
+                             , BC.pack $ show $ remoteHost req
+                             , " "
+                             , BC.pack $ show $ statusCode $ responseStatus res
+                             , " "
+                             , requestMethod req
+                             , " "
+                             , rawPathInfo req
+                             ]
+
+                  respond res'
            
-    etagMiddleware app req =
+    etagMiddleware app req respond =
       do let reqETags = 
                  "If-None-Match" `lookup` requestHeaders req
              matches etag = 
@@ -146,20 +146,21 @@ makeApplication conf = do
                            True
                    _ ->
                        False
-         res <- app req
-         let may304 res s hs
-                 | statusCode s == 200 &&
-                   maybe False matches ("ETag" `lookup` hs) =
-                       return $ ResponseBuilder notModified304 hs mempty
-                 | otherwise =
-                       return res
-         case res of
-           ResponseFile s hs _ _ -> 
-               may304 res s hs
-           ResponseBuilder s hs _ -> 
-               may304 res s hs
-           ResponseSource s hs _ -> 
-               may304 res s hs
+         app req $ \res ->
+             do let may304 res s hs
+                        | statusCode s == 200 &&
+                          maybe False matches ("ETag" `lookup` hs) =
+                              ResponseBuilder notModified304 hs mempty
+                        | otherwise =
+                            res
+                    res' = case res of
+                             ResponseFile s hs _ _ -> 
+                                 may304 res s hs
+                             ResponseBuilder s hs _ -> 
+                                 may304 res s hs
+                             ResponseStream s hs _ -> 
+                                 may304 res s hs
+                respond res'
 
 getApplicationDev :: IO (Int, Application)
 getApplicationDev =

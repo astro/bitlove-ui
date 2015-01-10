@@ -78,6 +78,7 @@ library
                 EmptyDataDecls
                 NoMonomorphismRestriction
                 RankNTypes
+                ViewPatterns
 
     build-depends: base                          >= 4.6.0.1
                  , yesod                         >= 1.2.2.1
