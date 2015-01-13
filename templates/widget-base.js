@@ -59,7 +59,7 @@ function doSend(urls, cb) {
     }).join("&");
 
     var cl = new XHR();
-    cl.open('GET', 'http://api.bitlove.org/by-enclosure.json?' + q);
+    cl.open('GET', 'https://api.bitlove.org/by-enclosure.json?' + q);
     cl.onreadystatechange = function() {
 	if (this.readyState == this.DONE) {
             sending = false;
