@@ -219,6 +219,4 @@ makeDBPool dbconf =
 
 
 getFaviconR :: Handler ()
-getFaviconR =
-    redirectWith (Status 301 "Over there") $ StaticR $ StaticRoute ["favicon.png"] []
-    
+getFaviconR = sendFile "image/x-icon" $ "static/favicon.ico"
