@@ -3,7 +3,7 @@ import Yesod.Default.Config (AppConfig (..), loadConfig, configSettings, csParse
 import Settings
 import Application          (makeApplication)
 import System.Environment (getArgs)
-import Network.Wai.Handler.Warp (runSettings, defaultSettings, settingsHost, settingsPort)
+import Network.Wai.Handler.Warp (runSettings, defaultSettings, setHost, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 
 fromArgs :: IO (AppConfig BitloveEnv Settings.Extra)
@@ -25,10 +25,9 @@ main = do
   config <- fromArgs 
   app <- makeApplication config
   print config
-  let settings = defaultSettings
-                        { settingsPort = appPort config
-                        , settingsHost = appHost config
-                        }
+  let settings = setHost (appHost config) $
+                 setPort (appPort config) $
+                 defaultSettings
       extra = appExtra config
       run = case (extraCert extra, extraKey extra) of
               (Nothing, Nothing) ->

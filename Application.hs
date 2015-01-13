@@ -26,7 +26,6 @@ import qualified Data.ByteString.Char8 as BC
 --import Data.Monoid
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
-import Control.Monad.Trans.Resource
 
 
 -- Import all relevant handler modules here.
@@ -69,7 +68,7 @@ makeApplication conf = do
     foundation <- makeUIFoundation conf uiPool
     tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost <$> stats <$> etagMiddleware <$>
+    ui <- enforceVhost <$> stats <$> autohead <$> etagMiddleware <$>
           toWaiApp foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
@@ -92,7 +91,7 @@ makeApplication conf = do
                    then anyApp apps req respond
                    else respond res
     anyApp [] =
-        \req respond ->
+        \_req respond ->
             respond $ ResponseBuilder (Status 404 "Not found") [] mempty
     enforceVhost :: Middleware
     enforceVhost app req respond =
@@ -115,15 +114,23 @@ makeApplication conf = do
         do cpu1 <- getCPUTime
            utc1 <- getCurrentTime
            app req $ \res ->
-               do let res' = res `seq` res
-
-                  cpu2 <- getCPUTime
+               do cpu2 <- res `seq`
+                          getCPUTime
                   utc2 <- getCurrentTime
+
+                  a <- respond res
+
+                  cpu3 <- getCPUTime
+                  utc3 <- getCurrentTime
                   BC.hPutStrLn stderr $ BC.concat
                              [ "["
                              , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
+                             , "+"
+                             , BC.pack $ show (truncate $ (utc3 `diffUTCTime` utc2) * 1000 :: Int)
                              , "ms real "
                              , BC.pack $ show ((cpu2 - cpu1) `div` 1000000000)
+                             , "+"
+                             , BC.pack $ show ((cpu3 - cpu2) `div` 1000000000)
                              , "ms cpu] "
                              , BC.pack $ show $ remoteHost req
                              , " "
@@ -134,7 +141,7 @@ makeApplication conf = do
                              , rawPathInfo req
                              ]
 
-                  respond res'
+                  return a
            
     etagMiddleware app req respond =
       do let reqETags = 
@@ -160,6 +167,7 @@ makeApplication conf = do
                                  may304 res s hs
                              ResponseStream s hs _ -> 
                                  may304 res s hs
+                             raw -> raw
                 respond res'
 
 getApplicationDev :: IO (Int, Application)
