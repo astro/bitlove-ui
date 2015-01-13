@@ -26,6 +26,7 @@ import qualified Data.ByteString.Char8 as BC
 --import Data.Monoid
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
+import Network.Wai.Middleware.Gzip
 
 
 -- Import all relevant handler modules here.
@@ -68,8 +69,8 @@ makeApplication conf = do
     foundation <- makeUIFoundation conf uiPool
     tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost <$> stats <$> autohead <$> etagMiddleware <$>
-          toWaiApp foundation
+    ui <- enforceVhost <$> stats <$> gzip def <$> autohead <$> etagMiddleware <$>
+          toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
     anyApp [app] = 
