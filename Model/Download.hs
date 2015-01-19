@@ -120,6 +120,10 @@ enclosureDownloads :: Text -> Query Download
 enclosureDownloads url =
   query "SELECT * FROM get_enclosure_downloads(?)" [toSql url]
   
+guidDownloads :: Text -> Query Download
+guidDownloads guid =
+  query "SELECT * FROM get_guid_downloads(?)" [toSql guid]
+
 feedDownloads :: Text -> QueryPage -> Query Download
 feedDownloads url page =
   query "SELECT * FROM get_recent_downloads(?, ?, ?)" $

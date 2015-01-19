@@ -17,25 +17,34 @@ getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
   -- For CORS:
   addHeader "Access-Control-Allow-Origin" "*"
-  
-  urls <- map snd `fmap`
-          filter (("url" `T.isPrefixOf`) . fst) `fmap`
-          reqGetParams `fmap` 
-          getRequest
-  urlDownloads <- withDB $ \db ->
-    forM urls $ \url ->
-        (url, ) `fmap`
-        let url' = rewriteUrl url
-        in enclosureDownloads url' db
+
+  params <- reqGetParams <$> getRequest
+  let fromParams :: T.Text -> [T.Text]
+      fromParams prefix = map snd $
+                          filter ((prefix `T.isPrefixOf`) . fst)
+                          params
+      urls = fromParams "url"
+      guids = fromParams  "guid"
+  resDownloads <- withDB $ \db ->
+                  do urlDownloads <-
+                         forM urls $ \url ->
+                             (url, ) <$>
+                             let url' = rewriteUrl url
+                             in enclosureDownloads url' db
+                     guidDownloads <-
+                         forM guids $ \guid ->
+                             (guid, ) <$>
+                             enclosureDownloads guid db
+                     return $ concat [urlDownloads, guidDownloads]
   -- Drop enclosures with no associated download
-  let urlDownloads' = filter ((> 0) . length . snd) urlDownloads
-  RepJson `fmap` 
-          toContent `fmap`
-          object `fmap` 
+  let resDownloads' = filter ((> 0) . length . snd) resDownloads
+  RepJson <$>
+          toContent <$>
+          object <$>
           mapM (\(url, downloads) -> do
                   json <- downloadToJson downloads
                   return $ url .= json
-               ) urlDownloads'
+               ) resDownloads'
 
     where downloadToJson downloads@(d:_) = do
                        sources <- mapM sourceToJson downloads
