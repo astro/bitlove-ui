@@ -31,11 +31,11 @@ getByEnclosureJson = do
                              (url, ) <$>
                              let url' = rewriteUrl url
                              in enclosureDownloads url' db
-                     guidDownloads <-
+                     guidDownloads' <-
                          forM guids $ \guid ->
                              (guid, ) <$>
-                             enclosureDownloads guid db
-                     return $ concat [urlDownloads, guidDownloads]
+                             guidDownloads guid db
+                     return $ concat [urlDownloads, guidDownloads']
   -- Drop enclosures with no associated download
   let resDownloads' = filter ((> 0) . length . snd) resDownloads
   RepJson <$>

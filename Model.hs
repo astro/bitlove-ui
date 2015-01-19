@@ -26,6 +26,7 @@ module Model (
   mostDownloaded,
   userDownloads,
   enclosureDownloads,
+  guidDownloads,
   feedDownloads,
   searchDownloads,
   -- Model.Item
