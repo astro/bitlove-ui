@@ -128,7 +128,7 @@ instance Yesod UIApp where
           addScript $ StaticR js_graphs_js
           addScriptRemote "https://api.flattr.com/js/0.6/load.js?mode=auto&popout=0&button=compact"
           $(widgetFile "default-layout")
-        giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     urlRenderOverride y s =
         Just $ uncurry (joinPath y "") $ renderRoute s
