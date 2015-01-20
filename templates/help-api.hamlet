@@ -9,6 +9,8 @@ $newline always
     <li>
       <a href="#by-enclosure">Torrent data by enclosure URL
     <li>
+      <a href="#by-guid">Torrent data by GUID
+    <li>
       <a href="#feed-lookup">Feed lookup by URL
   
   <h3 #crawling>Crawling the site</h3>
@@ -30,7 +32,24 @@ $newline always
     This API is #
     <a href="http://enable-cors.org/">CORS-enabled
     \ and in actual use by the widgets.
- 
+
+  <h3 #by-guid>Torrent data by GUID
+  <p>
+    Are your file URLs non-predictable? Starting January 2015 you may tag like that:
+  <pre>#{by_guid_source}
+  <p>
+    If you don't provide per-enclosure GUIDs we'll just use RSS'
+    <code>&lt;guid/&gt;
+    or ATOM's
+    <code>&lt;id/&gt;
+    . Please be aware that this mechanism follows the definition of user-supplied input very closely. Anyone could lookup your GUIDs and put them in their own Bitlove-fed feeds.
+  <p>
+    Use by replacing
+    <code>url=
+    with
+    <code>guid=
+    in the API call.
+
   <h3 #feed-lookup>Feed lookup by URL
   <p>
     Discover the URL of public feeds with their enclosures mapped to torrents:

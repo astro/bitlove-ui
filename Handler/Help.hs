@@ -34,6 +34,9 @@ getHelpApiR =
     let by_enclosure_example = 
             T.pack $
             BC.unpack $(embedFile "templates/help-api-by-enclosure-example.text")
+        by_guid_source = 
+            T.pack $
+            BC.unpack $(embedFile "templates/help-api-by-guid-source.text")
         feed_lookup_example = 
             T.pack $
             BC.unpack $(embedFile "templates/help-api-feed-lookup-example.text")

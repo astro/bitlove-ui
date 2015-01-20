@@ -1,0 +1,9 @@
+<!-- RSS -->
+<enclosure url="..."
+           xmlns:bitlove="http://bitlove.org"
+           bitlove:guid="6afe059f5b2ff7ba5590d5eb54be6c24" />
+<!-- ATOM -->
+<link rel="enclosure"
+      href="..."
+      xmlns:bitlove="http://bitlove.org"
+      bitlove:guid="6afe059f5b2ff7ba5590d5eb54be6c24" />
