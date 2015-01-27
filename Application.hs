@@ -27,6 +27,7 @@ import qualified Data.ByteString.Char8 as BC
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Autohead
 import Network.Wai.Middleware.Gzip
+import Network.HTTP.Types
 
 
 -- Import all relevant handler modules here.
@@ -67,9 +68,10 @@ makeApplication conf = do
     uiPool <- makeDBPool dbconf
     trackerPool <- makeDBPool dbconf
     foundation <- makeUIFoundation conf uiPool
-    tracker <- makeTrackerApp trackerPool >>= toWaiAppPlain
+    tracker <- ignoreAccept <$>
+               (makeTrackerApp trackerPool >>= toWaiAppPlain)
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost <$> stats <$> gzip def <$> autohead <$> etagMiddleware <$>
+    ui <- enforceVhost <$> stats <$> gzip def <$> autohead <$> etagMiddleware <$> ignoreAccept <$>
           toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
@@ -170,6 +172,16 @@ makeApplication conf = do
                                  may304 res s hs
                              raw -> raw
                 respond res'
+
+    -- | Ignore the "Accept:" header because Yesod is very strict
+    -- about typed content choice.
+    ignoreAccept :: Middleware
+    ignoreAccept app req = app req'
+        where requestHeaders' = requestHeaders req
+              removeHeader :: HeaderName -> RequestHeaders -> RequestHeaders
+              removeHeader name = filter ((name /=) . fst)
+              requestHeaders'' = removeHeader hAccept requestHeaders'
+              req' = req { requestHeaders = requestHeaders'' }
 
 getApplicationDev :: IO (Int, Application)
 getApplicationDev =
