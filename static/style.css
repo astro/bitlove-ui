@@ -343,6 +343,8 @@ section.downloads li a img {
   margin: 0;
   padding: 0;
   text-align: center;
+  /* HACK to push footer down: */
+  display: inline-block;
 }
 .content:after {
   clear: both;
@@ -535,6 +537,8 @@ h3 a:hover { color: #464646; }
   font-size: 70%;
   margin-top: .2em;
   margin-bottom: 1.5em;
+  overflow: clip;
+  text-overflow: allipsis;
 }
 .homepage a {
   font-weight: normal;
