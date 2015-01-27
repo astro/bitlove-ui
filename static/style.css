@@ -537,8 +537,8 @@ h3 a:hover { color: #464646; }
   font-size: 70%;
   margin-top: .2em;
   margin-bottom: 1.5em;
-  overflow: clip;
-  text-overflow: allipsis;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .homepage a {
   font-weight: normal;
