@@ -37,7 +37,7 @@ addCounter kind infoHash increment db = do
 getDownloadCounter :: Text -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 getDownloadCounter path start stop interval =
   -- | "info_hash LIKE 'GET /%.torrent'" to use VIEW counters_get
-  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\") FROM counters WHERE info_hash LIKE 'GET /%.torrent' AND info_hash='GET '||?::BYTEA \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql path, toSql start, toSql stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\") FROM counters WHERE info_hash LIKE 'GET /%.torrent' AND info_hash='GET '||?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql path, toSql start, toSql stop]
 
 getGauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 getGauge kind info_hash start stop interval =
