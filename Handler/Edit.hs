@@ -16,10 +16,10 @@ getUserDetailsR user = do
     [] ->
       notFound
     details:_ ->
-      returnJson [ "title" .= userTitle details
-                 , "image" .= userImage details
-                 , "homepage" .= userHomepage details
-                 ]
+      returnJson ([ ("title", userTitle details)
+                  , ("image", userImage details)
+                  , ("homepage", userHomepage details)
+                  ])
 
 postUserDetailsR :: UserName -> Handler RepJson
 postUserDetailsR user = do
@@ -54,14 +54,14 @@ putUserFeedR user slug = do
   
   link <- ($ UserFeedR user slug) `fmap`
           getUrlRender
-  returnJson ["link" .= link]
+  returnJson [("link", link)]
     
     where validateSlug :: Text -> Bool
           validateSlug slg = T.length slg >= 1 &&
                               all (\c ->
                                     isAsciiLower c ||
                                     isDigit c ||
-                                    c `elem` "-_"
+                                    c `elem` ("-_"::String)
                                   ) (T.unpack slg)
 
 deleteUserFeedR :: UserName -> Text -> Handler RepJson
@@ -69,7 +69,7 @@ deleteUserFeedR user slug = do
   _deleted <- withDB $ Model.deleteUserFeed user slug
   link <- ($ UserR user) `fmap`
           getUrlRender
-  returnJson ["link" .= link]
+  returnJson [("link", link)]
 
 getUserFeedDetailsR :: UserName -> Text -> Handler RepJson
 getUserFeedDetailsR user slug = do
@@ -78,8 +78,8 @@ getUserFeedDetailsR user slug = do
     [] ->
       notFound
     details:_ ->
-      returnJson [ "public" .= fdPublic details
-                 , "title" .= fdTitle details
+      returnJson [ ("public", Just $ T.pack $ show $ fdPublic details)
+                 , ("title", fdTitle details)
                  ]
 
 postUserFeedDetailsR :: UserName -> Text -> Handler RepJson

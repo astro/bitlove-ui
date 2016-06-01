@@ -34,7 +34,7 @@ import Model
 import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
 import Control.Applicative
-import Data.Conduit.Pool
+import Data.Pool
 import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import Settings.StaticFiles
@@ -236,19 +236,18 @@ withDB :: HasDB y => Transaction a -> HandlerT y IO a
 withDB f = do
     pool <- getDBPool
     liftIO $ runResourceT $ withDBPool pool f
-    
+
+-- TODO: could use more of ResourceT
 withDBPool :: DBPool -> Transaction a -> ResourceT IO a
-withDBPool pool f = do
-    -- TODO: use takeResourceCheck
-    db <- takeResource pool
+withDBPool pool f = liftIO $ do
+    (db, localPool) <- takeResource pool
     ea <- liftIO $
-          E.catch (Right <$> HDBC.withTransaction (mrValue db) f)
+          E.catch (Right <$> HDBC.withTransaction db f)
           (return . Left)
     case ea of
       Left (e :: E.SomeException) ->
-          do mrRelease db
+          do destroyResource pool localPool db
              E.throw e
       Right a ->
-          do mrReuse db True
-             mrRelease db
+          do putResource localPool db
              return a

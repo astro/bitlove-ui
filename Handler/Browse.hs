@@ -5,7 +5,6 @@ import qualified Data.Text as T
 import Data.Maybe
 import Data.Foldable (Foldable)
 import Data.Time.Format
-import System.Locale
 import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
 import Text.Blaze.Internal (MarkupM)
@@ -596,7 +595,7 @@ humanSize' n = foldl (\(n', unit) unit' ->
                           if n' < 1024
                           then (n', unit)
                           else (n' / 1024, [unit'])
-                     ) (n, "") "KMGT"
+                     ) (n, "") ("KMGT"::String)
 
 downloadLabel :: Download -> Text
 downloadLabel d =
@@ -625,7 +624,7 @@ downloadLabel d =
                    , ("audio-mp4a-latm", "M4A")
                    ]
           ext fn = 
-              let fn' = T.takeWhile (not . (`elem` "?#")) fn
+              let fn' = T.takeWhile (not . (`elem` ("?#"::String))) fn
                   mayLast :: [a] -> Maybe a
                   mayLast xs 
                       | null xs = Nothing

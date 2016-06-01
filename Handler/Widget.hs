@@ -2,8 +2,7 @@ module Handler.Widget where
 
 import Prelude
 import Data.FileEmbed (embedFile)
-import Blaze.ByteString.Builder (fromByteString)
-import Blaze.ByteString.Builder.Internal.Types (Builder)
+import Blaze.ByteString.Builder (fromByteString, Builder)
 import Data.Monoid
 
 import Import

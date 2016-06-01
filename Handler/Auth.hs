@@ -108,7 +108,7 @@ Thanks for sharing
                                   all (\c ->
                                            isAsciiLower c ||
                                            isDigit c ||
-                                           c `elem` "-_"
+                                           c `elem` ("-_"::String)
                                       ) (T.unpack name)
           sendError :: Text -> Handler a
           sendError e = defaultLayout (do

@@ -11,7 +11,7 @@ import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
 import Network.HTTP.Conduit (newManager, conduitManagerSettings)
-import Data.Conduit.Pool
+import Data.Pool
 import Database.HDBC as HDBC (disconnect)
 import Database.HDBC.PostgreSQL
 import qualified Data.Aeson as Aeson

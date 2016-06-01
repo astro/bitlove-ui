@@ -70,7 +70,7 @@ fromBytea sql =
           fromHex hex
       text' ->
           let unescape ('\\':c:t)
-                  | c `elem` "\\\"\'" = 
+                  | c `elem` ("\\\"\'"::String) =
                       c : unescape t
                   | c == 'n' =
                       '\n' : unescape t

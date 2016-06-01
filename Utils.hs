@@ -5,7 +5,6 @@ module Utils ( iso8601, rfc822, localTimeToZonedTime
 
 import Prelude
 import Data.Time
-import System.Locale
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.Char8 as BC
@@ -20,7 +19,7 @@ iso8601 time =
     zone
     where zone = case formatTime defaultTimeLocale "%z" time of
                    (sig:digits@(h1:h2:m1:m2))
-                     | sig `elem` "+-" &&
+                     | sig `elem` ("+-"::String) &&
                        all isDigit digits ->
                          sig:h1:h2:':':m1:m2
                    _ ->
