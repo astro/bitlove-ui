@@ -3,7 +3,9 @@
 module Model.Query where
 
 import Prelude
-import Database.HDBC
+import Hasql.Connection (Connection)
+import Hasql.Query (statement)
+import qualified Hasql.Session as HS
 import Data.Convertible
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
@@ -22,13 +24,16 @@ import Utils
 instance Convertible [SqlValue] T.Text where
   safeConvert = safeConvert . head
 
-type Query e = forall conn. (IConnection conn) => conn -> IO [e]
+type Query e = Connection -> IO [e]
 
-query :: (IConnection conn,
-          Convertible [SqlValue] e
-         ) => String -> [SqlValue] -> conn -> IO [e]
+query :: (Convertible [SqlValue] e)
+      => String -> [SqlValue] -> Connection -> IO [e]
 query sql args conn = do
-  rows <- quickQuery' conn sql args
+  let sql' = BC.pack sql
+      session = do
+        statement sql' encoder decoder True
+  rows <- either id (const []) <$>
+          run session conn
   concat <$> mapM tryRow rows
     where tryRow row =
               do let caught :: E.SomeException -> String

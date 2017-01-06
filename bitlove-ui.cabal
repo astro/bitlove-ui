@@ -102,8 +102,7 @@ library
                  , http-conduit                  >= 1.9.5
                  , directory                     >= 1.2.0.1
                  , resource-pool                 >= 0.2.3
-                 , HDBC                          >= 2.3.1.2
-                 , HDBC-postgresql               >= 2.3.2.1
+                 , hasql                         >= 0.19.14
                  , resourcet                     >= 0.4.8
                  , unordered-containers          >= 0.2.3.0
                  , aeson                         >= 0.6.2.0

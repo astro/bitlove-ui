@@ -12,8 +12,7 @@ import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
 import Network.HTTP.Conduit (newManager, conduitManagerSettings)
 import Data.Pool
-import Database.HDBC as HDBC (disconnect)
-import Database.HDBC.PostgreSQL
+import qualified Hasql.Connection as Connection
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
@@ -213,20 +212,28 @@ parseDBConf = return . parse
             _ ->
               error ("Cannot parse: " ++ show v)
         parse _ = error "Expected JSON object"
-    
+
+connectDB :: [(String, String)] -> IO Connection.Connection
+connectDB dbconf = do
+  let getConf key =
+        fromMaybe "" $
+        lookup key dbconf
+      settings =
+        Connection.settings
+        (getConf "host")
+        (getConf "port")
+        (getConf "user")
+        (getConf "password")
+        (getConf "database")
+  either (error . show) id <$>
+    Connection.acquire settings
+
 makeDBPool :: [(String, String)] -> IO DBPool
 makeDBPool dbconf =
-  let dbconf' :: [([Char], [Char])]
-      dbconf' = filter ((`elem` ["host", "hostaddr",
-                                 "port", "dbname",
-                                 "user", "password"]) . fst) dbconf
-      dbconf'' = unwords $
-                 map (\(k, v) ->
-                       k ++ "=" ++ v
-                     ) dbconf'
+  let connect = connectDB dbconf
   in createPool
-     (hPutStrLn stderr "connectPostgreSQL" >> connectPostgreSQL dbconf'')
-     (\db -> hPutStrLn stderr "HDBC.disconnect" >> HDBC.disconnect db)
+     (hPutStrLn stderr "connectPostgreSQL" >> connect)
+     (\db -> hPutStrLn stderr "HDBC.disconnect" >> Connection.release db)
      4 60 4
 
 

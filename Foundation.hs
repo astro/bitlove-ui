@@ -35,8 +35,7 @@ import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
 import Control.Applicative
 import Data.Pool
-import qualified Database.HDBC as HDBC (withTransaction)
-import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
+import Hasql.Connection (Connection)
 import Settings.StaticFiles
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -51,7 +50,7 @@ import PathPieces
 import BitloveAuth
 
 
-type DBPool = Pool PostgreSQL.Connection
+type DBPool = Pool Connection
 
 
 -- | The site argument for your application. This can be a good place to
@@ -229,7 +228,7 @@ class HasDB y where
 instance HasDB UIApp where
     getDBPool = uiDBPool <$> getYesod
   
-type Transaction a = PostgreSQL.Connection -> IO a
+type Transaction a = Connection -> IO a
     
 -- How to run database actions.
 withDB :: HasDB y => Transaction a -> HandlerT y IO a
