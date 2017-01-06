@@ -5,11 +5,10 @@ import Prelude
 import Yesod
 import qualified Network.Wai as Wai
 import Control.Monad
-import Control.Applicative
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
-import Network.Socket (SockAddr (..))
+import Network.Socket (SockAddr (..), HostName, getAddrInfo, addrAddress, tupleToHostAddress, tupleToHostAddress6)
 import Data.Word (Word32)
 import Data.Bits
 import System.Random (randomRIO)
@@ -182,24 +181,50 @@ getRawQuery =
     waiRequest
     
 getRemoteAddr :: Handler PeerAddress
-getRemoteAddr =
-  do remote <- Wai.remoteHost `fmap`
-               waiRequest
-     return $
-            case remote of
-              SockAddrInet _ haddr ->
-                  Peer4 $ wordToByteString haddr
-              SockAddrInet6 _ _ (0, 0, 0xffff, haddr) _ ->
-                  Peer4 $ wordToByteString haddr
-              SockAddrInet6 _ _ (h6, h6', h6'', h6''') _ ->
-                  Peer6 $ B.concat [ wordToByteString h6
-                                   , wordToByteString h6'
-                                   , wordToByteString h6''
-                                   , wordToByteString h6'''
-                                   ]
-              SockAddrUnix _ ->
-                  error "Cannot use tracker over unix sockets :-)"
-    
+getRemoteAddr = do
+  req <- waiRequest
+  let remote = normalize $ Wai.remoteHost req
+  toPeerAddress <$>
+    case isLocalhost remote of
+      False -> return remote
+      True ->
+        liftIO $
+        fromMaybe (return remote) $
+        fmap (parseAddr . BC.unpack) $
+        "X-Real-IP" `lookup` Wai.requestHeaders req
+
+      where
+        normalize (SockAddrInet6 port _ (0, 0, 0xffff, haddr) _) =
+          SockAddrInet port haddr
+        normalize sockaddr =
+          sockaddr
+
+        toPeerAddress (SockAddrInet _ haddr) =
+          Peer4 $ wordToByteString haddr
+        toPeerAddress (SockAddrInet6 _ _ (h6, h6', h6'', h6''') _) =
+          Peer6 $ B.concat [ wordToByteString h6
+                           , wordToByteString h6'
+                           , wordToByteString h6''
+                           , wordToByteString h6'''
+                           ]
+        toPeerAddress _ =
+          error "Must not happen"
+
+        isLocalhost (SockAddrInet _ addr)
+          | addr == tupleToHostAddress (127, 0, 0, 1) =
+              True
+        isLocalhost (SockAddrInet6 _ _ addr _)
+          | addr == tupleToHostAddress6 (0, 0, 0, 0, 0, 0, 0, 1) =
+              True
+        isLocalhost _ =
+          False
+
+        parseAddr :: HostName -> IO SockAddr
+        parseAddr s =
+          addrAddress <$>
+          head <$>
+          getAddrInfo Nothing (Just s) Nothing
+
 wordToByteString :: Word32 -> B.ByteString
 wordToByteString w =
     B.pack $
