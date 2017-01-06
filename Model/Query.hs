@@ -22,7 +22,7 @@ import Utils
 instance Convertible [SqlValue] T.Text where
   safeConvert = safeConvert . head
 
-type Query e = IConnection conn => conn -> IO [e]
+type Query e = forall conn. (IConnection conn) => conn -> IO [e]
 
 query :: (IConnection conn,
           Convertible [SqlValue] e
