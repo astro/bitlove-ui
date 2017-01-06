@@ -31,9 +31,9 @@ ourSeeders = do
            , Peer6 "\x2a\x01\x04\xf8\x01\x60\x54\x21\x00\x00\x00\x00\x00\x00\x00\x03"
            ]
   return $ TrackedPeer ourPeerId addr 6881
-  
+
 data TrackerApp = TrackerApp
-    { trackerDBPool :: DBPool 
+    { trackerDBPool :: DBPool
     , trackerAnnounceQueue :: WQ.Queue
     , trackerScrapeQueue :: WQ.Queue
     }
@@ -59,7 +59,7 @@ makeTrackerApp pool =
 newtype RepBenc = RepBenc Benc.BValue
 
 instance ToContent RepBenc where
-    toContent (RepBenc v) = 
+    toContent (RepBenc v) =
         ContentBuilder (Benc.toBuilder v) Nothing
 
 instance ToTypedContent RepBenc where
@@ -100,14 +100,14 @@ getAnnounceR = do
     Just tr ->
         do let isSeeder = trLeft tr == 0
            -- Read first
-           (peers, scraped) <- 
+           (peers, scraped) <-
                withDB $ \db ->
-                   do peers <- (ourSeeders ++) `fmap` getPeers (trInfoHash tr) isSeeder db
+                   do peers <- (ourSeeders ++) <$> getPeers (trInfoHash tr) isSeeder db
                       scraped <- safeScrape (trInfoHash tr) db
                       return (peers, scraped)
            -- Write in background
-           aQ <- trackerAnnounceQueue `fmap` getYesod
-           sQ <- trackerScrapeQueue `fmap` getYesod
+           aQ <- trackerAnnounceQueue <$> getYesod
+           sQ <- trackerScrapeQueue <$> getYesod
            pool <- getDBPool
            liftIO $ WQ.enqueue aQ $
                   do withDBPool pool $ announcePeer tr
@@ -148,38 +148,38 @@ getAnnounceR = do
 getScrapeR :: Handler RepBenc
 getScrapeR = do
   query <- getRawQuery
-  let mInfoHash = Model.InfoHash `fmap` 
+  let mInfoHash = Model.InfoHash <$>
                   (join $ "info_hash" `lookup` query)
   (infoHash, scraped) <-
       case mInfoHash of
         Nothing ->
             notFound
         Just infoHash ->
-            (infoHash, ) `fmap`
+            (infoHash, ) <$>
             withDB (safeScrape infoHash)
 
   return $ RepBenc $
-         Benc.BDict 
+         Benc.BDict
          [("host",
-           Benc.BDict 
+           Benc.BDict
            [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
-             Benc.BDict 
+             Benc.BDict
              [("incomplete", Benc.BInt $ scrapeLeechers scraped),
               ("complete", Benc.BInt $ scrapeSeeders scraped + 1),
               ("downloaded", Benc.BInt $ scrapeDownloaded scraped)]
             )]
           )]
-             
+
 safeScrape :: Model.InfoHash -> Transaction ScrapeInfo
-safeScrape infoHash db = 
-    (head . (++ [ScrapeInfo 0 0 0 0])) `fmap` 
+safeScrape infoHash db =
+    (head . (++ [ScrapeInfo 0 0 0 0])) <$>
     scrape infoHash db
-         
+
 getRawQuery :: Handler [(BC.ByteString, Maybe BC.ByteString)]
-getRawQuery = 
-    Wai.queryString `fmap`
+getRawQuery =
+    Wai.queryString <$>
     waiRequest
-    
+
 getRemoteAddr :: Handler PeerAddress
 getRemoteAddr = do
   req <- waiRequest
@@ -230,7 +230,7 @@ wordToByteString w =
     B.pack $
     map (fromIntegral . (.&. 0xFF) . (w `shiftR`) . (* 8)) $
     reverse [0..3]
-    
+
 portToByteString :: Int -> B.ByteString
 portToByteString p =
   B.pack $
