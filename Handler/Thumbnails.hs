@@ -37,7 +37,7 @@ generateThumbnail url size =
                      (source $$+- resize =$ CL.consume)
   where download :: Manager -> ResourceT IO (Maybe (ResumableSource (ResourceT IO) B.ByteString))
         download manager = do
-          req <- parseUrl $ T.unpack url
+          req <- parseRequest $ T.unpack url
           res <- http req manager
           case res of
             _ | statusCode (responseStatus res) == 200 ->
