@@ -125,6 +125,11 @@ makeApplication conf = do
 
                   cpu3 <- getCPUTime
                   utc3 <- getCurrentTime
+
+                  let remote = show $ remoteHost req
+                      proxied = BC.unpack <$>
+                                "X-Real-IP" `lookup` requestHeaders req
+                      remote' = maybe remote ((remote ++ "/") ++) proxied
                   BC.hPutStrLn stderr $ BC.concat
                              [ "["
                              , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
@@ -135,7 +140,7 @@ makeApplication conf = do
                              , "+"
                              , BC.pack $ show ((cpu3 - cpu2) `div` 1000000000)
                              , "ms cpu] "
-                             , BC.pack $ show $ remoteHost req
+                             , BC.pack $ remote'
                              , " "
                              , BC.pack $ show $ statusCode $ responseStatus res
                              , " "
