@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+-- TODO: "SET client_encoding = 'UTF8'"
 module Foundation
     ( BitloveEnv (..)
     , UIApp (..)

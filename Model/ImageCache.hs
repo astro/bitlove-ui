@@ -4,7 +4,7 @@ module Model.ImageCache where
 import Prelude
 import Data.Convertible
 import Data.Text (Text)
-import Database.HDBC
+import Model.SqlValue
 import qualified Data.ByteString.Lazy as LB
 
 import Model.Query

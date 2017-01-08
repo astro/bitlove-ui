@@ -6,13 +6,14 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Database.HDBC
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Aeson
 import System.Random
 import Control.Applicative
+import qualified Database.PostgreSQL.LibPQ as PQ
 
+import Model.SqlValue
 import Model.Query
 import Utils
 
@@ -55,8 +56,7 @@ userDetailsByName user =
     query "SELECT COALESCE(\"title\", ''), COALESCE(\"image\", ''), COALESCE(\"homepage\", '') FROM users WHERE \"name\"=$1"
     [toSql user]
 
-setUserDetails :: IConnection conn => 
-                  UserName -> UserDetails -> conn -> IO ()
+setUserDetails :: UserName -> UserDetails -> PQ.Connection -> IO ()
 setUserDetails user details db = do
   1 <- run db "UPDATE users SET \"title\"=?, \"image\"=?, \"homepage\"=? WHERE \"name\"=?"
        [toSql $ userTitle details, toSql $ userImage details, toSql $ userHomepage details, toSql user]
@@ -99,16 +99,14 @@ userSalt :: UserName -> Query UserSalt
 userSalt user =
     query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [toSql user]
     
-setUserSalted :: IConnection conn => 
-                 UserName -> Salted -> conn -> IO ()
+setUserSalted :: UserName -> Salted -> PQ.Connection -> IO ()
 setUserSalted user salted db = do
   1 <- run db
        "UPDATE users SET \"salted\"=? WHERE \"name\"=?"
        [toSql salted, toSql user]
   return ()
                  
-registerUser :: IConnection conn => 
-                UserName -> Text -> conn -> IO (Maybe Salt)
+registerUser :: UserName -> Text -> PQ.Connection -> IO (Maybe Salt)
 registerUser username email db = do
   r <- quickQuery' db 
        "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?" 

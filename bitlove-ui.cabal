@@ -27,6 +27,7 @@ library
                      PathPieces
                      Import
                      Model
+                     Model.SqlValue
                      Model.Query
                      Model.Item
                      Model.Download
@@ -102,7 +103,8 @@ library
                  , http-conduit                  >= 1.9.5
                  , directory                     >= 1.2.0.1
                  , resource-pool                 >= 0.2.3
-                 , hasql                         >= 0.19.14
+                 , postgresql-libpq              == 0.9.*
+                 , postgresql-binary             >= 0.9.1.1 && < 0.10
                  , resourcet                     >= 0.4.8
                  , unordered-containers          >= 0.2.3.0
                  , aeson                         >= 0.6.2.0
