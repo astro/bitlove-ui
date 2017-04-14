@@ -7,32 +7,33 @@ import Data.Text (Text)
 import Model.SqlValue
 import qualified Data.ByteString.Lazy as LB
 
+import Foundation
 import Model.Query
 
 data CachedImage = CachedImage LB.ByteString
-                 | CachedError String
+                 | CachedError Text
 
 instance Convertible [SqlValue] CachedImage where
     safeConvert [data_, err] 
         | not (LB.null $ fromBytea data_) =
             Right $ CachedImage $ fromBytea data_
         | otherwise =
-            Right $ CachedError $ fromSql err
+            Right $ CachedError $ convert err
     safeConvert _ = Right $ CachedError "safeConvert CachedImage error"
 
 getImage :: Text -> Int -> Query CachedImage
 getImage url size =
     query "SELECT \"data\", \"error\" FROM cached_images WHERE \"url\"=? AND \"size\"=?" 
-    [toSql url, toSql size]
+    [convert url, convert size]
 
-putImage :: IConnection conn => 
-            Text -> Int -> CachedImage -> conn -> IO ()
+putImage :: Text -> Int -> CachedImage -> Database -> IO ()
 putImage url size cached db =
-    do 1 <- case cached of
+    do Just _ <-
+         case cached of
               CachedError err ->
-                  run db "INSERT INTO cached_images (\"url\", \"size\", \"error\", \"time\") VALUES (?, ?, ?, NOW())" 
-                  [toSql url, toSql size, toSql err]
+                  query' "INSERT INTO cached_images (\"url\", \"size\", \"error\", \"time\") VALUES (?, ?, ?, NOW())" 
+                  [convert url, convert size, convert err] db
               CachedImage data_ ->
-                  run db "INSERT INTO cached_images (\"url\", \"size\", \"data\", \"time\") VALUES (?, ?, ?, NOW())" 
-                  [toSql url, toSql size, toBytea data_]
+                  query' "INSERT INTO cached_images (\"url\", \"size\", \"data\", \"time\") VALUES (?, ?, ?, NOW())"
+                  [convert url, convert size, toBytea data_] db
        return ()

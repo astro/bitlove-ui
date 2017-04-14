@@ -87,7 +87,7 @@ import PathPieces (DirectoryPage (..))
 
 infoHashByName :: UserName -> Text -> Text -> Query InfoHash
 infoHashByName user slug name =
-  query "SELECT \"info_hash\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
+  query "SELECT \"info_hash\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [convert user, convert slug, convert name]
 
 data Torrent = Torrent {
   torrentInfoHash :: InfoHash,
@@ -99,22 +99,22 @@ data Torrent = Torrent {
 instance Convertible [SqlValue] Torrent where
   safeConvert (info_hash:name:size:torrent:[]) =
     Torrent <$>
-    safeFromSql info_hash <*>
-    safeFromSql name <*>
-    safeFromSql size <*>
+    safeConvert info_hash <*>
+    safeConvert name <*>
+    safeConvert size <*>
     pure (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
 
 torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
-  query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
+  query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [convert user, convert slug, convert name]
   
 purgeTorrent :: IConnection conn => 
                 UserName -> Text -> Text -> conn -> IO Int
 purgeTorrent user slug name db =
-  (fromSql . head . head) `fmap`
+  (convert . head . head) `fmap`
   quickQuery' db "SELECT * FROM purge_download(?, ?, ?)"
-              [toSql user, toSql slug, toSql name]
+              [convert user, convert slug, convert name]
 
 data ActiveUser = ActiveUser
     { activeUser :: UserName
@@ -126,10 +126,10 @@ data ActiveUser = ActiveUser
 instance Convertible [SqlValue] ActiveUser where
     safeConvert (userVal:feedsVal:langsVal:typesVal:[]) =
         ActiveUser <$>
-        safeFromSql userVal <*>
-        safeFromSql feedsVal <*>
-        safeFromSql langsVal <*>
-        safeFromSql typesVal
+        safeConvert userVal <*>
+        safeConvert feedsVal <*>
+        safeConvert langsVal <*>
+        safeConvert typesVal
     safeConvert vals = convError "ActiveUser" vals
     
 getActiveUsers :: Query ActiveUser 
@@ -150,13 +150,13 @@ instance Convertible [SqlValue] DirectoryEntry where
     safeConvert (userVal:userTitleVal:userImageVal:
                  feedSlugVal:feedTitleVal:feedLangVal:feedTypesVal:[]) = 
       DirectoryEntry <$>
-      safeFromSql userVal <*>
-      safeFromSql userTitleVal <*>
-      (fixUrl <$> safeFromSql userImageVal) <*>
-      safeFromSql feedSlugVal <*>
-      safeFromSql feedTitleVal <*>
-      safeFromSql feedLangVal <*>
-      safeFromSql feedTypesVal
+      safeConvert userVal <*>
+      safeConvert userTitleVal <*>
+      (fixUrl <$> safeConvert userImageVal) <*>
+      safeConvert feedSlugVal <*>
+      safeConvert feedTitleVal <*>
+      safeConvert feedLangVal <*>
+      safeConvert feedTypesVal
     safeConvert vals = convError "DirectoryEntry" vals
       
 getDirectory :: Maybe DirectoryPage -> Query DirectoryEntry
@@ -168,6 +168,6 @@ getDirectory mPage =
             Just DirectoryDigit -> 
                 (" WHERE \"user\" ~* E'^[^a-z]'", [])
             Just (DirectoryLetter c) ->
-                (" WHERE LOWER(LEFT(\"user\", 1)) = ?", [toSql [c]])
+                (" WHERE LOWER(LEFT(\"user\", 1)) = ?", [convert [c]])
   in query ("SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',') FROM directory" ++ cond) params
 

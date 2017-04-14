@@ -8,9 +8,9 @@ import Data.Maybe
 import qualified Data.ByteString.Char8 as BC
 import qualified Network.Wai as Wai
 import Web.Cookie
-import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
 import qualified Data.Text as T
 import qualified Data.Map as Map
+import Database.PostgreSQL.LibPQ (Connection)
 
 import Utils
 import Model.Session
@@ -31,7 +31,7 @@ logout :: MonadHandler m => m ()
 logout = deleteSession "user"
 
 
-sessionBackend :: (forall b. (PostgreSQL.Connection -> IO b) -> IO b) -> SessionBackend
+sessionBackend :: (forall b. (Connection -> IO b) -> IO b) -> SessionBackend
 sessionBackend withDB =
     -- | App callback
     SessionBackend $ \req ->

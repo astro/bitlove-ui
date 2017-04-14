@@ -3,7 +3,6 @@ module Model.Download where
 
 import Data.Convertible
 import Prelude
-import Database.HDBC
 import Prelude
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -14,6 +13,7 @@ import Numeric (showHex)
 import Control.Applicative
 
 import Utils
+import Model.SqlValue
 import Model.Query
 import Model.User
 
@@ -71,28 +71,28 @@ instance Convertible [SqlValue] Download where
                homepage:payment:image:
                seeders:leechers:upspeed:downspeed:downloaded:[]) = 
     Download <$>
-    safeFromSql user <*> 
-    safeFromSql slug <*> 
-    safeFromSql feed <*> 
-    safeFromSql item <*> 
-    safeFromSql enclosure <*>
-    safeFromSql info_hash <*> 
-    safeFromSql name <*> 
-    safeFromSql size <*> 
-    safeFromSql type_ <*> 
-    safeFromSql feed_title <*> 
-    safeFromSql title <*> 
-    safeFromSql lang <*> 
-    safeFromSql summary <*> 
-    safeFromSql published <*> 
-    safeFromSql homepage <*> 
-    safeFromSql payment <*> 
-    (fixUrl <$> safeFromSql image) <*> 
-    safeFromSql seeders <*> 
-    safeFromSql leechers <*> 
-    safeFromSql upspeed <*> 
-    safeFromSql downspeed <*> 
-    safeFromSql downloaded    
+    safeConvert user <*> 
+    safeConvert slug <*> 
+    safeConvert feed <*> 
+    safeConvert item <*> 
+    safeConvert enclosure <*>
+    safeConvert info_hash <*> 
+    safeConvert name <*> 
+    safeConvert size <*> 
+    safeConvert type_ <*> 
+    safeConvert feed_title <*> 
+    safeConvert title <*> 
+    safeConvert lang <*> 
+    safeConvert summary <*> 
+    safeConvert published <*> 
+    safeConvert homepage <*> 
+    safeConvert payment <*> 
+    (fixUrl <$> safeConvert image) <*> 
+    safeConvert seeders <*> 
+    safeConvert leechers <*> 
+    safeConvert upspeed <*> 
+    safeConvert downspeed <*> 
+    safeConvert downloaded    
   safeConvert vals = convError "Download" vals
 
 
@@ -109,28 +109,28 @@ popularDownloads page =
 mostDownloaded :: Int -> QueryPage -> Query Download
 mostDownloaded period page =
   query "SELECT * FROM get_most_downloaded(?, ?, ?)" $
-  convert page ++ [toSql period]
+  convert page ++ [convert period]
 
 userDownloads :: UserName -> QueryPage -> Query Download
 userDownloads user page =
   query "SELECT * FROM get_user_recent_downloads(?, ?, ?)" $
-  convert page ++ [toSql user]
+  convert page ++ [convert user]
 
 enclosureDownloads :: Text -> Query Download
 enclosureDownloads url =
-  query "SELECT * FROM get_enclosure_downloads(?)" [toSql url]
+  query "SELECT * FROM get_enclosure_downloads(?)" [convert url]
   
 guidDownloads :: Text -> Query Download
 guidDownloads guid =
-  query "SELECT * FROM get_guid_downloads(?)" [toSql guid]
+  query "SELECT * FROM get_guid_downloads(?)" [convert guid]
 
 feedDownloads :: Text -> QueryPage -> Query Download
 feedDownloads url page =
   query "SELECT * FROM get_recent_downloads(?, ?, ?)" $
-  convert page ++ [toSql url]
+  convert page ++ [convert url]
   
 searchDownloads :: Text -> QueryPage -> Query Download
 searchDownloads needle page =
   query "SELECT * FROM search_feed_items(?, ?, ?)" $
-  convert page ++ [toSql needle]
+  convert page ++ [convert needle]
   

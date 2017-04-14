@@ -4,10 +4,11 @@ module Model.Tracker where
 import Prelude
 import Data.Convertible
 import Data.Data (Typeable)
-import Database.HDBC
 import qualified Data.ByteString.Char8 as BC
 import Control.Applicative
+import Database.PostgreSQL.LibPQ (Connection)
 
+import Model.SqlValue
 import Model.Query
 import Model.Download
 
@@ -21,16 +22,16 @@ data ScrapeInfo = ScrapeInfo {
 instance Convertible [SqlValue] ScrapeInfo where               
   safeConvert (leechers:seeders:downspeed:downloaded:[]) =
     ScrapeInfo <$>
-    safeFromSql leechers <*>
-    safeFromSql seeders <*>
-    safeFromSql downspeed <*>
-    safeFromSql downloaded
+    safeConvert leechers <*>
+    safeConvert seeders <*>
+    safeConvert downspeed <*>
+    safeConvert downloaded
   safeConvert vals = convError "ScrapeInfo" vals
 
 scrape :: InfoHash -> Query ScrapeInfo
 scrape infoHash =
   query "SELECT \"leechers\", \"seeders\", \"downspeed\", COALESCE(\"downloaded\", 0) FROM scraped LEFT JOIN downloaded_stats USING (info_hash) WHERE \"info_hash\"=?"
-  [toSql infoHash]
+  [convert infoHash]
 
 
 
@@ -67,9 +68,9 @@ data TrackedPeer = TrackedPeer !PeerId !PeerAddress !Int
 instance Convertible [SqlValue] TrackedPeer where
     safeConvert (peerId:addr:port:[]) =
         TrackedPeer <$>
-        safeFromSql peerId <*>
-        safeFromSql addr <*>
-        safeFromSql port
+        safeConvert peerId <*>
+        safeConvert addr <*>
+        safeConvert port
     safeConvert vals =
         convError "TrackedPeer" vals
         
@@ -81,7 +82,7 @@ getPeers infoHash onlyLeechers =
             else "tracker"
            ) ++
 	   " WHERE \"info_hash\"=? LIMIT 40")
-              [toSql infoHash]
+              [convert infoHash]
 
 
 data TrackerRequest = TrackerRequest {
@@ -96,28 +97,26 @@ data TrackerRequest = TrackerRequest {
       trCompact :: Bool
     } deriving (Show)
 
-announcePeer :: IConnection conn => 
-                TrackerRequest -> conn -> IO ()
+announcePeer :: TrackerRequest -> Connection -> IO ()
 announcePeer tr db =
     case trEvent tr of
-      Just "stopped" ->
-          run db "DELETE FROM tracked WHERE \"info_hash\"=? AND \"peer_id\"=? RETURNING \"uploaded\", \"downloaded\""
-	    [toSql $ trInfoHash tr, toSql $ trPeerId tr]
-          >>
+      Just "stopped" -> do
+          Just _ <- query' "DELETE FROM tracked WHERE \"info_hash\"=? AND \"peer_id\"=? RETURNING \"uploaded\", \"downloaded\""
+            [convert $ trInfoHash tr, convert $ trPeerId tr] db
           return ()
       _ ->
           do let m :: Convertible a SqlValue => (TrackerRequest -> a) -> SqlValue
-                 m = toSql . ($ tr)
-             _ <-
-                 run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)" $
+                 m = convert . ($ tr)
+             Just _ <-
+                 query' "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)"
                  [m trInfoHash, m trHost, m trPort, m trPeerId, 
-                  m trUploaded, m trDownloaded, m trLeft, m trEvent]
+                  m trUploaded, m trDownloaded, m trLeft, m trEvent] db
              return ()
              
-updateScraped :: IConnection conn => 
-                 InfoHash -> conn -> IO ()
+updateScraped :: InfoHash -> Connection -> IO ()
 updateScraped infoHash db =
-  do _ <-
-         run db "SELECT * FROM update_scraped(?)" [toSql infoHash]
+  do Just _ <-
+         query' "SELECT * FROM update_scraped(?)"
+         [convert infoHash] db
      return ()
      

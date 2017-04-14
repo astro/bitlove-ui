@@ -4,7 +4,7 @@ import Prelude hiding (id)
 import qualified Data.Text as T
 import Data.Time
 import Data.List (partition)
-import Database.HDBC
+import Data.Convertible
 
 import Utils
 import Model.Query
@@ -70,5 +70,5 @@ groupDownloads (d@(Download {
 userItemImage :: UserName -> T.Text -> T.Text -> Query T.Text
 userItemImage user slug item =
   fmap (map fixUrl) . 
-  query "SELECT \"image\" FROM user_feeds JOIN feed_items USING (\"feed\") WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND feed_items.\"id\"=?" [toSql user, toSql slug, toSql item]
+  query "SELECT \"image\" FROM user_feeds JOIN feed_items USING (\"feed\") WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND feed_items.\"id\"=?" [convert user, convert slug, convert item]
   

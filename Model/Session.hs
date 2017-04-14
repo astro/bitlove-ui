@@ -2,12 +2,13 @@
 module Model.Session where
 
 import Prelude
-import Database.HDBC
 import qualified Data.ByteString as B
 import Data.Convertible
 import Data.Data (Typeable)
 import System.Random
+import qualified Database.PostgreSQL.LibPQ as PQ
 
+import Model.SqlValue
 import Model.Query
 import Model.User
 
@@ -25,10 +26,10 @@ instance Convertible [SqlValue] SessionId where
   safeConvert [v] = safeConvert v
   safeConvert vs = convError "SessionId" vs
   
-createSession :: IConnection conn => UserName -> conn -> IO SessionId
+createSession :: UserName -> PQ.Connection -> IO SessionId
 createSession user db = do
   sid <- makeRandomSid
-  1 <- run db "INSERT INTO user_sessions (\"user\", \"sid\", \"updated\") VALUES (?, ?, NOW())" [toSql user, toSql sid]
+  Just _ <- query' "INSERT INTO user_sessions (\"user\", \"sid\", \"updated\") VALUES (?, ?, NOW())" [convert user, convert sid] db
   return sid
   
 makeRandomSid :: IO SessionId
@@ -38,9 +39,9 @@ makeRandomSid = (SessionId . B.pack . take 32 . randoms) `fmap`
 
 validateSession :: SessionId -> Query UserName
 validateSession sid = 
-  query "UPDATE user_sessions SET \"updated\"=NOW() WHERE \"sid\"=? RETURNING \"user\"" [toSql sid]
+  query "UPDATE user_sessions SET \"updated\"=NOW() WHERE \"sid\"=? RETURNING \"user\"" [convert sid]
 
-invalidateSession :: IConnection conn => SessionId -> conn -> IO ()
+invalidateSession :: SessionId -> PQ.Connection -> IO ()
 invalidateSession sid db = do 
-  _ <- run db "DELETE FROM user_sessions WHERE \"sid\"=?" [toSql sid]
+  Just _ <- query' "DELETE FROM user_sessions WHERE \"sid\"=?" [convert sid] db
   return ()

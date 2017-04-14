@@ -18,6 +18,7 @@ module Foundation
     --, requireAuth
     , module Settings
     , module Model
+    , Database
     ) where
 
 import Prelude
@@ -36,7 +37,6 @@ import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
 import Control.Applicative
 import Data.Pool
-import Hasql.Connection (Connection)
 import Settings.StaticFiles
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -45,12 +45,14 @@ import qualified Network.Wai as Wai
 import Data.ByteString.Char8 (isInfixOf)
 import qualified Data.ByteString.Lazy as LB
 import qualified Crypto.Hash.SHA1 as SHA1
+import Database.PostgreSQL.LibPQ (Connection)
 
 import Utils
 import PathPieces
 import BitloveAuth
 
 
+type Database = Connection
 type DBPool = Pool Connection
 
 

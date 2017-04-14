@@ -10,8 +10,7 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Aeson
 import System.Random
-import Control.Applicative
-import qualified Database.PostgreSQL.LibPQ as PQ
+import Database.PostgreSQL.LibPQ (Connection)
 
 import Model.SqlValue
 import Model.Query
@@ -46,20 +45,22 @@ data UserDetails = UserDetails {
 instance Convertible [SqlValue] UserDetails where
   safeConvert (title:image:homepage:[]) =
       UserDetails <$>
-      safeFromSql title <*>
-      (fixUrl <$> safeFromSql image) <*>
-      safeFromSql homepage
+      safeConvert title <*>
+      (fixUrl <$> safeConvert image) <*>
+      safeConvert homepage
   safeConvert vals = convError "UserDetails" vals
 
 userDetailsByName :: UserName -> Query UserDetails
 userDetailsByName user =
     query "SELECT COALESCE(\"title\", ''), COALESCE(\"image\", ''), COALESCE(\"homepage\", '') FROM users WHERE \"name\"=$1"
-    [toSql user]
+    [convert user]
 
-setUserDetails :: UserName -> UserDetails -> PQ.Connection -> IO ()
+setUserDetails :: UserName -> UserDetails -> Connection -> IO ()
 setUserDetails user details db = do
-  1 <- run db "UPDATE users SET \"title\"=?, \"image\"=?, \"homepage\"=? WHERE \"name\"=?"
-       [toSql $ userTitle details, toSql $ userImage details, toSql $ userHomepage details, toSql user]
+  Just _ <-
+    query' "UPDATE users SET \"title\"=?, \"image\"=?, \"homepage\"=? WHERE \"name\"=?"
+    [convert $ userTitle details, convert $ userImage details, convert $ userHomepage details, convert user]
+    db
   return ()
   
 newtype Salt = Salt { unSalt :: ByteString }
@@ -91,32 +92,31 @@ data UserSalt = UserSalt Salt Salted
 instance Convertible [SqlValue] UserSalt where
   safeConvert (salt:salted:[]) =
       UserSalt <$>
-      safeFromSql salt <*>
-      safeFromSql salted
+      safeConvert salt <*>
+      safeConvert salted
   safeConvert vals = convError "UserSalt" vals
 
 userSalt :: UserName -> Query UserSalt
 userSalt user =
-    query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [toSql user]
+    query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [convert user]
     
-setUserSalted :: UserName -> Salted -> PQ.Connection -> IO ()
+setUserSalted :: UserName -> Salted -> Connection -> IO ()
 setUserSalted user salted db = do
-  1 <- run db
-       "UPDATE users SET \"salted\"=? WHERE \"name\"=?"
-       [toSql salted, toSql user]
+  Just _ <-
+    query' "UPDATE users SET \"salted\"=? WHERE \"name\"=?"
+    [convert salted, convert user] db
   return ()
                  
-registerUser :: UserName -> Text -> PQ.Connection -> IO (Maybe Salt)
+registerUser :: UserName -> Text -> Connection -> IO (Maybe Salt)
 registerUser username email db = do
-  r <- quickQuery' db 
-       "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?" 
-       [toSql username]
+  r <- query' "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?" 
+       [convert username] db
   case r of
-    [[v]] | (fromSql v :: Int) < 1 -> do
+    Just [[v]] | convert v < (1 :: Int) -> do
            salt <- generateSalt
-           1 <- run db 
-                "INSERT INTO users (\"name\", \"email\", \"salt\") VALUES (?, ?, ?)"
-                [toSql username, toSql email, toSql salt]
+           Just _ <-
+             query' "INSERT INTO users (\"name\", \"email\", \"salt\") VALUES (?, ?, ?)"
+             [convert username, convert email, convert salt] db
            return $ Just salt
     _ ->
         return Nothing
@@ -128,5 +128,5 @@ registerUser username email db = do
 userByEmail :: Text -> Query UserName
 userByEmail email =
   query "SELECT \"name\" FROM users WHERE \"email\"=?"
-  [toSql email]
+  [convert email]
   

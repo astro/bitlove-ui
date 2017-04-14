@@ -29,24 +29,27 @@ instance Convertible [SqlValue] T.Text where
 
 type Query e = PQ.Connection -> IO [e]
 
-query :: (Convertible [SqlValue] e)
-      => String -> [SqlValue] -> PQ.Connection -> IO [e]
-query sql args conn = do
+query' :: String -> [SqlValue] -> PQ.Connection -> IO (Maybe [[SqlValue]])
+query' sql args conn = do
   let sql' = BC.pack sql
-      args' = do
-        SqlValue oid bytes <- args
-        return $ Just $
-          (oid, bytes, PQ.Binary)
+      args' = map (\v ->
+                     case v of
+                       SqlValue oid bytes ->
+                         Just $
+                         (oid, bytes, PQ.Binary)
+                       SqlNull ->
+                         Nothing
+                  ) args
 
   mResult <- PQ.execParams conn sql' args' PQ.Binary
 
   case mResult of
-    Nothing -> return []
+    Nothing -> return Nothing
     Just result -> do
       status <- PQ.resultStatus result
       case status of
         PQ.CommandOk ->
-          return []
+          return $ Just []
         _
           | status == PQ.SingleTuple ||
             status == PQ.TuplesOk -> do
@@ -57,16 +60,20 @@ query sql args conn = do
             forM [0..(cols - 1)] $
             PQ.ftype result . PQ.toColumn
 
-          forM [0..(rows - 1)] $ \row ->
-            convert <$>
-            forM (zip [0..(cols - 1)] colOids)
-            (\(col, oid) ->
+          fmap Just $
+            forM [0..(rows - 1)] $ \row ->
+            forM (zip [0..(cols - 1)] colOids) $ \(col, oid) ->
                SqlValue oid <$>
                fromMaybe B.empty <$>
                PQ.getvalue result (PQ.toRow row) (PQ.toColumn col)
-            )
         _ ->
           error $ "pq: " ++ show status
+
+query :: (Convertible [SqlValue] e)
+      => String -> [SqlValue] -> PQ.Connection -> IO [e]
+query sql args conn =
+  maybe [] (map convert) <$>
+  query' sql args conn
 
                           
 data QueryPage = QueryPage { pageLimit :: Int
@@ -88,7 +95,7 @@ fromBytea = const undefined
 -- fromBytea SqlNull = ""
 -- fromBytea sql =
 --   let text :: String
---       text = fromSql sql
+--       text = convert sql
 --   in 
 --     case text of
 --       '\\':'x':hex ->
@@ -123,7 +130,7 @@ fromBytea' = B.concat . LBC.toChunks . fromBytea
 -- TODO: BC.pack neccessary?
 toBytea :: LB.ByteString -> SqlValue
 toBytea = const undefined
--- toBytea = toSql . BC.pack . concatMap (escape . fromIntegral) . LB.unpack
+-- toBytea = convert . BC.pack . concatMap (escape . fromIntegral) . LB.unpack
 --   where escape 92 = "\\\\"
 --         escape c | c >= 32 && c <= 126 = [chr c]
 --         escape c = "\\" ++ oct c
