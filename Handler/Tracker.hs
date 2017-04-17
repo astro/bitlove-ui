@@ -115,7 +115,7 @@ getAnnounceR = do
   case mTr of
     Nothing ->
         return $ RepBenc $
-        Benc.BDict [(Benc.BString "failure",
+        Benc.BDict [(Benc.BString "failure reason",
                      Benc.BString "Invalid tracker request"),
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
@@ -124,7 +124,7 @@ getAnnounceR = do
       case exists of
         False ->
             return $ RepBenc $
-            Benc.BDict [(Benc.BString "failure",
+            Benc.BDict [(Benc.BString "failure reason",
                          Benc.BString "Torrent does not exist. Please go away!"),
                         (Benc.BString "interval",
                          Benc.BInt 0xffff)]
