@@ -19,6 +19,7 @@ import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
+import Cache
 
 
 -- TODO: make configurable
@@ -34,6 +35,7 @@ ourSeeders = do
 
 data TrackerApp = TrackerApp
     { trackerDBPool :: DBPool
+    , trackerCache :: Cache
     , trackerAnnounceQueue :: WQ.Queue
     , trackerScrapeQueue :: WQ.Queue
     }
@@ -51,10 +53,13 @@ instance HasDB TrackerApp where
 
 makeTrackerApp :: DBPool -> IO TrackerApp
 makeTrackerApp pool =
-    do aq <- WQ.makeQueue
+    do cache <- newCache "localhost" 11211
+       aq <- WQ.makeQueue
        sq <- WQ.makeQueue
-       return $ TrackerApp pool aq sq
+       return $ TrackerApp pool cache aq sq
 
+getCache :: Handler Cache
+getCache = trackerCache <$> getYesod
 
 newtype RepBenc = RepBenc Benc.BValue
 
@@ -90,6 +95,23 @@ getAnnounceR = do
             pure (fromMaybe 1 $ qi "left") <*>
             pure (q "event") <*>
             pure (maybe False (const True) $ q "compact")
+
+      checkExists tr = do
+        let infoHash = trInfoHash tr
+        cachedExists <- getCache >>=
+                        liftIO . getTorrentExists infoHash
+        case cachedExists of
+          False ->
+            return False
+          True -> do
+            torrentExists <- withDB $ Model.infoHashExists infoHash
+            case torrentExists of
+              True -> return True
+              False -> do
+                getCache >>=
+                  liftIO . setTorrentExists infoHash False
+                return False
+
   case mTr of
     Nothing ->
         return $ RepBenc $
@@ -97,53 +119,62 @@ getAnnounceR = do
                      Benc.BString "Invalid tracker request"),
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
-    Just tr ->
-        do let isSeeder = trLeft tr == 0
-           -- Read first
-           (peers, scraped) <-
-               withDB $ \db ->
-                   do peers <- (ourSeeders ++) <$> getPeers (trInfoHash tr) isSeeder db
-                      scraped <- safeScrape (trInfoHash tr) db
-                      return (peers, scraped)
-           -- Write in background
-           aQ <- trackerAnnounceQueue <$> getYesod
-           sQ <- trackerScrapeQueue <$> getYesod
-           pool <- getDBPool
-           liftIO $ WQ.enqueue aQ $
-                  do withDBPool pool $ announcePeer tr
-                     liftIO $ WQ.enqueue sQ $
-                       withDBPool pool $ updateScraped $ trInfoHash tr
-           -- Assemble response
-           let (peers4, peers6)
-                   | trCompact tr =
-                       ( Benc.BString $ LBC.fromChunks $ concat
-                         [[addr', portToByteString port']
-                          | TrackedPeer _ (Peer4 addr') port' <- peers]
-                       , Benc.BString $ LBC.fromChunks $ concat
-                         [[addr', portToByteString port']
-                          | TrackedPeer _ (Peer6 addr') port' <- peers]
-                       )
-                   | otherwise =
-                       let g peerId addr' port' =
-                               Benc.BDict [("peer id", Benc.BString $ LBC.fromChunks [peerId]),
-                                           ("ip", Benc.BString $ LBC.fromChunks [addr']),
-                                           ("port", Benc.BInt $ fromIntegral port')]
-                       in ( Benc.BList $
-                            [g peerId addr' port'
-                             | TrackedPeer (PeerId peerId) (Peer4 addr') port' <- peers]
-                          , Benc.BList $
-                            [g peerId addr' port'
-                             | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
-                          )
-           interval <- liftIO $ randomRIO (1620, 1800)
-           return $ RepBenc $
-                  Benc.BDict [ ("peers", peers4)
-                             , ("peers6", peers6)
-                             , ("interval", Benc.BInt interval)
-                             , ("complete", Benc.BInt $ scrapeSeeders scraped + 1)
-                             , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
-                             , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
-                             ]
+    Just tr -> do
+      exists <- checkExists tr
+      case exists of
+        False ->
+            return $ RepBenc $
+            Benc.BDict [(Benc.BString "failure",
+                         Benc.BString "Torrent does not exist. Please go away!"),
+                        (Benc.BString "interval",
+                         Benc.BInt 0xffff)]
+        True ->
+            do let isSeeder = trLeft tr == 0
+               -- Read first
+               (peers, scraped) <-
+                   withDB $ \db ->
+                       do peers <- (ourSeeders ++) <$> getPeers (trInfoHash tr) isSeeder db
+                          scraped <- safeScrape (trInfoHash tr) db
+                          return (peers, scraped)
+               -- Write in background
+               aQ <- trackerAnnounceQueue <$> getYesod
+               sQ <- trackerScrapeQueue <$> getYesod
+               pool <- getDBPool
+               liftIO $ WQ.enqueue aQ $
+                      do withDBPool pool $ announcePeer tr
+                         liftIO $ WQ.enqueue sQ $
+                           withDBPool pool $ updateScraped $ trInfoHash tr
+               -- Assemble response
+               let (peers4, peers6)
+                       | trCompact tr =
+                           ( Benc.BString $ LBC.fromChunks $ concat
+                             [[addr', portToByteString port']
+                              | TrackedPeer _ (Peer4 addr') port' <- peers]
+                           , Benc.BString $ LBC.fromChunks $ concat
+                             [[addr', portToByteString port']
+                              | TrackedPeer _ (Peer6 addr') port' <- peers]
+                           )
+                       | otherwise =
+                           let g peerId addr' port' =
+                                   Benc.BDict [("peer id", Benc.BString $ LBC.fromChunks [peerId]),
+                                               ("ip", Benc.BString $ LBC.fromChunks [addr']),
+                                               ("port", Benc.BInt $ fromIntegral port')]
+                           in ( Benc.BList $
+                                [g peerId addr' port'
+                                 | TrackedPeer (PeerId peerId) (Peer4 addr') port' <- peers]
+                              , Benc.BList $
+                                [g peerId addr' port'
+                                 | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
+                              )
+               interval <- liftIO $ randomRIO (1620, 1800)
+               return $ RepBenc $
+                      Benc.BDict [ ("peers", peers4)
+                                 , ("peers6", peers6)
+                                 , ("interval", Benc.BInt interval)
+                                 , ("complete", Benc.BInt $ scrapeSeeders scraped + 1)
+                                 , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
+                                 , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
+                                 ]
 
 getScrapeR :: Handler RepBenc
 getScrapeR = do

@@ -2,6 +2,7 @@
 module Model (
   -- Model
   infoHashByName,
+  infoHashExists,
   Torrent (..),
   torrentByName,
   purgeTorrent,
@@ -104,6 +105,26 @@ instance Convertible [SqlValue] Torrent where
     safeFromSql size <*>
     pure (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
+
+data InfoHashExists = InfoHashExists Bool
+
+instance Convertible [SqlValue] InfoHashExists where
+  safeConvert (value:_) =
+    InfoHashExists <$>
+    safeFromSql value
+  safeConvert _ =
+    Right $
+    InfoHashExists False
+
+infoHashExists infoHash conn = do
+  results <- infoHashExists' infoHash conn
+  case results of
+    (InfoHashExists True : _) -> return True
+    _ -> return False
+
+infoHashExists' :: InfoHash -> Query InfoHashExists
+infoHashExists' infoHash =
+  query "SELECT EXISTS (SELECT \"info_hash\" FROM torrents WHERE \"info_hash\"=?)" [toSql infoHash]
 
 torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
