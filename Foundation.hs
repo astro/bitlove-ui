@@ -33,7 +33,6 @@ import Settings (widgetFile, Extra (..), BitloveEnv (..))
 import Model
 import Text.Jasmine (minifym)
 import Text.Hamlet (hamletFile)
-import Control.Applicative
 import Data.Pool
 import qualified Database.HDBC as HDBC (withTransaction)
 import qualified Database.HDBC.PostgreSQL as PostgreSQL (Connection)
@@ -63,10 +62,6 @@ data UIApp = UIApp
     , getStatic :: Static -- ^ Settings for static file serving.
     , uiDBPool :: DBPool -- ^ Database connection pool.
     , httpManager :: Manager
-    }
-
-data TrackerApp = TrackerApp
-    { trackerDBPool :: DBPool
     }
 
 -- Set up i18n messages. See the message folder.
@@ -112,7 +107,6 @@ instance Yesod UIApp where
          return $ Just $ sessionBackend withDB'
 
     defaultLayout widget = do
-        master <- getYesod
         mmsg <- getMessage
         msu <- sessionUser
 

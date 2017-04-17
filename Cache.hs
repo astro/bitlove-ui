@@ -23,7 +23,7 @@ getTorrentExists infoHash client = do
   mVFV <- Memcache.gat client key expire
   case mVFV of
     Nothing -> return True
-    Just (value, flags, version) -> return False
+    Just (_value, _flags, _version) -> return False
 
 -- | Caching negative entries to avoid DB traffic on rogue torretns
 setTorrentExists :: InfoHash -> Bool -> Cache -> IO ()

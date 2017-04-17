@@ -8,7 +8,6 @@ import Database.HDBC
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
-import Control.Applicative
 
 import Utils
 import Model.Query

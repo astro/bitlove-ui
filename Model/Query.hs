@@ -14,7 +14,6 @@ import Numeric (showOct, readOct)
 import Data.Char (chr)
 import qualified Control.Exception as E
 import System.IO
-import Control.Applicative
 import Data.Default
 
 import Utils

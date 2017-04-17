@@ -1,7 +1,6 @@
 module Handler.FeedLookupAPI where
 
 import Prelude
-import Control.Applicative
 import Control.Monad
 import qualified Data.Text as T
 import Yesod

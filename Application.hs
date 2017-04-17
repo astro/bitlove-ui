@@ -10,7 +10,7 @@ import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
-import Network.HTTP.Conduit (newManager, conduitManagerSettings)
+import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import Data.Pool
 import Database.HDBC as HDBC (disconnect)
 import Database.HDBC.PostgreSQL
@@ -198,7 +198,7 @@ getApplicationDev =
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
 makeUIFoundation conf pool = do
-    manager <- newManager conduitManagerSettings
+    manager <- newManager tlsManagerSettings
     s <- staticSite
     return $ UIApp conf s pool manager
     

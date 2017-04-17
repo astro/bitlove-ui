@@ -2,7 +2,6 @@
 module Model.Download where
 
 import Data.Convertible
-import Prelude
 import Database.HDBC
 import Prelude
 import Data.Text (Text)
@@ -11,7 +10,6 @@ import Data.Time.LocalTime (LocalTime)
 import Data.ByteString (ByteString, unpack)
 import Data.Data (Typeable)
 import Numeric (showHex)
-import Control.Applicative
 
 import Utils
 import Model.Query

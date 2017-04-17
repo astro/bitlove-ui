@@ -11,7 +11,6 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Aeson
 import System.Random
-import Control.Applicative
 
 import Model.Query
 import Utils

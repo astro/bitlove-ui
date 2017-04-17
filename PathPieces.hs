@@ -114,8 +114,8 @@ instance Show DirectoryPage where
 instance PathPiece DirectoryPage where
     fromPathPiece c =
         case T.unpack c of
-          [c] | isAlpha c -> 
-              Just $ DirectoryLetter c
+          [c'] | isAlpha c' ->
+              Just $ DirectoryLetter c'
           "0-9" -> 
               Just DirectoryDigit
           _ -> 

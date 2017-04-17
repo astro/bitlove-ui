@@ -3,7 +3,6 @@ module Handler.Widget where
 import Prelude
 import Data.FileEmbed (embedFile)
 import Blaze.ByteString.Builder (fromByteString, Builder)
-import Data.Monoid
 
 import Import
 

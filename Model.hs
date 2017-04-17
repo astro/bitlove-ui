@@ -73,7 +73,6 @@ import Data.Text (Text)
 import Database.HDBC
 import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy as LB
-import Control.Applicative
 
 import Utils
 import Model.Query
@@ -116,6 +115,9 @@ instance Convertible [SqlValue] InfoHashExists where
     Right $
     InfoHashExists False
 
+infoHashExists :: forall conn.
+                  IConnection conn =>
+                  InfoHash -> conn -> IO Bool
 infoHashExists infoHash conn = do
   results <- infoHashExists' infoHash conn
   case results of

@@ -2,7 +2,6 @@
 module BitloveAuth where
 
 import Prelude
-import Control.Applicative
 import Yesod
 import Data.Maybe
 import qualified Data.ByteString.Char8 as BC
