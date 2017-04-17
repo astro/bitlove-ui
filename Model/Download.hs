@@ -18,7 +18,10 @@ import Model.Query
 import Model.User
 
 newtype InfoHash = InfoHash { unInfoHash :: ByteString }
-                 deriving (Show, Eq, Ord)
+                 deriving (Eq, Ord)
+
+instance Show InfoHash where
+  show = T.unpack . toHex . unInfoHash
                           
 infoHashToHex :: InfoHash -> Text
 infoHashToHex (InfoHash bs) =
