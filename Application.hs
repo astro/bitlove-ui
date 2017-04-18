@@ -71,7 +71,7 @@ makeApplication conf = do
     tracker <- ignoreAccept <$>
                (makeTrackerApp trackerPool >>= toWaiAppPlain)
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost <$> stats <$> gzip def <$> autohead <$> etagMiddleware <$> ignoreAccept <$>
+    ui <- enforceVhost . stats . gzip def . autohead . etagMiddleware . ignoreAccept <$>
           toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
@@ -140,7 +140,7 @@ makeApplication conf = do
                              , "+"
                              , BC.pack $ show ((cpu3 - cpu2) `div` 1000000000)
                              , "ms cpu] "
-                             , BC.pack $ remote'
+                             , BC.pack remote'
                              , " "
                              , BC.pack $ show $ statusCode $ responseStatus res
                              , " "
@@ -221,7 +221,7 @@ parseDBConf = return . parse
     
 makeDBPool :: [(String, String)] -> IO DBPool
 makeDBPool dbconf =
-  let dbconf' :: [([Char], [Char])]
+  let dbconf' :: [(String, String)]
       dbconf' = filter ((`elem` ["host", "hostaddr",
                                  "port", "dbname",
                                  "user", "password"]) . fst) dbconf
@@ -236,4 +236,4 @@ makeDBPool dbconf =
 
 
 getFaviconR :: Handler ()
-getFaviconR = sendFile "image/x-icon" $ "static/favicon.ico"
+getFaviconR = sendFile "image/x-icon" "static/favicon.ico"

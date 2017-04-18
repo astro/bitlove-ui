@@ -30,42 +30,41 @@ data Item = Item {
             
 groupDownloads :: [Download] -> [Item]
 groupDownloads [] = []
-groupDownloads (d@(Download {
+groupDownloads (d@Download {
                      downloadUser = user,
                      downloadHomepage = homepage,
                      downloadTitle = title,
                      downloadItem = id
-                   }):ds) =
-    let isSimilar (Download { downloadUser = user' })
+                   } : ds) =
+    let isSimilar Download { downloadUser = user' }
             | user /= user' = False
         isSimilar d' =
             let homepage' = downloadHomepage d'
                 title' = downloadTitle d'
                 id' = downloadItem d'
-            in ((not $ T.null homepage') && homepage == homepage') ||
-               ((not $ T.null title') && title == title') ||
+            in (not (T.null homepage') && homepage == homepage') ||
+               (not (T.null title') && title == title') ||
                (id' == id)
         (similar, ds') = partition isSimilar ds
         dropDupInfoHashes [] = []
         dropDupInfoHashes (d':ds'') =
-            d' : (dropDupInfoHashes $ 
-                  filter ((downloadInfoHash d' /=) . downloadInfoHash) 
-                         ds'')
+            d' : dropDupInfoHashes (filter ((downloadInfoHash d' /=) . downloadInfoHash)
+                                    ds'')
         downloads = dropDupInfoHashes $ d:similar
-    in (Item { itemUser = user,
-               itemSlug = downloadSlug d,
-               itemFeed = downloadFeed d,
-               itemId = downloadItem d,
-               itemFeedTitle = downloadFeedTitle d,
-               itemTitle = downloadTitle d,
-               itemLang = downloadLang d,
-               itemSummary = downloadSummary d,
-               itemPublished = downloadPublished d,
-               itemHomepage = downloadHomepage d,
-               itemPayment = downloadPayment d,
-               itemImage = downloadImage d,
-               itemDownloads = downloads
-             }) : (groupDownloads ds')
+    in Item { itemUser = user,
+              itemSlug = downloadSlug d,
+              itemFeed = downloadFeed d,
+              itemId = downloadItem d,
+              itemFeedTitle = downloadFeedTitle d,
+              itemTitle = downloadTitle d,
+              itemLang = downloadLang d,
+              itemSummary = downloadSummary d,
+              itemPublished = downloadPublished d,
+              itemHomepage = downloadHomepage d,
+              itemPayment = downloadPayment d,
+              itemImage = downloadImage d,
+              itemDownloads = downloads
+            } : groupDownloads ds'
        
 userItemImage :: UserName -> T.Text -> T.Text -> Query T.Text
 userItemImage user slug item =

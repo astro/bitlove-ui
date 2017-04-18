@@ -5,9 +5,9 @@ import Import hiding (returnJson)
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Char
-import Control.Monad (when)
+import Control.Monad (unless)
 
-import qualified Model as Model
+import qualified Model
 
 getUserDetailsR :: UserName -> Handler RepJson
 getUserDetailsR user = do
@@ -16,10 +16,10 @@ getUserDetailsR user = do
     [] ->
       notFound
     details:_ ->
-      returnJson ([ ("title", userTitle details)
-                  , ("image", userImage details)
-                  , ("homepage", userHomepage details)
-                  ])
+      returnJson [ ("title", userTitle details)
+                 , ("image", userImage details)
+                 , ("homepage", userHomepage details)
+                 ]
 
 postUserDetailsR :: UserName -> Handler RepJson
 postUserDetailsR user = do
@@ -38,7 +38,7 @@ putUserFeedR :: UserName -> Text -> Handler RepJson
 putUserFeedR user slug = do
   mUrl <- lookupPostParam "url"
   -- Validate
-  when (not $ validateSlug slug) $
+  unless (validateSlug slug) $
     sendResponse $ RepJson $ toContent $ 
     object ["error" .= ("Invalid slug" :: Text)]
   url <- case mUrl of
@@ -84,7 +84,7 @@ getUserFeedDetailsR user slug = do
 
 postUserFeedDetailsR :: UserName -> Text -> Handler RepJson
 postUserFeedDetailsR user slug = do
-  public <- maybe False (== "true") `fmap`
+  public <- (== Just "true") <$>
             lookupPostParam "public"
   title <- lookupPostParam "title"
   let details = FeedDetails public title

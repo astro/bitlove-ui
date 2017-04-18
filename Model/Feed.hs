@@ -30,7 +30,7 @@ feedXml url =
   query "SELECT \"xml\" FROM feeds WHERE \"url\"=?" [toSql url]
   
 instance Convertible [SqlValue] (Text, Text) where
-  safeConvert (val1:val2:[]) = 
+  safeConvert [val1, val2] =
       case (safeConvert val1, safeConvert val2) of
         (Right t1, Right t2) -> Right (t1, t2)
         (Left e, _) -> Left e
@@ -58,7 +58,7 @@ data FeedInfo = FeedInfo {
     } deriving (Show, Typeable)
                
 instance Convertible [SqlValue] FeedInfo where
-  safeConvert (url:user:slug:title:homepage:image:public:torrentify:error_text:[]) =
+  safeConvert [url, user, slug, title, homepage, image, public, torrentify, error_text] =
     FeedInfo <$>
     safeFromSql url <*>
     safeFromSql user <*>
@@ -87,14 +87,14 @@ userFeedInfo user slug =
 addUserFeed :: IConnection conn => 
                UserName -> Text -> Text -> conn -> IO Bool
 addUserFeed user slug url db =
-    fmap (fromSql . head . head) $
+    fromSql . head . head <$>
     quickQuery' db "SELECT * FROM add_user_feed(?, ?, ?)"
                     [toSql user, toSql slug, toSql url]
        
 deleteUserFeed :: IConnection conn => 
                   UserName -> Text -> conn -> IO Bool
 deleteUserFeed user slug db =
-    (== 1) `fmap`
+    (== 1) <$>
     run db "DELETE FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
         [toSql user, toSql slug]
         
@@ -108,7 +108,7 @@ data FeedDetails = FeedDetails {
     } deriving (Show, Typeable)
                     
 instance Convertible [SqlValue] FeedDetails where
-  safeConvert (public:title:[]) =
+  safeConvert [public, title] =
     FeedDetails <$>
     safeFromSql public <*>
     safeFromSql title

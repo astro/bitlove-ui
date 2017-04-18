@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 module BitloveAuth where
 
 import Prelude
@@ -19,7 +19,7 @@ login :: UserName -> HandlerT y IO ()
 login = setSession "user" . userName
 
 sessionUser :: MonadHandler m => m (Maybe UserName)
-sessionUser = maybe Nothing (Just . UserName) <$>
+sessionUser = (UserName <$>) <$>
               lookupSession "user"
       
 canEdit :: MonadHandler m => UserName -> m Bool
@@ -55,7 +55,7 @@ sessionBackend withDB =
                         do users <- withDB $ validateSession sid
                            return $ Map.fromList $
                                case users of
-                                 (UserName user):_ ->
+                                 UserName user : _ ->
                                      [("user", BC.pack $ T.unpack user)]
                                  _ ->
                                      []

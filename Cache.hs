@@ -31,6 +31,6 @@ setTorrentExists infoHash exists client = do
   let key = BC.concat ["E", unInfoHash infoHash]
       value = "0"
       expire = 3600
-  when (not exists) $
+  unless exists $
     void $
     Memcache.set client key value 0 expire

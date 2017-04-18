@@ -42,7 +42,7 @@ data UserDetails = UserDetails {
     } deriving (Typeable)
                    
 instance Convertible [SqlValue] UserDetails where
-  safeConvert (title:image:homepage:[]) =
+  safeConvert [title, image, homepage] =
       UserDetails <$>
       safeFromSql title <*>
       (fixUrl <$> safeFromSql image) <*>
@@ -88,7 +88,7 @@ data UserSalt = UserSalt Salt Salted
                 deriving (Typeable)
 
 instance Convertible [SqlValue] UserSalt where
-  safeConvert (salt:salted:[]) =
+  safeConvert [salt, salted] =
       UserSalt <$>
       safeFromSql salt <*>
       safeFromSql salted

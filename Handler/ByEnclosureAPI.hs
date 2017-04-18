@@ -35,11 +35,11 @@ getByEnclosureJson = do
                          forM guids $ \guid ->
                              (guid, ) <$>
                              guidDownloads guid db
-                     return $ concat [urlDownloads, guidDownloads']
+                     return $ urlDownloads ++ guidDownloads'
   -- Drop enclosures with no associated download
-  let resDownloads' = filter ((> 0) . length . snd) resDownloads
-  RepJson <$>
-          toContent <$>
+  let resDownloads' = filter (not . null . snd) resDownloads
+  RepJson .
+          toContent .
           object <$>
           mapM (\(url, downloads) -> do
                   json <- downloadToJson downloads
@@ -60,7 +60,7 @@ getByEnclosureJson = do
                                ]
           downloadToJson [] = error "This never occurs"
           sourceToJson d = do
-                       do torrentLink' <- torrentLink d
+                          torrentLink' <- torrentLink d
                           permaLink' <- permaLink d
                           tz <- liftIO getCurrentTimeZone
                           return $
@@ -130,7 +130,7 @@ torrentLink d =
 
 permaLink :: Download -> HandlerT UIApp IO Text
 permaLink d =
-    ((`T.append` (downloadItem d)) .
+    ((`T.append` downloadItem d) .
      (`T.append` "#") .
      ($ UserFeedR (downloadUser d) (downloadSlug d))) `fmap`
     getFullUrlRender

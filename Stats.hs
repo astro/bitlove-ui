@@ -22,7 +22,7 @@ type StatsBuffer = TVar (Map Key (TVar Integer))
 
 statsMiddleware :: BitloveEnv -> DBPool -> IO Wai.Middleware
 statsMiddleware env pool = do
-  tBuf <- newTVarIO $ Map.empty
+  tBuf <- newTVarIO Map.empty
   return $ \app req respond ->
       do liftIO $ countRequest env pool tBuf req
          app req respond

@@ -2,6 +2,7 @@
 module Model.Tracker where
 
 import Prelude
+import Control.Monad (void)
 import Data.Convertible
 import Data.Data (Typeable)
 import Database.HDBC
@@ -18,7 +19,7 @@ data ScrapeInfo = ScrapeInfo {
     } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] ScrapeInfo where
-  safeConvert (leechers:seeders:downspeed:downloaded:[]) =
+  safeConvert [leechers, seeders, downspeed, downloaded] =
     ScrapeInfo <$>
     safeFromSql leechers <*>
     safeFromSql seeders <*>
@@ -64,7 +65,7 @@ data TrackedPeer = TrackedPeer !PeerId !PeerAddress !Int
                    deriving (Show, Typeable)
 
 instance Convertible [SqlValue] TrackedPeer where
-    safeConvert (peerId:addr:port:[]) =
+    safeConvert [peerId, addr, port] =
         TrackedPeer <$>
         safeFromSql peerId <*>
         safeFromSql addr <*>
@@ -100,22 +101,19 @@ announcePeer :: IConnection conn =>
 announcePeer tr db =
     case trEvent tr of
       Just "stopped" ->
+          void $
           run db "DELETE FROM tracked WHERE \"info_hash\"=? AND \"peer_id\"=? RETURNING \"uploaded\", \"downloaded\""
             [toSql $ trInfoHash tr, toSql $ trPeerId tr]
-          >>
-          return ()
       _ ->
           do let m :: Convertible a SqlValue => (TrackerRequest -> a) -> SqlValue
                  m = toSql . ($ tr)
-             _ <-
-                 run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)" $
+             void $
+                 run db "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)"
                  [m trInfoHash, m trHost, m trPort, m trPeerId,
                   m trUploaded, m trDownloaded, m trLeft, m trEvent]
-             return ()
 
 updateScraped :: IConnection conn =>
                  InfoHash -> conn -> IO ()
 updateScraped infoHash db =
-  do _ <-
-         run db "SELECT * FROM update_scraped(?)" [toSql infoHash]
-     return ()
+    void $
+    run db "SELECT * FROM update_scraped(?)" [toSql infoHash]

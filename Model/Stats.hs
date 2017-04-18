@@ -15,7 +15,7 @@ data StatsValue = StatsValue LocalTime Double
                 deriving (Show, Typeable)
 
 instance Convertible [SqlValue] StatsValue where
-  safeConvert (time:val:[]) =
+  safeConvert [time, val] =
     StatsValue <$>
     safeFromSql time <*>
     safeFromSql val
@@ -40,4 +40,4 @@ getDownloadCounter path start stop interval =
 
 getGauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 getGauge kind info_hash start stop interval =
-  query ("SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [toSql interval, toSql kind, toSql info_hash, toSql start, toSql stop]

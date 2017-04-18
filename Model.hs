@@ -97,7 +97,7 @@ data Torrent = Torrent {
 } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] Torrent where
-  safeConvert (info_hash:name:size:torrent:[]) =
+  safeConvert [info_hash, name, size, torrent] =
     Torrent <$>
     safeFromSql info_hash <*>
     safeFromSql name <*>
@@ -105,7 +105,7 @@ instance Convertible [SqlValue] Torrent where
     pure (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
 
-data InfoHashExists = InfoHashExists Bool
+newtype InfoHashExists = InfoHashExists Bool
 
 instance Convertible [SqlValue] InfoHashExists where
   safeConvert (value:_) =
@@ -131,7 +131,7 @@ infoHashExists' infoHash =
 torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
   query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [toSql user, toSql slug, toSql name]
-  
+
 purgeTorrent :: IConnection conn => 
                 UserName -> Text -> Text -> conn -> IO Int
 purgeTorrent user slug name db =
@@ -147,7 +147,7 @@ data ActiveUser = ActiveUser
     } deriving (Show, Typeable)
     
 instance Convertible [SqlValue] ActiveUser where
-    safeConvert (userVal:feedsVal:langsVal:typesVal:[]) =
+    safeConvert [userVal, feedsVal, langsVal, typesVal] =
         ActiveUser <$>
         safeFromSql userVal <*>
         safeFromSql feedsVal <*>
@@ -170,8 +170,8 @@ data DirectoryEntry = DirectoryEntry
     } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] DirectoryEntry where
-    safeConvert (userVal:userTitleVal:userImageVal:
-                 feedSlugVal:feedTitleVal:feedLangVal:feedTypesVal:[]) = 
+    safeConvert [userVal, userTitleVal, userImageVal,
+                 feedSlugVal, feedTitleVal, feedLangVal, feedTypesVal] =
       DirectoryEntry <$>
       safeFromSql userVal <*>
       safeFromSql userTitleVal <*>
