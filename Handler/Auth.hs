@@ -327,7 +327,7 @@ sendMail toUser toEmail subject body =
                             }]]
             }
 
-returnJson :: (Monad m, ToJSON a, a ~ Value) =>
+returnJson :: (Monad m, a ~ Value) =>
               [(Text, a)] -> m RepJson
 returnJson = return . repJson . object
 

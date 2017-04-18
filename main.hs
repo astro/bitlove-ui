@@ -26,7 +26,7 @@ main = do
   app <- makeApplication config
   print config
   let settings = setHost (appHost config) $
-                 setPort (appPort config) $
+                 setPort (appPort config)
                  defaultSettings
       extra = appExtra config
       run = case (extraCert extra, extraKey extra) of

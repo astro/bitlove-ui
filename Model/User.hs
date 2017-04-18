@@ -19,7 +19,7 @@ import Utils
 
 newtype UserName = UserName { userName :: Text }
     deriving (Eq, Ord, Show, Typeable)
-             
+
 instance Convertible UserName SqlValue where
     safeConvert (UserName name) = safeConvert name
 
@@ -33,7 +33,7 @@ instance Convertible [SqlValue] UserName where
 
 instance Read UserName where
     readsPrec _ = (:[]) . (, "") . UserName . T.pack
-  
+
 
 
 data UserDetails = UserDetails {
@@ -41,9 +41,9 @@ data UserDetails = UserDetails {
       userImage :: Text,
       userHomepage :: Text
     } deriving (Typeable)
-                   
+
 instance Convertible [SqlValue] UserDetails where
-  safeConvert (title:image:homepage:[]) =
+  safeConvert [title, image, homepage] =
       UserDetails <$>
       safeConvert title <*>
       (fixUrl <$> safeConvert image) <*>
@@ -62,12 +62,12 @@ setUserDetails user details db = do
     [convert $ userTitle details, convert $ userImage details, convert $ userHomepage details, convert user]
     db
   return ()
-  
+
 newtype Salt = Salt { unSalt :: ByteString }
 
 instance Convertible Salt SqlValue where
     safeConvert = Right . toBytea' . unSalt
-             
+
 instance Convertible SqlValue Salt where
     safeConvert = Right . Salt . fromBytea'
 
@@ -78,7 +78,7 @@ newtype Salted = Salted { unSalted :: ByteString }
 
 instance Convertible Salted SqlValue where
     safeConvert = Right . toBytea' . unSalted
-             
+
 instance Convertible SqlValue Salted where
     safeConvert = Right . Salted . fromBytea'
 
@@ -90,7 +90,7 @@ data UserSalt = UserSalt Salt Salted
                 deriving (Typeable)
 
 instance Convertible [SqlValue] UserSalt where
-  safeConvert (salt:salted:[]) =
+  safeConvert [salt, salted] =
       UserSalt <$>
       safeConvert salt <*>
       safeConvert salted
@@ -99,17 +99,17 @@ instance Convertible [SqlValue] UserSalt where
 userSalt :: UserName -> Query UserSalt
 userSalt user =
     query "SELECT \"salt\", \"salted\" FROM users WHERE \"name\"=?" [convert user]
-    
+
 setUserSalted :: UserName -> Salted -> Connection -> IO ()
 setUserSalted user salted db = do
   Just _ <-
     query' "UPDATE users SET \"salted\"=? WHERE \"name\"=?"
     [convert salted, convert user] db
   return ()
-                 
+
 registerUser :: UserName -> Text -> Connection -> IO (Maybe Salt)
 registerUser username email db = do
-  r <- query' "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?" 
+  r <- query' "SELECT COUNT(\"name\") FROM users WHERE \"name\"=?"
        [convert username] db
   case r of
     Just [[v]] | convert v < (1 :: Int) -> do
@@ -120,13 +120,12 @@ registerUser username email db = do
            return $ Just salt
     _ ->
         return Nothing
-    
+
     where generateSalt =
               (Salt . B.pack . take 8 . randoms) `fmap`
               getStdGen
-              
+
 userByEmail :: Text -> Query UserName
 userByEmail email =
   query "SELECT \"name\" FROM users WHERE \"email\"=?"
   [convert email]
-  

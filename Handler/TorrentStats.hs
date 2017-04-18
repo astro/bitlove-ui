@@ -7,7 +7,7 @@ import qualified Data.Text as T
 
 import Import
 import PathPieces
-import qualified Model as Model
+import qualified Model
 import BitloveAuth
 
 
@@ -46,7 +46,7 @@ getTorrentStatsR user slug name statsPeriod stats = do
       (RepJson . toContent . object) <$> case stats of
         StatsDownloads -> do
           canEdit' <- canEdit user
-          json <- ("downloads" .=) <$> 
+          json <- ("downloads" .=) .
                   statsToJson tz <$>
                   withStats (Model.getCounter "complete" info_hash)
           json' <- 
@@ -75,12 +75,12 @@ getTorrentStatsR user slug name statsPeriod stats = do
                        completeGauge' $
                        case vs of
                          -- First beyond start?
-                         (StatsValue t value):_
+                         StatsValue t value : _
                              | t > localStart && 
                                value > 0 ->
                                  let t' = utcToLocalTime tz $
-                                          (fromIntegral $ -interval) `addUTCTime` (localTimeToUTC tz t)
-                                 in (StatsValue t' 0):vs
+                                          fromIntegral (-interval) `addUTCTime` localTimeToUTC tz t
+                                 in StatsValue t' 0 : vs
                          _ ->
                            vs
                    -- empty gauge
@@ -89,9 +89,9 @@ getTorrentStatsR user slug name statsPeriod stats = do
                    completeGauge' [v@(StatsValue t value)]
                        | t < localStop = [v, StatsValue localStop value]
                    -- traverse till last (above case)
-                   completeGauge' (v:vs) = v:(completeGauge' vs)
+                   completeGauge' (v:vs) = v : completeGauge' vs
                return (completeGauge $ map cheat seeders,
-                       completeGauge $ leechers)
+                       completeGauge leechers)
           return $ ("seeders" .= statsToJson tz seeders) :
                    ("leechers" .= statsToJson tz leechers) : 
                    baseJson
@@ -104,5 +104,5 @@ statsToJson :: TimeZone -> [StatsValue] -> Value
 statsToJson tz = 
     object .
     map (\(StatsValue time val) ->
-             (T.pack $ iso8601 $ localTimeToZonedTime tz time) .= val
+             T.pack (iso8601 $ localTimeToZonedTime tz time) .= val
         )

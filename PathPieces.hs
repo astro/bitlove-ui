@@ -21,14 +21,14 @@ instance PathPiece Period where
       "1" -> Just $ PeriodDays 1
       "7" -> Just $ PeriodDays 7
       "30" -> Just $ PeriodDays 30
-      "all" -> Just $ PeriodAll
+      "all" -> Just PeriodAll
       _ -> Nothing
   toPathPiece (PeriodDays days) = T.pack $ show days
   toPathPiece PeriodAll = "all"
 
 
-data TorrentName = TorrentName T.Text
-                   deriving (Show, Eq, Read, Ord)
+newtype TorrentName = TorrentName T.Text
+                    deriving (Show, Eq, Read, Ord)
   
 instance PathPiece TorrentName where
   fromPathPiece text = do
@@ -85,8 +85,8 @@ instance PathPiece Token where
   toPathPiece = toHex . unToken
   
 
-data Thumbnail = Thumbnail Int
-                 deriving (Show, Eq, Ord, Read)
+newtype Thumbnail = Thumbnail Int
+                  deriving (Show, Eq, Ord, Read)
 
 instance PathPiece Thumbnail where
     fromPathPiece "48x48.png" = 
@@ -114,8 +114,8 @@ instance Show DirectoryPage where
 instance PathPiece DirectoryPage where
     fromPathPiece c =
         case T.unpack c of
-          [c] | isAlpha c -> 
-              Just $ DirectoryLetter c
+          [c'] | isAlpha c' ->
+              Just $ DirectoryLetter c'
           "0-9" -> 
               Just DirectoryDigit
           _ -> 

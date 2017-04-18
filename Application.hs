@@ -10,7 +10,7 @@ import Settings
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
-import Network.HTTP.Conduit (newManager, conduitManagerSettings)
+import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import Data.Pool
 import qualified Hasql.Connection as Connection
 import qualified Data.Aeson as Aeson
@@ -60,7 +60,7 @@ mkYesodDispatch "UIApp" resourcesUIApp
 -- migrations handled by Yesod.
 makeApplication :: AppConfig BitloveEnv Extra -> IO Application
 makeApplication conf = do
-    dbconf <- withYamlEnvironment 
+    dbconf <- withYamlEnvironment
               "config/postgresql.yml"
               (appEnv conf)
               parseDBConf
@@ -70,13 +70,13 @@ makeApplication conf = do
     tracker <- ignoreAccept <$>
                (makeTrackerApp trackerPool >>= toWaiAppPlain)
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost <$> stats <$> gzip def <$> autohead <$> etagMiddleware <$> ignoreAccept <$>
+    ui <- enforceVhost . stats . gzip def . autohead . etagMiddleware . ignoreAccept <$>
           toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
-    anyApp [app] = 
+    anyApp [app] =
         app
-    anyApp (app:apps) = 
+    anyApp (app:apps) =
         \req respond ->
             app req $ \res ->
                 let tryNext =
@@ -109,7 +109,7 @@ makeApplication conf = do
                  | any (`BC.isPrefixOf` vhost) ["localhost", "bitlove.org", "api.bitlove.org"] ->
                      proceed
              Just _ ->
-                 getRedirectResponse $ 
+                 getRedirectResponse $
                  "https://bitlove.org" `BC.append` rawPathInfo req
     measureDuration :: Middleware
     measureDuration app req respond =
@@ -124,6 +124,11 @@ makeApplication conf = do
 
                   cpu3 <- getCPUTime
                   utc3 <- getCurrentTime
+
+                  let remote = show $ remoteHost req
+                      proxied = BC.unpack <$>
+                                "X-Real-IP" `lookup` requestHeaders req
+                      remote' = maybe remote ((remote ++ "/") ++) proxied
                   BC.hPutStrLn stderr $ BC.concat
                              [ "["
                              , BC.pack $ show (truncate $ (utc2 `diffUTCTime` utc1) * 1000 :: Int)
@@ -134,7 +139,7 @@ makeApplication conf = do
                              , "+"
                              , BC.pack $ show ((cpu3 - cpu2) `div` 1000000000)
                              , "ms cpu] "
-                             , BC.pack $ show $ remoteHost req
+                             , BC.pack remote'
                              , " "
                              , BC.pack $ show $ statusCode $ responseStatus res
                              , " "
@@ -144,11 +149,11 @@ makeApplication conf = do
                              ]
 
                   return a
-           
+
     etagMiddleware app req respond =
-      do let reqETags = 
+      do let reqETags =
                  "If-None-Match" `lookup` requestHeaders req
-             matches etag = 
+             matches etag =
                  case (etag `BC.breakSubstring`) <$> reqETags of
                    Just (_, reqEtags')
                        | not (BC.null reqEtags') ->
@@ -163,11 +168,11 @@ makeApplication conf = do
                         | otherwise =
                             res
                     res' = case res of
-                             ResponseFile s hs _ _ -> 
+                             ResponseFile s hs _ _ ->
                                  may304 res s hs
-                             ResponseBuilder s hs _ -> 
+                             ResponseBuilder s hs _ ->
                                  may304 res s hs
-                             ResponseStream s hs _ -> 
+                             ResponseStream s hs _ ->
                                  may304 res s hs
                              raw -> raw
                 respond res'
@@ -187,15 +192,15 @@ getApplicationDev =
     defaultDevelApp loader makeApplication
   where
     loader = loadConfig (configSettings Settings.Development)
-        { csParseExtra = parseExtra 
+        { csParseExtra = parseExtra
         }
 
 makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
 makeUIFoundation conf pool = do
-    manager <- newManager conduitManagerSettings
+    manager <- newManager tlsManagerSettings
     s <- staticSite
     return $ UIApp conf s pool manager
-    
+
 parseDBConf :: Monad m =>
                Value -> m [(String, String)]
 parseDBConf = return . parse
@@ -238,4 +243,4 @@ makeDBPool dbconf =
 
 
 getFaviconR :: Handler ()
-getFaviconR = sendFile "image/x-icon" $ "static/favicon.ico"
+getFaviconR = sendFile "image/x-icon" "static/favicon.ico"

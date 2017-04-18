@@ -10,7 +10,6 @@ import Data.Time.LocalTime (LocalTime)
 import Data.ByteString (ByteString, unpack)
 import Data.Data (Typeable)
 import Numeric (showHex)
-import Control.Applicative
 
 import Utils
 import Model.SqlValue
@@ -18,16 +17,17 @@ import Model.Query
 import Model.User
 
 newtype InfoHash = InfoHash { unInfoHash :: ByteString }
-                 deriving (Show, Eq, Ord)
-                          
+                 deriving (Eq, Ord)
+
+instance Show InfoHash where
+  show = T.unpack . toHex . unInfoHash
+
 infoHashToHex :: InfoHash -> Text
 infoHashToHex (InfoHash bs) =
   T.pack $
-  concatMap (\byte ->
-              showHex byte ""
-            ) $
+  concatMap (flip showHex "") $
   unpack bs
-                          
+
 instance Convertible InfoHash SqlValue where
   safeConvert (InfoHash bs) = Right $ toBytea' bs
 
@@ -64,35 +64,35 @@ data Download = Download {
 } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] Download where
-  safeConvert (user:slug:feed:item:enclosure:
-               feed_title:_feed_public:
-               info_hash:name:size:type_:
-               title:lang:summary:published:
-               homepage:payment:image:
-               seeders:leechers:upspeed:downspeed:downloaded:[]) = 
+  safeConvert [user, slug, feed, item, enclosure,
+               feed_title, _feed_public,
+               info_hash, name, size, type_,
+               title, lang, summary, published,
+               homepage, payment, image,
+               seeders, leechers, upspeed, downspeed, downloaded] =
     Download <$>
-    safeConvert user <*> 
-    safeConvert slug <*> 
-    safeConvert feed <*> 
-    safeConvert item <*> 
+    safeConvert user <*>
+    safeConvert slug <*>
+    safeConvert feed <*>
+    safeConvert item <*>
     safeConvert enclosure <*>
-    safeConvert info_hash <*> 
-    safeConvert name <*> 
-    safeConvert size <*> 
-    safeConvert type_ <*> 
-    safeConvert feed_title <*> 
-    safeConvert title <*> 
-    safeConvert lang <*> 
-    safeConvert summary <*> 
-    safeConvert published <*> 
-    safeConvert homepage <*> 
-    safeConvert payment <*> 
-    (fixUrl <$> safeConvert image) <*> 
-    safeConvert seeders <*> 
-    safeConvert leechers <*> 
-    safeConvert upspeed <*> 
-    safeConvert downspeed <*> 
-    safeConvert downloaded    
+    safeConvert info_hash <*>
+    safeConvert name <*>
+    safeConvert size <*>
+    safeConvert type_ <*>
+    safeConvert feed_title <*>
+    safeConvert title <*>
+    safeConvert lang <*>
+    safeConvert summary <*>
+    safeConvert published <*>
+    safeConvert homepage <*>
+    safeConvert payment <*>
+    (fixUrl <$> safeConvert image) <*>
+    safeConvert seeders <*>
+    safeConvert leechers <*>
+    safeConvert upspeed <*>
+    safeConvert downspeed <*>
+    safeConvert downloaded
   safeConvert vals = convError "Download" vals
 
 
@@ -119,7 +119,7 @@ userDownloads user page =
 enclosureDownloads :: Text -> Query Download
 enclosureDownloads url =
   query "SELECT * FROM get_enclosure_downloads(?)" [convert url]
-  
+
 guidDownloads :: Text -> Query Download
 guidDownloads guid =
   query "SELECT * FROM get_guid_downloads(?)" [convert guid]
@@ -128,9 +128,8 @@ feedDownloads :: Text -> QueryPage -> Query Download
 feedDownloads url page =
   query "SELECT * FROM get_recent_downloads(?, ?, ?)" $
   convert page ++ [convert url]
-  
+
 searchDownloads :: Text -> QueryPage -> Query Download
 searchDownloads needle page =
   query "SELECT * FROM search_feed_items(?, ?, ?)" $
   convert page ++ [convert needle]
-  

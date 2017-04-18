@@ -1,0 +1,8 @@
+language: haskell
+ghc:
+  - 7.8
+install:
+  - cabal install happy alex
+  - PATH=~/.cabal/bin:$PATH cabal install --only-dependencies --enable-tests
+script:
+  - cabal configure --enable-tests -fdev && cabal build

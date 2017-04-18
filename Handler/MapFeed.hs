@@ -62,10 +62,10 @@ mapFeed (FeedXml xml) getEnclosureLink =
         mapEnclosures =
           CL.map (\event ->
                    case event of
-                     EventBeginElement name@(Name {
-                                               nameLocalName = "link",
-                                               nameNamespace = Just ns
-                                             }) attrs 
+                     EventBeginElement name@Name {
+                         nameLocalName = "link",
+                         nameNamespace = Just ns
+                     } attrs
                          | ns == xmlnsAtom &&
                            (attrs `getAttr` "rel") == "enclosure" ->
                              let href = attrs `getAttr` "href"

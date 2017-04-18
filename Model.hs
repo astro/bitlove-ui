@@ -2,6 +2,7 @@
 module Model (
   -- Model
   infoHashByName,
+  infoHashExists,
   Torrent (..),
   torrentByName,
   purgeTorrent,
@@ -72,7 +73,6 @@ import Data.Text (Text)
 import Database.HDBC
 import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy as LB
-import Control.Applicative
 
 import Utils
 import Model.Query
@@ -97,7 +97,7 @@ data Torrent = Torrent {
 } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] Torrent where
-  safeConvert (info_hash:name:size:torrent:[]) =
+  safeConvert [info_hash, name, size, torrent] =
     Torrent <$>
     safeConvert info_hash <*>
     safeConvert name <*>
@@ -105,10 +105,33 @@ instance Convertible [SqlValue] Torrent where
     pure (fromBytea torrent)
   safeConvert vals = convError "Torrent" vals
 
+newtype InfoHashExists = InfoHashExists Bool
+
+instance Convertible [SqlValue] InfoHashExists where
+  safeConvert (value:_) =
+    InfoHashExists <$>
+    safeFromSql value
+  safeConvert _ =
+    Right $
+    InfoHashExists False
+
+infoHashExists :: forall conn.
+                  IConnection conn =>
+                  InfoHash -> conn -> IO Bool
+infoHashExists infoHash conn = do
+  results <- infoHashExists' infoHash conn
+  case results of
+    (InfoHashExists True : _) -> return True
+    _ -> return False
+
+infoHashExists' :: InfoHash -> Query InfoHashExists
+infoHashExists' infoHash =
+  query "SELECT EXISTS (SELECT \"info_hash\" FROM torrents WHERE \"info_hash\"=?)" [toSql infoHash]
+
 torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
   query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [convert user, convert slug, convert name]
-  
+
 purgeTorrent :: IConnection conn => 
                 UserName -> Text -> Text -> conn -> IO Int
 purgeTorrent user slug name db =
@@ -124,7 +147,7 @@ data ActiveUser = ActiveUser
     } deriving (Show, Typeable)
     
 instance Convertible [SqlValue] ActiveUser where
-    safeConvert (userVal:feedsVal:langsVal:typesVal:[]) =
+    safeConvert [userVal, feedsVal, langsVal, typesVal] =
         ActiveUser <$>
         safeConvert userVal <*>
         safeConvert feedsVal <*>
@@ -147,8 +170,8 @@ data DirectoryEntry = DirectoryEntry
     } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] DirectoryEntry where
-    safeConvert (userVal:userTitleVal:userImageVal:
-                 feedSlugVal:feedTitleVal:feedLangVal:feedTypesVal:[]) = 
+    safeConvert [userVal, userTitleVal, userImageVal,
+                 feedSlugVal, feedTitleVal, feedLangVal, feedTypesVal] =
       DirectoryEntry <$>
       safeConvert userVal <*>
       safeConvert userTitleVal <*>

@@ -6,7 +6,6 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Data.Text (Text)
 import Data.Time (LocalTime)
-import Control.Applicative
 import Database.PostgreSQL.LibPQ (Connection)
 
 import Model.SqlValue
@@ -17,7 +16,7 @@ data StatsValue = StatsValue LocalTime Double
                 deriving (Show, Typeable)
 
 instance Convertible [SqlValue] StatsValue where
-  safeConvert (time:val:[]) =
+  safeConvert [time, val] =
     StatsValue <$>
     safeConvert time <*>
     safeConvert val
@@ -41,4 +40,4 @@ getDownloadCounter path start stop interval =
 
 getGauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Integer -> Query StatsValue
 getGauge kind info_hash start stop interval =
-  query ("SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC") [convert interval, convert kind, convert info_hash, convert start, convert stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert kind, convert info_hash, convert start, convert stop]

@@ -1,7 +1,6 @@
 module Handler.FeedLookupAPI where
 
 import Prelude
-import Control.Applicative
 import Control.Monad
 import qualified Data.Text as T
 import Yesod
@@ -13,16 +12,16 @@ getFeedLookupJson = do
   -- For CORS:
   addHeader "Access-Control-Allow-Origin" "*"
 
-  urls <- map snd <$>
-          filter (("url" `T.isPrefixOf`) . fst) <$>
+  urls <- map snd .
+          filter (("url" `T.isPrefixOf`) . fst) .
           reqGetParams <$>
           getRequest
   fullUrlRender <- getFullUrlRender
-  RepJson <$> toContent <$> object <$>
+  RepJson . toContent . object <$>
           withDB
           (\db ->
                forM urls $ \url ->
-                   (url .=) <$>
+                   (url .=) .
                    map (\feed ->
                             fullUrlRender $
                             MapFeedR (feedUser feed) (feedSlug feed)

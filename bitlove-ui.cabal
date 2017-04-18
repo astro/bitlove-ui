@@ -59,6 +59,7 @@ library
                      Handler.Thumbnails
                      Benc
                      WorkQueue
+                     Cache
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -107,7 +108,7 @@ library
                  , postgresql-binary             >= 0.9.1.1 && < 0.10
                  , resourcet                     >= 0.4.8
                  , unordered-containers          >= 0.2.3.0
-                 , aeson                         >= 0.6.2.0
+                 , aeson                         >= 0.6.2.0 && < 1.2
                  , convertible                   >= 1.0.11.1
                  , time                          >= 1.4.0.1
                  , old-locale                    >= 1.0.0.5
@@ -135,6 +136,7 @@ library
                  , process-conduit               >= 1.0.0.1
                  , lifted-base                   >= 0.2.1.0
                  , regex-pcre                    >= 0.94.4
+                 , memcache                      >= 0.2.0.1
 
 executable         ui
     if flag(library-only)

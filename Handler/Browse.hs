@@ -583,7 +583,7 @@ renderPagination page =
            <a href="#{next}">Next <i class="icon-arrow-right"></i>
      |]
                                     
-humanSize :: (Integral a, Show a) => a -> String
+humanSize :: (Integral a) => a -> String
 humanSize n = let (n', unit) = humanSize' $ fromIntegral n
                   ns | n' < 10 = show $
                                  (fromIntegral (truncate $ n' * 10 :: Integer) / 10 :: Double)
