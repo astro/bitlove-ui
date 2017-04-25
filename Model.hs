@@ -70,11 +70,13 @@ module Model (
 import Prelude
 import Data.Convertible
 import Data.Text (Text)
-import Database.HDBC
+import qualified Data.Text as T
 import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy as LB
+import Database.PostgreSQL.LibPQ (Connection)
 
 import Utils
+import Model.SqlValue
 import Model.Query
 import Model.Download
 import Model.Item
@@ -102,7 +104,7 @@ instance Convertible [SqlValue] Torrent where
     safeConvert info_hash <*>
     safeConvert name <*>
     safeConvert size <*>
-    pure (fromBytea torrent)
+    safeConvert torrent
   safeConvert vals = convError "Torrent" vals
 
 newtype InfoHashExists = InfoHashExists Bool
@@ -110,14 +112,12 @@ newtype InfoHashExists = InfoHashExists Bool
 instance Convertible [SqlValue] InfoHashExists where
   safeConvert (value:_) =
     InfoHashExists <$>
-    safeFromSql value
+    safeConvert value
   safeConvert _ =
     Right $
     InfoHashExists False
 
-infoHashExists :: forall conn.
-                  IConnection conn =>
-                  InfoHash -> conn -> IO Bool
+infoHashExists :: InfoHash -> Connection -> IO Bool
 infoHashExists infoHash conn = do
   results <- infoHashExists' infoHash conn
   case results of
@@ -126,18 +126,18 @@ infoHashExists infoHash conn = do
 
 infoHashExists' :: InfoHash -> Query InfoHashExists
 infoHashExists' infoHash =
-  query "SELECT EXISTS (SELECT \"info_hash\" FROM torrents WHERE \"info_hash\"=?)" [toSql infoHash]
+  query "SELECT EXISTS (SELECT \"info_hash\" FROM torrents WHERE \"info_hash\"=?)" [convert infoHash]
 
 torrentByName :: UserName -> Text -> Text -> Query Torrent
 torrentByName user slug name =
   query "SELECT \"info_hash\", \"name\", \"size\", \"torrent\" FROM user_feeds JOIN enclosures USING (feed) JOIN enclosure_torrents USING (url) JOIN torrents USING (info_hash) WHERE user_feeds.\"user\"=? AND user_feeds.\"slug\"=? AND torrents.\"name\"=?" [convert user, convert slug, convert name]
 
-purgeTorrent :: IConnection conn => 
-                UserName -> Text -> Text -> conn -> IO Int
+purgeTorrent :: UserName -> Text -> Text -> Connection -> IO Int
 purgeTorrent user slug name db =
-  (convert . head . head) `fmap`
-  quickQuery' db "SELECT * FROM purge_download(?, ?, ?)"
-              [convert user, convert slug, convert name]
+  head <$>
+  query1 "SELECT * FROM purge_download(?, ?, ?)"
+  [convert user, convert slug, convert name]
+  db
 
 data ActiveUser = ActiveUser
     { activeUser :: UserName
@@ -191,6 +191,6 @@ getDirectory mPage =
             Just DirectoryDigit -> 
                 (" WHERE \"user\" ~* E'^[^a-z]'", [])
             Just (DirectoryLetter c) ->
-                (" WHERE LOWER(LEFT(\"user\", 1)) = ?", [convert [c]])
+                (" WHERE LOWER(LEFT(\"user\", 1)) = ?", [convert $ T.pack [c]])
   in query ("SELECT \"user\", COALESCE(\"title\", \"user\"), COALESCE(\"image\", ''), \"slug\", COALESCE(\"feed_title\", \"slug\"), COALESCE(\"lang\", ''), array_to_string(\"types\", ',') FROM directory" ++ cond) params
 

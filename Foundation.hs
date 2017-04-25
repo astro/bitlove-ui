@@ -49,6 +49,7 @@ import Database.PostgreSQL.LibPQ (Connection)
 import Utils
 import PathPieces
 import BitloveAuth
+import Model.Query
 
 
 type Database = Connection
@@ -237,9 +238,15 @@ withDB f = do
 withDBPool :: DBPool -> Transaction a -> ResourceT IO a
 withDBPool pool f = liftIO $ do
     (db, localPool) <- takeResource pool
+    let f' = do
+          txBegin db
+          a <- f db
+          txCommit db
+          return $ Right a
     ea <- liftIO $
-          E.catch (Right <$> HDBC.withTransaction db f)
-          (return . Left)
+          E.catch f' $ \e -> do
+            txRollback db
+            return $ Left e
     case ea of
       Left (e :: E.SomeException) ->
           do destroyResource pool localPool db

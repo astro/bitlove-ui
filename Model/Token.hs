@@ -19,10 +19,10 @@ newtype Token = Token { unToken :: ByteString }
 
 
 instance Convertible Token SqlValue where
-    safeConvert = Right . toBytea' . unToken
+    safeConvert = safeConvert . unToken
              
 instance Convertible SqlValue Token where
-    safeConvert = Right . Token . fromBytea'
+    safeConvert v = Token <$> safeConvert v
 
 instance ToJSON Token where
     toJSON = toJSON . toHex . unToken

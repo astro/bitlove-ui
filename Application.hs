@@ -12,10 +12,11 @@ import Yesod.Default.Main
 import Yesod.Default.Handlers hiding (getFaviconR)
 import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import Data.Pool
-import qualified Hasql.Connection as Connection
+import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Text as Text
+import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Network.Wai
 import Network.Wai.Internal
 import Network.HTTP.Types.Status
@@ -206,10 +207,10 @@ parseDBConf :: Monad m =>
 parseDBConf = return . parse
   where parse (Aeson.Object o) = do
           (k, v) <- HashMap.toList o
-          let k' = Text.unpack k
+          let k' = T.unpack k
           case v of
             Aeson.String v' ->
-              return (k', Text.unpack v')
+              return (k', T.unpack v')
             (Aeson.Object _) ->
               parse v
             (Aeson.Number n) ->
@@ -218,27 +219,31 @@ parseDBConf = return . parse
               error ("Cannot parse: " ++ show v)
         parse _ = error "Expected JSON object"
 
-connectDB :: [(String, String)] -> IO Connection.Connection
+connectDB :: [(String, String)] -> IO PQ.Connection
 connectDB dbconf = do
-  let getConf key =
-        fromMaybe "" $
-        lookup key dbconf
-      settings =
-        Connection.settings
-        (getConf "host")
-        (getConf "port")
-        (getConf "user")
-        (getConf "password")
-        (getConf "database")
-  either (error . show) id <$>
-    Connection.acquire settings
+  putStrLn $ "PQ.connect " ++ show dbconf
+  db <- PQ.connectdb $ encodeUtf8 conf
+  mMsg <- PQ.errorMessage db
+  case mMsg of
+    Just msg | not (BC.null msg) -> do
+      let msg' = T.unpack (decodeUtf8 msg)
+      putStrLn $ "Error: " ++ msg'
+      PQ.finish db
+      error msg'
+    _ -> return db
+  where pqKeys = ["user", "password", "host", "port", "dbname", "hostaddr"]
+        dbconf' =
+          filter ((`elem` pqKeys) . fst) dbconf
+        conf = T.intercalate " " $ do
+          (k, v) <- dbconf'
+          return $ T.concat [T.pack k, "=", T.pack v]
 
 makeDBPool :: [(String, String)] -> IO DBPool
 makeDBPool dbconf =
   let connect = connectDB dbconf
   in createPool
-     (hPutStrLn stderr "connectPostgreSQL" >> connect)
-     (\db -> hPutStrLn stderr "HDBC.disconnect" >> Connection.release db)
+     (hPutStrLn stderr "PQ connect" >> connect)
+     (\db -> hPutStrLn stderr "PQ disconnect" >> PQ.finish db)
      4 60 4
 
 

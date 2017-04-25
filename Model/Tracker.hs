@@ -39,21 +39,21 @@ newtype PeerId = PeerId { unPeerId :: BC.ByteString }
                deriving (Show, Typeable)
 
 instance Convertible SqlValue PeerId where
-    safeConvert = Right . PeerId . fromBytea'
+    safeConvert = (PeerId <$>) . safeConvert
 
 instance Convertible PeerId SqlValue where
-    safeConvert = Right . toBytea' . unPeerId
+    safeConvert = safeConvert . unPeerId
 
 data PeerAddress = Peer4 !BC.ByteString
                  | Peer6 !BC.ByteString
                    deriving (Show, Read, Typeable, Eq, Ord)
 
 instance Convertible PeerAddress SqlValue where
-    safeConvert (Peer4 addr) = Right $ toBytea' addr
-    safeConvert (Peer6 addr) = Right $ toBytea' addr
+    safeConvert (Peer4 addr) = safeConvert addr
+    safeConvert (Peer6 addr) = safeConvert addr
 
 instance Convertible SqlValue PeerAddress where
-    safeConvert = decide . fromBytea'
+    safeConvert v = safeConvert v >>= decide
         where decide addr
                   | BC.length addr == 4 =
                       Right $ Peer4 addr
@@ -81,7 +81,7 @@ getPeers infoHash onlyLeechers =
             then "tracker_leechers"
             else "tracker"
            ) ++
-	   " WHERE \"info_hash\"=? LIMIT 40")
+           " WHERE \"info_hash\"=? LIMIT 40")
               [convert infoHash]
 
 
@@ -116,4 +116,4 @@ announcePeer tr db =
 updateScraped :: InfoHash -> Connection -> IO ()
 updateScraped infoHash db =
     void $
-    query' "SELECT * FROM update_scraped(?)" [convert infoHash]
+    query' "SELECT * FROM update_scraped(?)" [convert infoHash] db

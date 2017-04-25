@@ -16,7 +16,7 @@ import Model.User
 
 userFeed :: UserName -> Text -> Query Text
 userFeed user slug =
-  query "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
+  query1 "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
   [convert user, convert slug]
 
 newtype FeedXml = FeedXml LBC.ByteString
@@ -95,8 +95,8 @@ addUserFeed user slug url db =
 
 deleteUserFeed :: UserName -> Text -> Connection -> IO Bool
 deleteUserFeed user slug db =
-    (\result -> result == [[1 :: Int]]) <$>
-    query "DELETE FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
+    (== [1 :: Int]) <$>
+    query1 "DELETE FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
     [convert user, convert slug] db
 
 feedByUrl :: Text -> Query FeedInfo
@@ -122,8 +122,8 @@ userFeedDetails user slug =
 
 setUserFeedDetails :: UserName -> Text -> FeedDetails -> Connection -> IO Bool
 setUserFeedDetails user slug details db =
-  (== 1) `fmap`
-  query' "UPDATE user_feeds SET \"public\"=?, \"title\"=? WHERE \"user\"=? AND \"slug\"=?"
+  (== [1::Int]) <$>
+  query1 "UPDATE user_feeds SET \"public\"=?, \"title\"=? WHERE \"user\"=? AND \"slug\"=?"
   [convert $ fdPublic details, convert $ fdTitle details,
     convert user, convert slug]
   db

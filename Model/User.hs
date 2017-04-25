@@ -66,10 +66,10 @@ setUserDetails user details db = do
 newtype Salt = Salt { unSalt :: ByteString }
 
 instance Convertible Salt SqlValue where
-    safeConvert = Right . toBytea' . unSalt
+    safeConvert = safeConvert . unSalt
 
 instance Convertible SqlValue Salt where
-    safeConvert = Right . Salt . fromBytea'
+    safeConvert v = Salt <$> safeConvert v
 
 instance ToJSON Salt where
     toJSON = toJSON . toHex . unSalt
@@ -77,10 +77,10 @@ instance ToJSON Salt where
 newtype Salted = Salted { unSalted :: ByteString }
 
 instance Convertible Salted SqlValue where
-    safeConvert = Right . toBytea' . unSalted
+    safeConvert = safeConvert . unSalted
 
 instance Convertible SqlValue Salted where
-    safeConvert = Right . Salted . fromBytea'
+    safeConvert v = Salted <$> safeConvert v
 
 instance ToJSON Salted where
     toJSON = toJSON . toHex . unSalted

@@ -34,11 +34,11 @@ getTorrentStatsR user slug name statsPeriod stats = do
           baseJson = ["start" .= iso8601 zonedStart,
                       "stop" .= iso8601 zonedStop,
                       "interval" .= interval]
-          withStats :: (LocalTime -> LocalTime -> Integer -> Transaction a)
+          withStats :: (LocalTime -> LocalTime -> Int -> Transaction a)
                      -> Handler a
           withStats f = withDB $ 
                         f localStart localStop interval
-          withStats' :: (((LocalTime -> LocalTime -> Integer -> Transaction a) -> IO a) -> IO b) -> Handler b
+          withStats' :: (((LocalTime -> LocalTime -> Int -> Transaction a) -> IO a) -> IO b) -> Handler b
           withStats' f = withDB $ \db ->
                          f $ \f' ->
                          f' localStart localStop interval db

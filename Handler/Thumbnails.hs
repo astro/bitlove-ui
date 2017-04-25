@@ -94,7 +94,7 @@ serveThumbnail size url
                                      "Image cache " ++ show url ++ 
                                      " " ++ e
                           withDB $ Cache.putImage url size $ 
-                                 Cache.CachedError $ show e
+                                 Cache.CachedError $ T.pack $ show e
                           noThumbnail
                     EX.catch (generateThumbnail url size >>=
                               maybe (bail' "No HTTP source") storeReturn

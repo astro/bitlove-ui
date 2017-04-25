@@ -17,10 +17,10 @@ newtype SessionId = SessionId { unSessionId :: B.ByteString }
                   deriving (Show, Eq, Typeable)
 
 instance Convertible SessionId SqlValue where
-  safeConvert = Right . toBytea' . unSessionId
+  safeConvert = safeConvert . unSessionId
   
 instance Convertible SqlValue SessionId where
-  safeConvert = Right . SessionId . fromBytea'
+  safeConvert v = SessionId <$> safeConvert v
 
 instance Convertible [SqlValue] SessionId where
   safeConvert [v] = safeConvert v

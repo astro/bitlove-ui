@@ -14,11 +14,15 @@ data CachedImage = CachedImage LB.ByteString
                  | CachedError Text
 
 instance Convertible [SqlValue] CachedImage where
-    safeConvert [data_, err] 
-        | not (LB.null $ fromBytea data_) =
-            Right $ CachedImage $ fromBytea data_
-        | otherwise =
-            Right $ CachedError $ convert err
+    safeConvert [img, err] =
+      let img' = safeConvert img
+      in case img' of
+           Right img'' | not (LB.null img'') ->
+             Right $ CachedImage img''
+           Right _ ->
+             CachedError <$> safeConvert err
+           Left _ ->
+             CachedError <$> safeConvert err
     safeConvert _ = Right $ CachedError "safeConvert CachedImage error"
 
 getImage :: Text -> Int -> Query CachedImage
@@ -33,7 +37,7 @@ putImage url size cached db =
               CachedError err ->
                   query' "INSERT INTO cached_images (\"url\", \"size\", \"error\", \"time\") VALUES (?, ?, ?, NOW())" 
                   [convert url, convert size, convert err] db
-              CachedImage data_ ->
+              CachedImage img ->
                   query' "INSERT INTO cached_images (\"url\", \"size\", \"data\", \"time\") VALUES (?, ?, ?, NOW())"
-                  [convert url, convert size, toBytea data_] db
+                  [convert url, convert size, convert img] db
        return ()
