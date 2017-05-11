@@ -24,7 +24,7 @@ instance Convertible [SqlValue] StatsValue where
   
 getCounter :: Text -> InfoHash -> LocalTime -> LocalTime -> Int -> Query StatsValue
 getCounter kind info_hash start stop interval =
-  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\") FROM counters WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert kind, convert info_hash, convert start, convert stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\")::FLOAT FROM counters WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert kind, convert info_hash, convert start, convert stop]
   
 addCounter :: Text -> InfoHash -> Integer -> Connection -> IO ()
 addCounter kind infoHash increment db = do
@@ -36,8 +36,8 @@ addCounter kind infoHash increment db = do
 getDownloadCounter :: Text -> LocalTime -> LocalTime -> Int -> Query StatsValue
 getDownloadCounter path start stop interval =
   -- | "info_hash LIKE 'GET /%.torrent'" to use VIEW counters_get
-  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\") FROM counters WHERE info_hash LIKE 'GET /%.torrent' AND info_hash='GET '||?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert path, convert start, convert stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, SUM(\"value\")::FLOAT FROM counters WHERE info_hash LIKE 'GET /%.torrent' AND info_hash='GET '||?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert path, convert start, convert stop]
 
 getGauge :: Text -> InfoHash -> LocalTime -> LocalTime -> Int -> Query StatsValue
 getGauge kind info_hash start stop interval =
-  query "SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\") FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert kind, convert info_hash, convert start, convert stop]
+  query "SELECT align_timestamp(\"time\", ?) AS t, MAX(\"value\")::FLOAT FROM gauges WHERE \"kind\"=? AND \"info_hash\"=?::BYTEA AND \"time\">=? AND \"time\"<=? GROUP BY t ORDER BY t ASC" [convert interval, convert kind, convert info_hash, convert start, convert stop]
