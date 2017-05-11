@@ -50,8 +50,6 @@ query' sql args conn = do
                        SqlNull ->
                          Nothing
                   ) args
-
-  putStrLn $ "Query: " ++ sql ++ " " ++ show args
   mResult <- PQ.execParams conn sql' args' PQ.Binary
 
   case mResult of
@@ -70,7 +68,6 @@ query' sql args conn = do
           colOids <-
             forM [0..(cols - 1)] $
             PQ.ftype result . PQ.toColumn
-          putStrLn $ "colOids: " ++ show colOids
 
           fmap Just $
             forM [0..(rows - 1)] $ \row ->

@@ -24,7 +24,7 @@ import System.CPUTime (getCPUTime)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import qualified Data.ByteString.Char8 as BC
 --import Data.Monoid
-import System.IO (hPutStrLn, stderr)
+import System.IO (stderr)
 import Network.Wai.Middleware.Autohead
 import Network.Wai.Middleware.Gzip
 import Network.HTTP.Types
@@ -221,13 +221,12 @@ parseDBConf = return . parse
 
 connectDB :: [(String, String)] -> IO PQ.Connection
 connectDB dbconf = do
-  putStrLn $ "PQ.connect " ++ show dbconf
   db <- PQ.connectdb $ encodeUtf8 conf
   mMsg <- PQ.errorMessage db
   case mMsg of
     Just msg | not (BC.null msg) -> do
       let msg' = T.unpack (decodeUtf8 msg)
-      putStrLn $ "Error: " ++ msg'
+      BC.hPutStrLn stderr $ BC.pack $ "Error: " ++ msg'
       PQ.finish db
       error msg'
     _ -> return db
@@ -242,8 +241,8 @@ makeDBPool :: [(String, String)] -> IO DBPool
 makeDBPool dbconf =
   let connect = connectDB dbconf
   in createPool
-     (hPutStrLn stderr "PQ connect" >> connect)
-     (\db -> hPutStrLn stderr "PQ disconnect" >> PQ.finish db)
+     (BC.hPutStrLn stderr "PQ.connect" >> connect)
+     (\db -> BC.hPutStrLn stderr "PQ.disconnect" >> PQ.finish db)
      4 60 4
 
 
