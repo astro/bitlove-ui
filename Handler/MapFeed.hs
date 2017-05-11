@@ -53,7 +53,8 @@ type Attrs = [(Name, [Content])]
              
 mapFeed :: FeedXml -> (Text -> Maybe Text) -> Source (ResourceT IO) (Flush Builder)
 mapFeed (FeedXml xml) getEnclosureLink =
-  parseLBS def (LB.concat $ chunkify 64 xml) $= 
+  yield xml $=
+  parseText' def =$=
   mapEnclosures =$=
   renderBuilder def =$=
   CL.sequence (CL.take 2048) =$=
@@ -105,12 +106,6 @@ mapFeed (FeedXml xml) getEnclosureLink =
           in case m_val of
                Just val -> (name, [ContentText val]) : attrs'
                Nothing -> attrs'
-        chunkify chunkSize s
-            | LB.null s = []
-            | otherwise = 
-                let s' = LB.take chunkSize s 
-                    s'' = LB.drop chunkSize s
-                in s' : chunkify chunkSize s'' 
 
 typeTorrent :: Text
 typeTorrent = "application/x-bittorrent"

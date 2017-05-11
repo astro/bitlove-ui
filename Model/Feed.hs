@@ -5,7 +5,6 @@ module Model.Feed where
 import Prelude
 import Data.Convertible
 import Data.Text (Text)
-import qualified Data.ByteString.Lazy.Char8 as LBC
 import Data.Data (Typeable)
 import Database.PostgreSQL.LibPQ (Connection)
 
@@ -19,7 +18,7 @@ userFeed user slug =
   query1 "SELECT \"feed\" FROM user_feeds WHERE \"user\"=? AND \"slug\"=?"
   [convert user, convert slug]
 
-newtype FeedXml = FeedXml LBC.ByteString
+newtype FeedXml = FeedXml Text
     deriving (Typeable)
 
 instance Convertible [SqlValue] FeedXml where
