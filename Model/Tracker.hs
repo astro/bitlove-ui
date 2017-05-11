@@ -5,6 +5,7 @@ import Prelude
 import Control.Monad (void)
 import Data.Convertible
 import Data.Data (Typeable)
+import Data.Text (Text)
 import qualified Data.ByteString.Char8 as BC
 import Database.PostgreSQL.LibPQ (Connection)
 
@@ -93,7 +94,7 @@ data TrackerRequest = TrackerRequest {
       trUploaded :: Integer,
       trDownloaded :: Integer,
       trLeft :: Integer,
-      trEvent :: Maybe BC.ByteString,
+      trEvent :: Maybe Text,
       trCompact :: Bool
     } deriving (Show)
 
