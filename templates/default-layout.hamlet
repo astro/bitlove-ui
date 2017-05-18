@@ -26,6 +26,10 @@
             <a href=@{LoginR}>_{MsgLogin}
           <li>
             <a href=@{SignupR}>_{MsgSignUp}
+      <p>
+        We recommend
+        <a href="https://webtorrent.io/desktop/">WebTorrent Desktop
+        for streaming playback
 
   <ul id="main-nav">
     <li>

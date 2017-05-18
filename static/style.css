@@ -119,13 +119,24 @@ header h1 a {
 
 #top-nav .content-wrapper {
   height: 100%;
-  max-width: 60em;
-  margin: auto;
+  max-width: 100vw;
+  margin: 0 .1em;
+}
+
+#top-nav p {
+    height: 100%;
+    vertical-align: bottom;
+    margin: 4px 0 3px;
+    padding: .4em;
+    text-align: center;
+}
+#top-nav p a {
+    font-weight: bold;
 }
 
 /* #top-nav */ #search {
   margin: 0;
-  margin: 4px 0;
+  margin: 2px 0 4px;
   float: left;
 }
 
@@ -133,7 +144,7 @@ header h1 a {
   float: right;
   list-style-type: none;
   padding: 0;
-  margin: 3px 0;
+  margin: 1px 0 3px;
 }
 
 #user-nav em {
