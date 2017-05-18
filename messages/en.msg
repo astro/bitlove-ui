@@ -82,3 +82,5 @@ BroadcasterExplanation: Place your content on Bitlove to make your audience happ
 ForgotPasswordQuestion: Forgot password?
 Reactivate: Reactivate your account
 Ok: Ok
+Recommend1: We recommend
+Recommend2: for streaming playback

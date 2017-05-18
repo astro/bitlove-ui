@@ -81,3 +81,5 @@ BroadcasterExplanation: Veröffentlichen Sie ihre Inhalte auf Bitlove und machen
 ForgotPasswordQuestion: Passwort vergessen?
 Reactivate: Benutzer reaktivieren
 Ok: Okay
+Recommend1: Wir empfehlen
+Recommend2: für Streaming

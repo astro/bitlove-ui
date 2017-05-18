@@ -133,7 +133,7 @@ header h1 a {
     padding: .4em;
     text-align: center;
 }
-#top-nav p {
+#top-nav p a {
     font-weight: bold;
 }
 

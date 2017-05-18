@@ -13,9 +13,9 @@
           _{MsgSearch}:
         <input name="q" type="search" id="search-field">
       <p>
-        We recommend
+        _{MsgRecommend1}
         <a href="https://webtorrent.io/desktop/">WebTorrent Desktop
-        for streaming playback
+        _{MsgRecommend2}
       <ul id="user-nav">
         $maybe user <- msu
           <li>
