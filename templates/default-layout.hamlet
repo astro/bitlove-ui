@@ -12,6 +12,10 @@
         <label for="search-field">
           _{MsgSearch}:
         <input name="q" type="search" id="search-field">
+      <p>
+        We recommend
+        <a href="https://webtorrent.io/desktop/">WebTorrent Desktop
+        for streaming playback
       <ul id="user-nav">
         $maybe user <- msu
           <li>
@@ -26,10 +30,6 @@
             <a href=@{LoginR}>_{MsgLogin}
           <li>
             <a href=@{SignupR}>_{MsgSignUp}
-      <p>
-        We recommend
-        <a href="https://webtorrent.io/desktop/">WebTorrent Desktop
-        for streaming playback
 
   <ul id="main-nav">
     <li>

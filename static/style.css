@@ -103,7 +103,6 @@ header h1 a {
   top: 0;
   left: 0;
   right: 0;
-  height: 32px;
   border-bottom: 1px solid #E0E0E0;
   background: #fdfdfd;
   background: -moz-linear-gradient(top, #fdfdfd 0%, #f2f2f2 100%);
@@ -120,31 +119,33 @@ header h1 a {
 #top-nav .content-wrapper {
   height: 100%;
   max-width: 100vw;
-  margin: 0 .1em;
+  margin: 0 .2em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 #top-nav p {
     height: 100%;
     vertical-align: bottom;
-    margin: 4px 0 3px;
+    margin: 3px 0;
     padding: .4em;
     text-align: center;
 }
-#top-nav p a {
+#top-nav p {
     font-weight: bold;
 }
 
 /* #top-nav */ #search {
   margin: 0;
-  margin: 2px 0 4px;
-  float: left;
+  margin: 4px 0;
 }
 
 /* #top-nav */ #user-nav {
-  float: right;
   list-style-type: none;
   padding: 0;
-  margin: 1px 0 3px;
+  margin: 3px 0;
 }
 
 #user-nav em {
