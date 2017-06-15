@@ -29,8 +29,8 @@ ourPeerId = PeerId "-<30000-bitlove.org/"
 
 ourSeeders :: [TrackedPeer]
 ourSeeders = do
-  addr <-  [ Peer4 "\85\10\246\236"
-           , Peer6 "\x2a\x01\x04\xf8\x01\x60\x54\x21\x00\x00\x00\x00\x00\x00\x00\x03"
+  addr <-  [ Peer4 "\94\130\10\164"
+           , Peer6 "\x2a\x01\x04\xf8\x01\x0b\x0e\xdb\x00\x00\x00\x00\x00\x00\x00\x03"
            ]
   return $ TrackedPeer ourPeerId addr 6881
 
