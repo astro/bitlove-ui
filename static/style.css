@@ -433,10 +433,10 @@ p.feed {
 .published .today {
   font-weight: 700;
 }
-.flattr {
-  font-size: 50%;
+.payment {
+  font-size: .6em;
 }
-.flattr a {
+.payment a {
   color: #595;
   margin: 0 0.4em 0.1em 0.5em;
   padding: 0 2px;

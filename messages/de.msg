@@ -83,3 +83,4 @@ Reactivate: Benutzer reaktivieren
 Ok: Okay
 Recommend1: Wir empfehlen
 Recommend2: für Streaming
+Payment: Spenden

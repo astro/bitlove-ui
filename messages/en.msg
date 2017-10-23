@@ -84,3 +84,4 @@ Reactivate: Reactivate your account
 Ok: Ok
 Recommend1: We recommend
 Recommend2: for streaming playback
+Payment: Donate

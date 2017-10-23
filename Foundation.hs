@@ -123,7 +123,6 @@ instance Yesod UIApp where
           addScript $ StaticR js_jquery_1_7_1_min_js
           addScript $ StaticR js_jquery_flot_js
           addScript $ StaticR js_graphs_js
-          addScriptRemote "https://api.flattr.com/js/0.6/load.js?mode=auto&popout=0&button=compact"
           $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 

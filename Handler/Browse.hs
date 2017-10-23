@@ -424,8 +424,9 @@ renderItem item showOrigin = do
              src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}">
       <div class="right">
         $if not (T.null $ itemPayment item)
-          <div class="flattr">
-            #{renderPayment}
+          <div .payment>
+            <a rel="payment" href="#{payment}">
+              _{MsgPayment}
         <p class="published">#{date}
       <div class="title">
         <h3>
@@ -467,50 +468,6 @@ renderItem item showOrigin = do
 |]
   where payment = itemPayment item
         homepage = itemHomepage item
-        renderPayment
-            | "https://flattr.com/submit/auto?" `T.isPrefixOf` payment =
-                let qs = mapMaybe (\(k, mv) ->
-                                     (k, ) `fmap` mv
-                                  ) $
-                         parseQueryText $
-                         BC.pack $
-                         T.unpack $
-                         snd $
-                         T.break (== '?') $
-                          payment
-                    qs' = ("popout", "0") :
-                          filter ((/= "popout") . fst) qs
-                in foldl (\tag (k, v) ->
-                              let ma | k == "user_id" =
-                                         Just "uid"
-                                     | all (\c ->
-                                                c >= 'a' && c <= 'z'
-                                           ) $ T.unpack k =
-                                       Just k
-                                     | otherwise =
-                                         Nothing
-                              in maybe tag
-                                     (\k' ->
-                                          tag
-                                          ! dataAttribute (textTag $ "flattr-" `T.append` k') (toValue v)
-                                     ) ma
-                         ) (a
-                            ! class_ "FlattrButton"
-                            ! rel "payment"
-                            ! href (toValue payment)
-                            $ "[Flattr]") qs'
-            | "http://flattr.com/" `T.isPrefixOf` payment ||
-              "https://flattr.com/" `T.isPrefixOf` payment =
-                a ! class_ "FlattrButton"
-                  ! rel "payment"
-                  ! href (toValue payment)
-                  ! dataAttribute "flattr-url" (toValue homepage)
-                  ! dataAttribute "flattr-popout" "0" $
-                  "[Flattr]"
-            | otherwise =
-                a ! rel "payment"
-                  ! href (toValue payment) $
-                  "[Support]"
 
 -- | <link rel="alternate"> to <head>
 addFeedsLinks :: forall master a a1.
