@@ -123,6 +123,8 @@ instance Yesod UIApp where
           addScript $ StaticR js_jquery_1_7_1_min_js
           addScript $ StaticR js_jquery_flot_js
           addScript $ StaticR js_graphs_js
+          addScript $ StaticR js_webtorrent_min_js
+          addScript $ StaticR js_webtorrent_int_js
           $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
