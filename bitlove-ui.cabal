@@ -57,6 +57,7 @@ library
                      Handler.Help
                      Handler.Widget
                      Handler.Thumbnails
+                     Handler.WebTorrent.Tracker
                      Benc
                      WorkQueue
                      Cache
@@ -137,6 +138,7 @@ library
                  , lifted-base                   >= 0.2.1.0
                  , regex-pcre                    >= 0.94.4
                  , memcache                      >= 0.2.0.1
+                 , yesod-websockets
 
 executable         ui
     if flag(library-only)

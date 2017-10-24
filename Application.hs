@@ -46,6 +46,7 @@ import Handler.Tracker (makeTrackerApp)
 import Handler.Help
 import Handler.Widget
 import Handler.Thumbnails
+import Handler.WebTorrent.Tracker
 import Stats
 
 

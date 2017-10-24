@@ -11,6 +11,7 @@
 
 /by-enclosure.json ByEnclosureJson GET
 /feed-lookup.json FeedLookupJson GET
+/webtorrent-announce WebTorrentAnnounce GET
 
 / FrontR GET
 /new NewR GET
