@@ -1,14 +1,18 @@
-module Handler.WebTorrent.Tracker (getWebTorrentAnnounce) where
+module Tracker.Handler.Webtorrent (getWebTorrentAnnounce) where
 
 import Yesod.WebSockets
 import Data.Aeson
 
-import Import
+import Import hiding (Handler)
+import Tracker.Foundation
+import Tracker.Utils
+import Model.Tracker
 
 
 getWebTorrentAnnounce :: Handler ()
 getWebTorrentAnnounce = do
-  webSockets handler
+  addr <- getRemoteAddr
+  webSockets $ handler addr
   invalidArgs ["WebSocket expected"]
 
 
@@ -34,10 +38,14 @@ instance FromJSON Message where
     <*> o .: "numwant"
     <*> o .: "offers"
     
-
-handler = do
-  m <- receiveData
-  let mJson :: Maybe Message
-      mJson = decode m
-  liftIO $ putStrLn $ "WebSocket received: " ++ show mJson
-  handler
+handler :: PeerAddress -> WebSocketsT Handler ()
+handler addr = do
+  me <- receiveDataE
+  case me of
+    Left e ->
+      liftIO $ putStrLn $ "WebSocket error: " ++ show e
+    Right m -> do
+      let mJson :: Maybe Message
+          mJson = decode m
+      liftIO $ putStrLn $ "WebSocket received from " ++ show addr ++ ": " ++ show mJson
+      handler addr

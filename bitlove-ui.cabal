@@ -53,11 +53,14 @@ library
                      Handler.DownloadFeeds
                      Handler.ByEnclosureAPI
                      Handler.FeedLookupAPI
-                     Handler.Tracker
                      Handler.Help
                      Handler.Widget
                      Handler.Thumbnails
-                     Handler.WebTorrent.Tracker
+                     Tracker
+                     Tracker.Foundation
+                     Tracker.Utils
+                     Tracker.Handler.HTTP
+                     Tracker.Handler.Webtorrent
                      Benc
                      WorkQueue
                      Cache

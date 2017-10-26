@@ -95,7 +95,8 @@ data TrackerRequest = TrackerRequest {
       trDownloaded :: Integer,
       trLeft :: Integer,
       trEvent :: Maybe Text,
-      trCompact :: Bool
+      trCompact :: Bool,
+      trOffers :: Maybe Text
     } deriving (Show)
 
 announcePeer :: TrackerRequest -> Connection -> IO ()

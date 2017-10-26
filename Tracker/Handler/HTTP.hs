@@ -1,26 +1,24 @@
 {-# LANGUAGE TupleSections #-}
-module Handler.Tracker where
+module Tracker.Handler.HTTP where
 
 import Prelude
 import Yesod
 import qualified Network.Wai as Wai
 import Control.Monad
-import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
-import Network.Socket (SockAddr (..), HostName, getAddrInfo, addrAddress, tupleToHostAddress, tupleToHostAddress6)
-import Data.Word (Word32)
-import Data.Bits
 import System.Random (randomRIO)
 import Data.Maybe (fromMaybe)
 import Data.Text.Encoding (decodeUtf8)
 
-import Foundation (DBPool, HasDB (getDBPool), withDB, withDBPool, Transaction)
+import Foundation (HasDB (getDBPool), withDB, withDBPool, Transaction)
 import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
 import Cache
+import Tracker.Foundation
+import Tracker.Utils
 
 
 -- TODO: make configurable
@@ -34,33 +32,6 @@ ourSeeders = do
            ]
   return $ TrackedPeer ourPeerId addr 6881
 
-data TrackerApp = TrackerApp
-    { trackerDBPool :: DBPool
-    , trackerCache :: Cache
-    , trackerAnnounceQueue :: WQ.Queue
-    , trackerScrapeQueue :: WQ.Queue
-    }
-
-mkYesod "TrackerApp" [parseRoutes|
-                      /announce AnnounceR GET
-                      /scrape ScrapeR GET
-                      |]
-
-instance Yesod TrackerApp where
-    makeSessionBackend _ = return Nothing
-
-instance HasDB TrackerApp where
-    getDBPool = trackerDBPool <$> getYesod
-
-makeTrackerApp :: DBPool -> IO TrackerApp
-makeTrackerApp pool =
-    do cache <- newCache "localhost" 11211
-       aq <- WQ.makeQueue
-       sq <- WQ.makeQueue
-       return $ TrackerApp pool cache aq sq
-
-getCache :: Handler Cache
-getCache = trackerCache <$> getYesod
 
 newtype RepBenc = RepBenc Benc.BValue
 
@@ -95,7 +66,8 @@ getAnnounceR = do
             qi "downloaded" <*>
             pure (fromMaybe 1 $ qi "left") <*>
             pure (decodeUtf8 <$> q "event") <*>
-            pure (maybe False (const True) $ q "compact")
+            pure (maybe False (const True) $ q "compact") <*>
+            pure Nothing
 
       checkExists tr = do
         let infoHash = trInfoHash tr
@@ -211,62 +183,3 @@ getRawQuery :: Handler [(BC.ByteString, Maybe BC.ByteString)]
 getRawQuery =
     Wai.queryString <$>
     waiRequest
-
-getRemoteAddr :: Handler PeerAddress
-getRemoteAddr = do
-  req <- waiRequest
-  let remote = normalize $ Wai.remoteHost req
-  toPeerAddress <$>
-    case isLocalhost remote of
-      False -> return remote
-      True ->
-        liftIO $
-        fromMaybe (return remote) $
-        fmap (parseAddr . BC.unpack) $
-        "X-Real-IP" `lookup` Wai.requestHeaders req
-
-      where
-        normalize (SockAddrInet6 port _ (0, 0, 0xffff, haddr) _) =
-          SockAddrInet port haddr
-        normalize sockaddr =
-          sockaddr
-
-        toPeerAddress (SockAddrInet _ haddr) =
-          Peer4 $ wordToByteString haddr
-        toPeerAddress (SockAddrInet6 _ _ (h6, h6', h6'', h6''') _) =
-          Peer6 $ B.concat [ wordToByteString h6
-                           , wordToByteString h6'
-                           , wordToByteString h6''
-                           , wordToByteString h6'''
-                           ]
-        toPeerAddress _ =
-          error "Must not happen"
-
-        isLocalhost (SockAddrInet _ addr)
-          | addr == tupleToHostAddress (127, 0, 0, 1) =
-              True
-        isLocalhost (SockAddrInet6 _ _ addr _)
-          | addr == tupleToHostAddress6 (0, 0, 0, 0, 0, 0, 0, 1) =
-              True
-        isLocalhost _ =
-          False
-
-        parseAddr :: HostName -> IO SockAddr
-        parseAddr s =
-          addrAddress <$>
-          head <$>
-          getAddrInfo Nothing (Just s) Nothing
-
-wordToByteString :: Word32 -> B.ByteString
-wordToByteString w =
-    B.pack $
-    map (fromIntegral . (.&. 0xFF) . (w `shiftR`) . (* 8)) $
-    reverse [0..3]
-
-portToByteString :: Int -> B.ByteString
-portToByteString p =
-  B.pack $
-  map (fromIntegral . (.&. 0xFF)) $
-  [ p `shiftR` 8
-  , p
-  ]

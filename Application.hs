@@ -42,11 +42,10 @@ import Handler.MapFeed
 import Handler.DownloadFeeds
 import Handler.ByEnclosureAPI
 import Handler.FeedLookupAPI
-import Handler.Tracker (makeTrackerApp)
+import Tracker (makeTrackerApp)
 import Handler.Help
 import Handler.Widget
 import Handler.Thumbnails
-import Handler.WebTorrent.Tracker
 import Stats
 
 
