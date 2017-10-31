@@ -7,6 +7,7 @@ import Data.Convertible
 import Data.Data (Typeable)
 import Data.Text (Text)
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as LBC
 import Database.PostgreSQL.LibPQ (Connection)
 
 import Model.SqlValue
@@ -96,7 +97,7 @@ data TrackerRequest = TrackerRequest {
       trLeft :: Integer,
       trEvent :: Maybe Text,
       trCompact :: Bool,
-      trOffers :: Maybe Text
+      trOffers :: Maybe LBC.ByteString
     } deriving (Show)
 
 announcePeer :: TrackerRequest -> Connection -> IO ()

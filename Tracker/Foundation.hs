@@ -4,8 +4,10 @@ module Tracker.Foundation where
 import Prelude
 import Yesod
 import qualified WorkQueue as WQ
+import Model (InfoHash, infoHashExists)
+import Model.Tracker (TrackerRequest(..), ScrapeInfo(..), scrape)
 
-import Foundation (DBPool, HasDB(..))
+import Foundation (DBPool, HasDB(..), withDB, Transaction)
 import Cache
 
 data TrackerApp = TrackerApp
@@ -17,6 +19,24 @@ data TrackerApp = TrackerApp
 
 getCache :: HandlerT TrackerApp IO Cache
 getCache = trackerCache <$> getYesod
+
+checkExists :: TrackerRequest -> HandlerT TrackerApp IO Bool
+checkExists tr = do
+  let infoHash = trInfoHash tr
+  cachedExists <- getCache >>=
+                  liftIO . getTorrentExists infoHash
+  case cachedExists of
+    False ->
+      return False
+    True -> do
+      torrentExists <- withDB $ infoHashExists infoHash
+      case torrentExists of
+        True ->
+          return True
+        False ->
+          getCache >>=
+          liftIO . setTorrentExists infoHash False >>
+          return False
 
 mkYesodData "TrackerApp"
   [parseRoutes|
@@ -30,3 +50,8 @@ instance Yesod TrackerApp where
 
 instance HasDB TrackerApp where
     getDBPool = trackerDBPool <$> getYesod
+
+safeScrape :: Model.InfoHash -> Transaction ScrapeInfo
+safeScrape infoHash db =
+    (head . (++ [ScrapeInfo 0 0 0 0])) <$>
+    scrape infoHash db

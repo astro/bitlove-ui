@@ -11,12 +11,11 @@ import System.Random (randomRIO)
 import Data.Maybe (fromMaybe)
 import Data.Text.Encoding (decodeUtf8)
 
-import Foundation (HasDB (getDBPool), withDB, withDBPool, Transaction)
+import Foundation (HasDB (getDBPool), withDB, withDBPool)
 import qualified Model as Model
 import Model.Tracker
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
-import Cache
 import Tracker.Foundation
 import Tracker.Utils
 
@@ -69,22 +68,6 @@ getAnnounceR = do
             pure (maybe False (const True) $ q "compact") <*>
             pure Nothing
 
-      checkExists tr = do
-        let infoHash = trInfoHash tr
-        cachedExists <- getCache >>=
-                        liftIO . getTorrentExists infoHash
-        case cachedExists of
-          False ->
-            return False
-          True -> do
-            torrentExists <- withDB $ Model.infoHashExists infoHash
-            case torrentExists of
-              True -> return True
-              False -> do
-                getCache >>=
-                  liftIO . setTorrentExists infoHash False
-                return False
-
   case mTr of
     Nothing ->
         return $ RepBenc $
@@ -103,12 +86,14 @@ getAnnounceR = do
                          Benc.BInt 0xffff)]
         True ->
             do let isSeeder = trLeft tr == 0
+
                -- Read first
                (peers, scraped) <-
                    withDB $ \db ->
                        do peers <- (ourSeeders ++) <$> getPeers (trInfoHash tr) isSeeder db
                           scraped <- safeScrape (trInfoHash tr) db
                           return (peers, scraped)
+
                -- Write in background
                aQ <- trackerAnnounceQueue <$> getYesod
                sQ <- trackerScrapeQueue <$> getYesod
@@ -117,6 +102,7 @@ getAnnounceR = do
                       do withDBPool pool $ announcePeer tr
                          liftIO $ WQ.enqueue sQ $
                            withDBPool pool $ updateScraped $ trInfoHash tr
+
                -- Assemble response
                let (peers4, peers6)
                        | trCompact tr =
@@ -173,11 +159,6 @@ getScrapeR = do
               ("downloaded", Benc.BInt $ scrapeDownloaded scraped)]
             )]
           )]
-
-safeScrape :: Model.InfoHash -> Transaction ScrapeInfo
-safeScrape infoHash db =
-    (head . (++ [ScrapeInfo 0 0 0 0])) <$>
-    scrape infoHash db
 
 getRawQuery :: Handler [(BC.ByteString, Maybe BC.ByteString)]
 getRawQuery =

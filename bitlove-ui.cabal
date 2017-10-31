@@ -142,6 +142,7 @@ library
                  , regex-pcre                    >= 0.94.4
                  , memcache                      >= 0.2.0.1
                  , yesod-websockets
+                 , enclosed-exceptions
 
 executable         ui
     if flag(library-only)
