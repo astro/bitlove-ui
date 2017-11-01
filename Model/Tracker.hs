@@ -83,7 +83,28 @@ getPeers infoHash onlyLeechers =
             then "tracker_leechers"
             else "tracker"
            ) ++
-           " WHERE \"info_hash\"=? LIMIT 40")
+           " WHERE \"info_hash\"=? AND \"offers\" IS NULL LIMIT 40")
+              [convert infoHash]
+
+data TrackedWebPeer = TrackedWebPeer !PeerId LBC.ByteString
+                   deriving (Show, Typeable)
+
+instance Convertible [SqlValue] TrackedWebPeer where
+    safeConvert [peerId, offers] =
+        TrackedWebPeer <$>
+        safeConvert peerId <*>
+        safeConvert offers
+    safeConvert vals =
+        convError "TrackedWebPeer" vals
+
+getWebPeers :: InfoHash -> Bool -> Query TrackedWebPeer
+getWebPeers infoHash onlyLeechers =
+    query ("SELECT \"peer_id\", \"offers\" FROM " ++
+           (if onlyLeechers
+            then "tracker_leechers"
+            else "tracker"
+           ) ++
+           " WHERE \"info_hash\"=? AND \"offers\" IS NOT NULL LIMIT 40")
               [convert infoHash]
 
 
@@ -111,9 +132,10 @@ announcePeer tr db =
           do let m :: Convertible a SqlValue => (TrackerRequest -> a) -> SqlValue
                  m = convert . ($ tr)
              void $
-                 query' "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)"
+                 query' "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?, ?)"
                  [m trInfoHash, m trHost, m trPort, m trPeerId,
-                  m trUploaded, m trDownloaded, m trLeft, m trEvent]
+                  m trUploaded, m trDownloaded, m trLeft, m trEvent,
+                  m trOffers]
                  db
 
 updateScraped :: InfoHash -> Connection -> IO ()

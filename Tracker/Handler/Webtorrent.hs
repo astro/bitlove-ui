@@ -1,9 +1,11 @@
 module Tracker.Handler.Webtorrent (getWebTorrentAnnounce) where
 
 import Prelude
+import Control.Monad
 import Control.Exception.Enclosed
 import System.Random (randomRIO)
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Data.Text as T
 import Yesod.WebSockets
 import Data.Aeson
@@ -66,8 +68,8 @@ messageToTrackerRequest (addr, port) msg@(AnnounceMessage {}) =
   <*> pure (msgAction msg)
   <*> pure False
   <*> pure (encode <$> msgOffers msg)
-messageToTrackerRequest _ _ =
-  Nothing
+-- messageToTrackerRequest _ _ =
+--   Nothing
 
 encodeLatin1 :: Text -> BC.ByteString
 encodeLatin1 = BC.pack . T.unpack
@@ -87,17 +89,31 @@ instance ToJSON TrackerError where
 data TrackerResponse = TrackerResponse InfoHash ScrapeInfo Int
 
 instance ToJSON TrackerResponse where
-  toJSON (TrackerResponse infoHash scrape interval) =
+  toJSON (TrackerResponse infoHash scraped interval) =
     object [ "action" .= ("announce" :: Text)
            , "info_hash" .= decodeLatin1 (unInfoHash infoHash)
            , "interval" .= interval
-           , "complete" .= scrapeSeeders scrape
-           , "incomplete" .= scrapeLeechers scrape
-           , "downloaded" .= scrapeDownloaded scrape
+           , "complete" .= scrapeSeeders scraped
+           , "incomplete" .= scrapeLeechers scraped
+           , "downloaded" .= scrapeDownloaded scraped
+           ]
+
+data TrackerPeer = TrackerPeer InfoHash PeerId Object
+
+instance ToJSON TrackerPeer where
+  toJSON (TrackerPeer infoHash peerId offers) =
+    object [ "action" .= ("announce" :: Text)
+           , "info_hash" .= decodeLatin1 (unInfoHash infoHash)
+           , "peer_id" .= decodeLatin1 (unPeerId peerId)
+           , "offers" .= offers
            ]
 
 send :: ToJSON a => a -> WebSocketsT Handler ()
-send = sendTextData . encode
+-- send = sendTextData . encode
+send a = do
+  let m = encode a
+  liftIO $ putStrLn $ "WebSocket send: " ++ show m
+  sendTextData m
 
 runHandler :: (PeerAddress, Int) -> WebSocketsT Handler ()
 runHandler addr = do
@@ -127,15 +143,13 @@ handler addr = do
 
         True -> do
           let isSeeder = trLeft tr == 0
+              infoHash = trInfoHash tr
 
           -- Read first
           (peers, scraped) <- lift $ withDB $ \db -> do
-            peers <- getPeers (trInfoHash tr) isSeeder db
-            scraped <- safeScrape (trInfoHash tr) db
+            peers <- getWebPeers infoHash isSeeder db
+            scraped <- safeScrape infoHash db
             return (peers, scraped)
-
-          interval <- liftIO $ randomRIO (1620, 1800)
-          send $ TrackerResponse (trInfoHash tr) scraped interval
 
           -- Write in background
           aQ <- trackerAnnounceQueue <$> lift getYesod
@@ -144,7 +158,18 @@ handler addr = do
           liftIO $ WQ.enqueue aQ $
             do withDBPool pool $ announcePeer tr
                liftIO $ WQ.enqueue sQ $
-                 withDBPool pool $ updateScraped $ trInfoHash tr
+                 withDBPool pool $ updateScraped infoHash
+
+          -- Send response
+          interval <- liftIO $ randomRIO (1620, 1800)
+          send $ TrackerResponse infoHash scraped interval
+
+          -- Send peers
+          forM_ peers $ \(TrackedWebPeer peerId offers) -> do
+            case decode offers of
+              Nothing -> return ()
+              Just offers' ->
+                send $ TrackerPeer infoHash peerId offers'
 
           -- -- Assemble response
           -- let (peers4, peers6)
