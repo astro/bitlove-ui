@@ -4,6 +4,7 @@ module Model.Tracker where
 import Prelude
 import Control.Monad (void)
 import Data.Convertible
+import Data.Hashable (Hashable)
 import Data.Data (Typeable)
 import Data.Text (Text)
 import qualified Data.ByteString.Char8 as BC
@@ -38,7 +39,7 @@ scrape infoHash =
 
 
 newtype PeerId = PeerId { unPeerId :: BC.ByteString }
-               deriving (Show, Typeable)
+               deriving (Show, Typeable, Eq, Hashable)
 
 instance Convertible SqlValue PeerId where
     safeConvert = (PeerId <$>) . safeConvert

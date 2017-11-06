@@ -2,8 +2,9 @@ module Tracker.Handler.Webtorrent (getWebTorrentAnnounce) where
 
 import Prelude
 import Control.Monad
+import Control.Concurrent (threadDelay)
 import Control.Exception.Enclosed
-import System.Random (randomRIO)
+import System.Random (randomIO, randomRIO)
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Data.Text as T
@@ -13,6 +14,7 @@ import Data.Aeson
 import Import hiding (Handler)
 import Tracker.Foundation
 import Tracker.Utils
+import Tracker.WebsocketHub
 import Model.Tracker
 import qualified Model as Model
 import qualified WorkQueue as WQ
@@ -21,8 +23,7 @@ import qualified WorkQueue as WQ
 getWebTorrentAnnounce :: Handler ()
 getWebTorrentAnnounce = do
   addr <- getRemoteAddr
-  sessionId <- liftIO $ randomRIO (1, 65535)
-  webSockets $ runHandler (addr, sessionId)
+  webSockets $ runHandler addr
   invalidArgs ["WebSocket expected"]
 
 
@@ -55,13 +56,13 @@ instance FromJSON Message where
         fail $ "No supported action: " ++ show action
   parseJSON _ = fail "Not an object"
 
-messageToTrackerRequest :: (PeerAddress, Int) -> Message -> Maybe TrackerRequest
-messageToTrackerRequest (addr, port) msg@(AnnounceMessage {}) =
+messageToTrackerRequest :: PeerAddress -> SessionId -> Message -> Maybe TrackerRequest
+messageToTrackerRequest addr sessionId msg@(AnnounceMessage {}) =
   TrackerRequest
   <$> Model.InfoHash <$> encodeLatin1 <$> msgInfoHash msg
   <*> (PeerId <$> encodeLatin1 <$> msgPeerId msg)
   <*> pure addr
-  <*> pure port
+  <*> pure (fromIntegral sessionId)
   <*> msgUploaded msg
   <*> msgDownloaded msg
   <*> msgLeft msg
@@ -98,7 +99,7 @@ instance ToJSON TrackerResponse where
            , "downloaded" .= scrapeDownloaded scraped
            ]
 
-data TrackerPeer = TrackerPeer InfoHash PeerId Object
+data TrackerPeer = TrackerPeer InfoHash PeerId Value
 
 instance ToJSON TrackerPeer where
   toJSON (TrackerPeer infoHash peerId offers) =
@@ -115,25 +116,52 @@ send a = do
   liftIO $ putStrLn $ "WebSocket send: " ++ show m
   sendTextData m
 
-runHandler :: (PeerAddress, Int) -> WebSocketsT Handler ()
+runHandler :: PeerAddress -> WebSocketsT Handler ()
 runHandler addr = do
   liftIO $ putStrLn $ "WebSocket connected from " ++ show addr
-  r <- tryAny $ handler addr
+  hub <- trackerHub <$> lift getYesod
+  session <- liftIO $ do
+    sessionId <- randomIO
+    newSession hub sessionId
+  r <- tryAny $
+    race (handler session addr) (forwardFromHub session)
+  liftIO $ sessionClear session
   case r of
     Left e ->
       liftIO $ putStrLn $ "WebSocket handler error: " ++ show e
     _ ->
       return ()
 
-  -- TODO: clean up
+  liftIO $ sessionClear session
   return ()
 
-handler :: (PeerAddress, Int) -> WebSocketsT Handler ()
-handler addr = do
+forwardFromHub :: Websession -> WebSocketsT Handler ()
+forwardFromHub session = loop 0
+  where
+    keepAliveInterval :: Int
+    keepAliveInterval = 30
+    loop idleSeconds
+      | idleSeconds >= keepAliveInterval = do
+          sendPing ("" :: BC.ByteString)
+          loop 0
+      | otherwise = do
+          m <- liftIO $ sessionRecv session
+          case m of
+            Just msg -> do
+              sendTextData msg
+              loop 0
+            Nothing -> do
+              liftIO $ threadDelay 1000000
+              loop $ idleSeconds + 1
+
+handler :: Websession -> PeerAddress -> WebSocketsT Handler ()
+handler session addr = do
   m <- receiveData
   let mJson :: Maybe Message
       mJson = decode m
-  case mJson >>= messageToTrackerRequest addr of
+      mTr = mJson >>=
+            messageToTrackerRequest addr (sessionId session)
+  case mTr of
     Just tr -> do
       liftIO $ putStrLn $ "WebSocket tracker request: " ++ show tr
       exists <- lift $ checkExists tr
@@ -167,42 +195,13 @@ handler addr = do
           -- Send peers
           forM_ peers $ \(TrackedWebPeer peerId offers) -> do
             case decode offers of
-              Nothing -> return ()
+              Nothing ->
+                liftIO $ putStrLn $
+                "Cannot decode offers " ++ show offers
               Just offers' ->
                 send $ TrackerPeer infoHash peerId offers'
 
-          -- -- Assemble response
-          -- let (peers4, peers6)
-          --       | trCompact tr =
-          --           ( Benc.BString $ LBC.fromChunks $ concat
-          --             [[addr', portToByteString port']
-          --                     | TrackedPeer _ (Peer4 addr') port' <- peers]
-          --                  , Benc.BString $ LBC.fromChunks $ concat
-          --                    [[addr', portToByteString port']
-          --                     | TrackedPeer _ (Peer6 addr') port' <- peers]
-          --                  )
-          --              | otherwise =
-          --                  let g peerId addr' port' =
-          --                          Benc.BDict [("peer id", Benc.BString $ LBC.fromChunks [peerId]),
-          --                                      ("ip", Benc.BString $ LBC.fromChunks [addr']),
-          --                                      ("port", Benc.BInt $ fromIntegral port')]
-          --                  in ( Benc.BList $
-          --                       [g peerId addr' port'
-          --                        | TrackedPeer (PeerId peerId) (Peer4 addr') port' <- peers]
-          --                     , Benc.BList $
-          --                       [g peerId addr' port'
-          --                        | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
-          --                     )
-          -- return $ RepBenc $
-          --   Benc.BDict [ ("peers", peers4)
-          --              , ("peers6", peers6)
-          --              , ("interval", Benc.BInt interval)
-          --              , ("complete", Benc.BInt $ scrapeSeeders scraped + 1)
-          --              , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
-          --              , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
-          --              ]
-
           -- Loop
-      handler addr
+      handler session addr
     Nothing ->
       liftIO $ putStrLn $ "WebSocket received invalid from " ++ show addr ++ ": " ++ show m

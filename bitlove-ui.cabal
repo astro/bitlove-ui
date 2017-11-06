@@ -61,6 +61,7 @@ library
                      Tracker.Utils
                      Tracker.Handler.HTTP
                      Tracker.Handler.Webtorrent
+                     Tracker.WebsocketHub
                      Benc
                      WorkQueue
                      Cache
@@ -143,6 +144,7 @@ library
                  , memcache                      >= 0.2.0.1
                  , yesod-websockets
                  , enclosed-exceptions
+                 , hashable
 
 executable         ui
     if flag(library-only)
