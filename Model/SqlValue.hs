@@ -33,6 +33,8 @@ sqlConverter parsers (SqlValue oid bytes) =
       safeConvertSql bytes parser
     Nothing ->
       convError "Cannot handle Oid" oid
+sqlConverter _ SqlNull =
+      convError "Cannot handle NULL" ("SqlNull" :: String)
 
 instance (Convertible SqlValue c) => Convertible SqlValue (Maybe c) where
   safeConvert SqlNull = Right Nothing
