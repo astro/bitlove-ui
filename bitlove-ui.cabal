@@ -86,6 +86,7 @@ library
                 NoMonomorphismRestriction
                 RankNTypes
                 ViewPatterns
+                TupleSections
 
     build-depends: base                          >= 4.6.0.1
                  , yesod                         >= 1.4

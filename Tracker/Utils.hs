@@ -6,12 +6,20 @@ import Data.Maybe (fromMaybe)
 import qualified Network.Wai as Wai
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
+import Data.Text (Text)
+import qualified Data.Text as T
 import Network.Socket (SockAddr (..), HostName, getAddrInfo, addrAddress, tupleToHostAddress, tupleToHostAddress6)
 import Data.Word (Word32)
 import Data.Bits
 
 import Model.Tracker (PeerAddress(..))
 
+
+encodeLatin1 :: Text -> BC.ByteString
+encodeLatin1 = BC.pack . T.unpack
+
+decodeLatin1 :: BC.ByteString -> Text
+decodeLatin1 = T.pack . BC.unpack
 
 getRemoteAddr :: HandlerT a IO PeerAddress
 getRemoteAddr = do
