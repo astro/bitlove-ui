@@ -16,6 +16,7 @@ import Data.Aeson.Types (parseMaybe)
 import qualified Data.HashMap.Lazy as LHM
 import qualified Database.PostgreSQL.LibPQ as PQ
 
+import Utils (fromHex)
 import Model.Query (query')
 import Model.Download (InfoHash)
 import Model.Tracker (PeerId(PeerId))
@@ -31,25 +32,28 @@ data Hub = Hub { hubSessionsRef :: SessionsRef
                }
 
 notificationChannel :: String
-notificationChannel = "websocket"
+notificationChannel = "WEBSOCKET"
 
 startHub :: PQ.Connection -> IO Hub
 startHub db = do
   void $
-    query' ("LISTEN " ++ notificationChannel ++ ";") [] db
+    query' ("LISTEN \"" ++ notificationChannel ++ "\";") [] db
 
   sessions <- newTVarIO HM.empty
     :: IO SessionsRef
   let hubLoop = do
+        True <- PQ.consumeInput db
         mn <- PQ.notifies db
-        putStrLn $ "Notifies: " ++ show mn
         case mn of
           Nothing ->
-            threadDelay 1000000
+            threadDelay 100000
           Just n
             | BC.unpack (PQ.notifyRelname n) == notificationChannel -> do
-                let mMsg :: Maybe Object
-                    mMsg = decode $ LBC.fromChunks [PQ.notifyExtra n]
+                let payload =
+                      convertPayload $
+                      LBC.fromChunks [PQ.notifyExtra n]
+                    mMsg :: Maybe Object
+                    mMsg = decode payload
                 let mPeerId = PeerId <$>
                               encodeLatin1 <$>
                               (mMsg >>=
@@ -57,7 +61,7 @@ startHub db = do
                                parseMaybe parseJSON
                               )
                 case (mMsg, mPeerId) of
-                  (Just msg, Just peerId) ->
+                  (Just msg, Just peerId) -> do
                     atomically $ do
                     mSession <-
                       HM.lookup peerId <$>
@@ -67,7 +71,8 @@ startHub db = do
                         writeTChan chan msg
                       Nothing ->
                         return ()
-                  _ ->
+                  _ -> do
+                    putStrLn $ "Cannot handle Websocket notification: " ++ show payload
                     return ()
             | otherwise ->
                 return ()
@@ -76,6 +81,11 @@ startHub db = do
   putStrLn "Started Websocket Hub…"
   return $ Hub { hubSessionsRef = sessions
                }
+
+    where
+      convertPayload s
+        | LBC.take 2 s == "\\x" = fromHex $ LBC.unpack $ LBC.drop 2 s
+        | otherwise = s
 
 hubSend :: ToJSON a => PQ.Connection -> a -> IO ()
 hubSend db msg =
