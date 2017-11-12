@@ -18,22 +18,22 @@ data PeerAddress = Peer4 !BC.ByteString
                  | Peer6 !BC.ByteString
                    deriving (Show, Read, Typeable, Eq, Ord)
 
-data TrackedPeer = BittorrentPeer { pBtHost :: PeerAddress
-                                  , pBtPort :: Int
-                                  , pUploaded :: Int
-                                  , pDownloaded :: Int
-                                  , pUpspeed :: Int
-                                  , pDownspeed :: Int
-                                  , pLeft :: Int
-                                  , pLastRequest :: Int
+data TrackedPeer = BittorrentPeer { pBtHost :: !PeerAddress
+                                  , pBtPort :: !Int
+                                  , pUploaded :: !Int
+                                  , pDownloaded :: !Int
+                                  , pUpspeed :: !Int
+                                  , pDownspeed :: !Int
+                                  , pLeft :: !Int
+                                  , pLastRequest :: !Int
                                   }
                  | WebtorrentPeer { pWtOffers :: [()]
-                                  , pUploaded :: Int
-                                  , pDownloaded :: Int
-                                  , pUpspeed :: Int
-                                  , pDownspeed :: Int
-                                  , pLeft :: Int
-                                  , pLastRequest :: Int
+                                  , pUploaded :: !Int
+                                  , pDownloaded :: !Int
+                                  , pUpspeed :: !Int
+                                  , pDownspeed :: !Int
+                                  , pLeft :: !Int
+                                  , pLastRequest :: !Int
                                   }
 
 updatePeerDeltas :: TrackedPeer -> TrackedPeer -> TrackedPeer
@@ -109,24 +109,24 @@ trackedModifyData (Tracked trackedRef) infoHash f =
 
 
 data TrackedAnnounce
-  = BittorrentAnnounce { aInfoHash :: InfoHash
-                       , aPeerId :: PeerId
-                       , aHost :: PeerAddress
-                       , aPort :: Int
-                       , aUploaded :: Int
-                       , aDownloaded :: Int
-                       , aLeft :: Int
+  = BittorrentAnnounce { aInfoHash :: !InfoHash
+                       , aPeerId :: !PeerId
+                       , aHost :: !PeerAddress
+                       , aPort :: !Int
+                       , aUploaded :: !Int
+                       , aDownloaded :: !Int
+                       , aLeft :: !Int
                        , aEvent :: Maybe Text
-                       , aCompact :: Bool
+                       , aCompact :: !Bool
                        }
-  | WebtorrentAnnounce { aInfoHash :: InfoHash
-                       , aPeerId :: PeerId
+  | WebtorrentAnnounce { aInfoHash :: !InfoHash
+                       , aPeerId :: !PeerId
                        , aOffers :: [()]
-                       , aUploaded :: Int
-                       , aDownloaded :: Int
-                       , aLeft :: Int
+                       , aUploaded :: !Int
+                       , aDownloaded :: !Int
+                       , aLeft :: !Int
                        , aEvent :: Maybe Text
-                       , aCompact :: Bool
+                       , aCompact :: !Bool
                        } deriving (Show)
 
 -- TODO: must return counter events
@@ -151,7 +151,10 @@ announce tracked announce@(WebtorrentAnnounce {}) = do
   trackedModifyData tracked (aInfoHash announce) $
     updateData $
     HM.alter
-    (maybe (Just newPeer) (\oldPeer -> Just $ updatePeerDeltas oldPeer newPeer))
+    (maybe (Just newPeer)
+     (\oldPeer ->
+        Just $! updatePeerDeltas oldPeer newPeer
+     ))
     (aPeerId announce)
   
 -- TODO
