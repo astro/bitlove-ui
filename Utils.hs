@@ -1,4 +1,4 @@
-module Utils ( iso8601, rfc822, localTimeToZonedTime
+module Utils ( iso8601, rfc822, localTimeToZonedTime, getNow
              , isHex, toHex, fromHex, fromHex'
              , fixUrl, unescapeEntities
              ) where
@@ -31,6 +31,15 @@ rfc822 = formatTime defaultTimeLocale rfc822DateFormat
 localTimeToZonedTime :: TimeZone -> LocalTime -> ZonedTime
 localTimeToZonedTime tz =
     utcToZonedTime tz . localTimeToUTC tz
+
+getNow :: IO Int
+getNow =
+  fromIntegral <$>
+  (`div` 1000000000000) <$>
+  diffTimeToPicoseconds <$>
+  utctDayTime <$>
+  getCurrentTime
+
 
 isHex :: BC.ByteString -> Bool
 isHex = BC.all isHexDigit

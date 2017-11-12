@@ -2,6 +2,7 @@
 module Model.Download where
 
 import Data.Convertible
+import Data.Hashable (Hashable)
 import Prelude
 import Prelude
 import Data.Text (Text)
@@ -17,7 +18,7 @@ import Model.Query
 import Model.User
 
 newtype InfoHash = InfoHash { unInfoHash :: ByteString }
-                 deriving (Eq, Ord)
+                 deriving (Eq, Ord, Hashable)
 
 instance Show InfoHash where
   show = T.unpack . toHex . unInfoHash
