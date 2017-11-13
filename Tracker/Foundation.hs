@@ -5,26 +5,25 @@ import Prelude
 import Yesod
 import qualified WorkQueue as WQ
 import Model (InfoHash, infoHashExists)
-import Model.Tracker (TrackerRequest(..), ScrapeInfo(..), scrape)
-import Tracker.WebsocketHub
+import Model.Tracker (ScrapeInfo(..), scrape)
 
 import Foundation (DBPool, HasDB(..), withDB, Transaction)
 import Cache
+import Tracked (Tracked)
 
 data TrackerApp = TrackerApp
     { trackerDBPool :: DBPool
     , trackerCache :: Cache
     , trackerAnnounceQueue :: WQ.Queue
     , trackerScrapeQueue :: WQ.Queue
-    , trackerHub :: Hub
+    , trackerTracked :: Tracked
     }
 
 getCache :: HandlerT TrackerApp IO Cache
 getCache = trackerCache <$> getYesod
 
-checkExists :: TrackerRequest -> HandlerT TrackerApp IO Bool
-checkExists tr = do
-  let infoHash = trInfoHash tr
+checkExists :: InfoHash -> HandlerT TrackerApp IO Bool
+checkExists infoHash = do
   cachedExists <- getCache >>=
                   liftIO . getTorrentExists infoHash
   case cachedExists of

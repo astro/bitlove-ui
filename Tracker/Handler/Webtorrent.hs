@@ -6,25 +6,26 @@ import Control.Monad
 import Control.Concurrent (threadDelay)
 import Control.Exception.Enclosed
 import System.Random (randomIO, randomRIO)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import qualified Data.Text as T
 import Yesod.WebSockets
 import Data.Aeson
+import Data.IORef
+import Control.Concurrent.STM
 
 import Import hiding (Handler)
 import Tracker.Foundation
 import Tracker.Utils
-import Tracker.WebsocketHub
-import Model.Tracker
 import qualified Model as Model
-import qualified WorkQueue as WQ
+import Tracked
 
 
 getWebTorrentAnnounce :: Handler ()
 getWebTorrentAnnounce = do
-  addr <- getRemoteAddr
-  webSockets $ runHandler addr
+  webSockets runWebsocket
   invalidArgs ["WebSocket expected"]
 
 data Offer = Offer { offerId :: Text
@@ -37,21 +38,18 @@ instance FromJSON Offer where
     <$> o .: "offer_id"
     <*> o .: "offer"
 
-instance ToJSON Offer where
-  toJSON o =
-    object [ "offer_id" .= offerId o
-           , "offer" .= offer o
-           ]
-
 data Message = AnnounceMessage {
   msgInfoHash :: Maybe Text,
   msgPeerId :: Maybe Text,
-  msgDownloaded :: Maybe Integer,
-  msgUploaded :: Maybe Integer,
-  msgLeft :: Maybe Integer,
+  msgDownloaded :: Maybe Int,
+  msgUploaded :: Maybe Int,
+  msgLeft :: Maybe Int,
   msgAction :: Maybe Text,
   msgNumWant :: Maybe Int,
-  msgOffers :: Maybe [Offer]
+  msgOffers :: Maybe [Offer],
+  msgOfferId :: Maybe Text,
+  msgToPeerId :: Maybe Text,
+  msgAnswer :: Maybe Object
 } deriving (Show)
 
 instance FromJSON Message where
@@ -62,31 +60,29 @@ instance FromJSON Message where
         AnnounceMessage
         <$> o .: "info_hash"
         <*> o .: "peer_id"
-        <*> o .: "downloaded"
-        <*> o .: "uploaded"
-        <*> o .: "left"
+        <*> o .:? "downloaded"
+        <*> o .:? "uploaded"
+        <*> o .:? "left"
         <*> o .: "action"
-        <*> o .: "numwant"
-        <*> o .: "offers"
+        <*> o .:? "numwant"
+        <*> o .:? "offers"
+        <*> o .:? "offer_id"
+        <*> o .:? "to_peer_id"
+        <*> o .:? "answer"
       _ ->
         fail $ "No supported action: " ++ show action
   parseJSON _ = fail "Not an object"
 
-messageToTrackerRequest :: PeerAddress -> SessionId -> Message -> Maybe TrackerRequest
-messageToTrackerRequest addr sessionId msg@(AnnounceMessage {}) =
-  TrackerRequest
+messageToAnnounce :: Message -> TChan Value -> Maybe TrackedAnnounce
+messageToAnnounce msg@(AnnounceMessage {}) chan =
+  TrackedAnnounce
   <$> Model.InfoHash <$> encodeLatin1 <$> msgInfoHash msg
   <*> (PeerId <$> encodeLatin1 <$> msgPeerId msg)
-  <*> pure addr
-  <*> pure (fromIntegral sessionId)
+  <*> pure (WebtorrentInfo chan)
   <*> msgUploaded msg
   <*> msgDownloaded msg
   <*> msgLeft msg
   <*> pure (msgAction msg)
-  <*> pure False
-  <*> pure (encode <$> msgOffers msg)
--- messageToTrackerRequest _ _ =
---   Nothing
 
 data TrackerError = TrackerError Text
 
@@ -120,6 +116,32 @@ instance ToJSON PeerOffer where
            , "offer" .= offer o
            ]
 
+data PeerAnswer = PeerAnswer { ansInfoHash :: InfoHash
+                             , ansPeerId :: PeerId
+                             , ansOfferId :: Text
+                             , ansToPeerId :: PeerId
+                             , ansAnswer :: Object
+                             }
+
+instance ToJSON PeerAnswer where
+  toJSON pa =
+    object [ "action" .= ("announce" :: Text)
+           , "info_hash" .= decodeLatin1 (unInfoHash $ ansInfoHash pa)
+           , "peer_id" .= decodeLatin1 (unPeerId $ ansPeerId pa)
+           , "offer_id" .= ansOfferId pa
+           , "to_peer_id" .= decodeLatin1 (unPeerId $ ansToPeerId pa)
+           , "answer" .= ansAnswer pa
+           ]
+
+messageToAnswer :: Message -> Maybe PeerAnswer
+messageToAnswer msg@(AnnounceMessage {}) =
+  PeerAnswer
+  <$> Model.InfoHash <$> encodeLatin1 <$> msgInfoHash msg
+  <*> (PeerId <$> encodeLatin1 <$> msgPeerId msg)
+  <*> msgOfferId msg
+  <*> (PeerId <$> encodeLatin1 <$> msgToPeerId msg)
+  <*> msgAnswer msg
+
 send :: ToJSON a => a -> WebSocketsT Handler ()
 -- send = sendTextData . encode
 send a = do
@@ -127,27 +149,29 @@ send a = do
   liftIO $ putStrLn $ "WebSocket send: " ++ show m
   sendTextData m
 
-runHandler :: PeerAddress -> WebSocketsT Handler ()
-runHandler addr = do
-  liftIO $ putStrLn $ "WebSocket connected from " ++ show addr
-  hub <- trackerHub <$> lift getYesod
-  session <- liftIO $ do
-    sessionId <- randomIO
-    newSession hub sessionId
+-- | Remember a set of info_hash+peer_id combinations for clean-up on
+-- disconnect
+type Session = IORef (Set (InfoHash, PeerId))
+
+runWebsocket :: WebSocketsT Handler ()
+runWebsocket = do
+  liftIO $ putStrLn $ "WebSocket connected."
+  session <- liftIO $ newIORef Set.empty
+  chan <- liftIO newTChanIO
   r <- tryAny $
-    race (handler session addr) (forwardFromHub session)
-  liftIO $ sessionClear session
+    race (recvLoop session chan) (forwardFromHub chan)
+  sessionClear session
   case r of
     Left e ->
       liftIO $ putStrLn $ "WebSocket handler error: " ++ show e
     _ ->
       return ()
 
-  liftIO $ sessionClear session
+  sessionClear session
   return ()
 
-forwardFromHub :: Websession -> WebSocketsT Handler ()
-forwardFromHub session = loop 0
+forwardFromHub :: TChan Value -> WebSocketsT Handler ()
+forwardFromHub chan = loop 0
   where
     keepAliveInterval :: Int
     keepAliveInterval = 30
@@ -156,7 +180,8 @@ forwardFromHub session = loop 0
           sendPing ("" :: BC.ByteString)
           loop 0
       | otherwise = do
-          m <- liftIO $ sessionRecv session
+          m <- liftIO $ atomically $
+            tryReadTChan chan
           case m of
             Just msg -> do
               send msg
@@ -165,46 +190,42 @@ forwardFromHub session = loop 0
               liftIO $ threadDelay 1000000
               loop $ idleSeconds + 1
 
-handler :: Websession -> PeerAddress -> WebSocketsT Handler ()
-handler session addr = do
+recvLoop :: Session -> TChan Value -> WebSocketsT Handler ()
+recvLoop session chan = do
   m <- receiveData
   let mJson :: Maybe Message
       mJson = decode m
-      mTr = do
+      mMsgAnn = do
         msg <- mJson
         (msg, ) <$>
-          messageToTrackerRequest addr (sessionId session) msg
-  case mTr of
-    Just (msg, tr) -> do
-      liftIO $ putStrLn $ "WebSocket tracker request: " ++ show tr
-      exists <- lift $ checkExists tr
+          messageToAnnounce msg chan
+      mMsgAns = do
+        msg <- mJson
+        (msg, ) <$>
+          messageToAnswer msg
+  case (mMsgAnn, mMsgAns) of
+    (Just (msg, ann), _) -> do
+      liftIO $ putStrLn "WebSocket tracker request"
+      let infoHash = aInfoHash ann
+      exists <- lift $ checkExists infoHash
       case exists of
         False ->
           send $ TrackerError "Torrent does not exist. Please go away!"
 
         True -> do
-          let isSeeder = trLeft tr == 0
-              infoHash = trInfoHash tr
+          liftIO $
+            modifyIORef session $
+            Set.insert (infoHash, aPeerId ann)
 
-          -- Read first
-          (peers, scraped) <- lift $ withDB $ \db -> do
-            peers <- filter (\(TrackedWebPeer peerId _) ->
-                               peerId /= trPeerId tr
-                            ) <$>
-                     getWebPeers infoHash isSeeder db
-            scraped <- safeScrape infoHash db
-            return (peers, scraped)
+          let isSeeder = aLeft ann == 0
 
-          -- Write in background
-          aQ <- trackerAnnounceQueue <$> lift getYesod
-          sQ <- trackerScrapeQueue <$> lift getYesod
-          pool <- lift getDBPool
-          liftIO $ WQ.enqueue aQ $
-            do withDBPool pool $ announcePeer tr
-               liftIO $ putStrLn $ "Peer announced"
-               liftIO $ WQ.enqueue sQ $
-                 withDBPool pool $ updateScraped infoHash
-               liftIO $ putStrLn $ "Update scraped done"
+          -- Announce
+          tracked <- lift $ trackerTracked <$> getYesod
+
+          (peers, scraped) <- liftIO $ do
+            (,)
+            <$> announce tracked ann
+            <*> scrape tracked infoHash
 
           -- Send response
           interval <- liftIO $ randomRIO (1620, 1800)
@@ -214,13 +235,44 @@ handler session addr = do
           let offers =
                 fromMaybe [] $ msgOffers msg
           liftIO $ putStrLn $ "Distribute " ++ show (length offers) ++ " offers to " ++ show (length peers) ++ " peers"
-          lift $
-            withDB $ \db ->
+          liftIO $
             forM_ (zip peers offers) $
-            \((TrackedWebPeer peerId _offers), offer) ->
-            hubSend db (PeerOffer infoHash peerId offer)
+            \((peerId, peer), offer) ->
+              case pConnInfo peer of
+                WebtorrentInfo chan ->
+                  let peerOffer =
+                        toJSON $
+                        PeerOffer
+                        infoHash (aPeerId ann)
+                        offer
+
+                  in atomically $
+                     writeTChan chan peerOffer
+                _ ->
+                  return ()
 
       -- Loop
-      handler session addr
-    Nothing ->
-      liftIO $ putStrLn $ "WebSocket received invalid from " ++ show addr ++ ": " ++ show m
+      recvLoop session chan
+    (_, Just (msg, ans)) -> do
+      tracked <- lift $ trackerTracked <$> getYesod
+      mPeer <- liftIO $
+        getPeer tracked (ansInfoHash ans) (ansPeerId ans)
+      case pConnInfo <$> mPeer of
+        Just (WebtorrentInfo chan) ->
+          let peerAnswer =
+                toJSON ans
+          in liftIO $
+             atomically $
+             writeTChan chan peerAnswer
+        _ ->
+          return ()
+    _ ->
+      liftIO $ putStrLn $ "WebSocket received invalid: " ++ show m
+
+sessionClear :: Session -> WebSocketsT Handler ()
+sessionClear session = do
+  tracked <- lift $ trackerTracked <$> getYesod
+  session' <- liftIO $ readIORef session
+  liftIO $
+    forM_ (Set.toList session') $ \(infoHash, peerId) ->
+    clearPeer tracked infoHash peerId

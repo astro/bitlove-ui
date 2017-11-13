@@ -62,7 +62,6 @@ library
                      Tracker.Utils
                      Tracker.Handler.HTTP
                      Tracker.Handler.Webtorrent
-                     Tracker.WebsocketHub
                      Benc
                      WorkQueue
                      Cache

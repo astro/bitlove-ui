@@ -76,7 +76,7 @@ getAnnounceR = do
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
     Just tr -> do
-      exists <- checkExists tr
+      exists <- checkExists $ trInfoHash tr
       case exists of
         False ->
             return $ RepBenc $
