@@ -199,10 +199,8 @@ recvLoop session chan = do
         msg <- mJson
         (msg, ) <$>
           messageToAnnounce msg chan
-      mMsgAns = do
-        msg <- mJson
-        (msg, ) <$>
-          messageToAnswer msg
+      mMsgAns =
+        mJson >>= messageToAnswer
   case (mMsgAnn, mMsgAns) of
     (Just (msg, ann), _) -> do
       liftIO $ putStrLn "WebSocket tracker request"
@@ -253,7 +251,7 @@ recvLoop session chan = do
 
       -- Loop
       recvLoop session chan
-    (_, Just (msg, ans)) -> do
+    (_, Just ans) -> do
       tracked <- lift $ trackerTracked <$> getYesod
       mToPeer <- liftIO $
         getPeer tracked (ansInfoHash ans) (ansToPeerId ans)
