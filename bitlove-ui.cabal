@@ -146,6 +146,8 @@ library
                  , yesod-websockets
                  , enclosed-exceptions
                  , hashable
+                 , attoparsec                    >= 0.13.2.0
+                 , network-uri                   >= 2.6
 
 executable         ui
     if flag(library-only)

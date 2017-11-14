@@ -28,6 +28,7 @@ module Model (
   userDownloads,
   enclosureDownloads,
   guidDownloads,
+  torrentGuids,
   feedDownloads,
   searchDownloads,
   -- Model.Item
@@ -72,7 +73,7 @@ import Data.Convertible
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Data (Typeable)
-import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString as B
 import Database.PostgreSQL.LibPQ (Connection)
 
 import Utils
@@ -95,7 +96,7 @@ data Torrent = Torrent {
   torrentInfoHash :: InfoHash,
   torrentName :: Text,
   torrentSize :: Integer,
-  torrentTorrent :: LB.ByteString
+  torrentTorrent :: B.ByteString
 } deriving (Show, Typeable)
 
 instance Convertible [SqlValue] Torrent where

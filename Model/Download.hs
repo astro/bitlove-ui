@@ -125,6 +125,17 @@ guidDownloads :: Text -> Query Download
 guidDownloads guid =
   query "SELECT * FROM get_guid_downloads(?)" [convert guid]
 
+newtype GUID = GUID { unGUID :: Text }
+
+instance Convertible [SqlValue] GUID where
+  safeConvert [guid] = GUID <$> safeConvert guid
+  safeConvert vals = convError "GUID" vals
+
+torrentGuids :: InfoHash -> Query Text
+torrentGuids infoHash =
+  (map unGUID <$>) .
+  query "SELECT * FROM get_torrent_guids(?)" [convert infoHash]
+
 feedDownloads :: Text -> QueryPage -> Query Download
 feedDownloads url page =
   query "SELECT * FROM get_recent_downloads(?, ?, ?)" $
