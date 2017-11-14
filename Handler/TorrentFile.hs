@@ -79,7 +79,7 @@ updateTorrent guids buf = do
         BString tracker <- trackers
         return tracker
     trackerList' =
-      myTrackers :
+      map (: []) myTrackers ++
       (filter (not . null) $
        map (filter (not . (`elem` myTrackers)))
        trackerList)
@@ -90,18 +90,17 @@ updateTorrent guids buf = do
       myUrls ++
       urlList
     dict' =
-      filter (\(name, val) ->
-                name /= "announce" &&
-                name /= "announce-list" &&
-                name /= "url-list"
-             ) dict
-  let dict'' =
         ("announce", BString $ head myTrackers) :
         ("announce-list", BList $ map (BList . map BString) trackerList') :
         ("url-list", BList $ map BString urlList') :
-        dict'
+        filter (\(name, val) ->
+                  name /= "announce" &&
+                 name /= "announce-list" &&
+                 name /= "url-list"
+               ) dict
+
   return $ toBuilder $
-    BDict dict''
+    BDict dict'
 
     where
       myTrackers =
