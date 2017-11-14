@@ -255,16 +255,19 @@ recvLoop session chan = do
       recvLoop session chan
     (_, Just (msg, ans)) -> do
       tracked <- lift $ trackerTracked <$> getYesod
-      mPeer <- liftIO $
-        getPeer tracked (ansInfoHash ans) (ansPeerId ans)
-      case pConnInfo <$> mPeer of
+      mToPeer <- liftIO $
+        getPeer tracked (ansInfoHash ans) (ansToPeerId ans)
+      case pConnInfo <$> mToPeer of
         Just (WebtorrentInfo chan) ->
           let peerAnswer =
                 toJSON ans
           in liftIO $
              atomically $
              writeTChan chan peerAnswer
-        _ ->
+        _ -> do
+          liftIO $
+            putStrLn $
+            "Cannot relay Websocket answer to " ++ show (ansToPeerId ans)
           return ()
     _ ->
       liftIO $ putStrLn $ "WebSocket received invalid: " ++ show m
