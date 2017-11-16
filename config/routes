@@ -39,6 +39,8 @@
 /directory/#DirectoryPage DirectoryPageR GET
 /directory.opml DirectoryOpmlR GET
 
+/seed/#HexInfoHash/data WebSeedR GET
+
 /#UserName UserR GET
 /#UserName/#Text/feed MapFeedR GET
 /#UserName/downloads.rss UserDownloadsRssR GET

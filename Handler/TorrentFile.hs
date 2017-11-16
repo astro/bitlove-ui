@@ -1,6 +1,7 @@
 module Handler.TorrentFile where
 
 import Prelude
+import Data.Convertible (convert)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import qualified Data.Text as T
@@ -12,6 +13,7 @@ import Network.URI (escapeURIString, isUnescapedInURIComponent)
 
 import Import
 import qualified Model as Model
+import PathPieces (HexInfoHash(HexInfoHash))
 import Benc
 
 
@@ -28,22 +30,24 @@ instance ToTypedContent RepTorrent where
 
 getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
 getTorrentFileR user slug (TorrentName name) = do
-  mBufGuids <- withDB $ \db -> do
+  mInfo <- withDB $ \db -> do
     torrents <- Model.torrentByName user slug name db
     case torrents of
       [] ->
         return Nothing
       (torrent:_) -> do
         let buf = torrentTorrent torrent
-        guids <- Model.torrentGuids
-                 (torrentInfoHash torrent)
-                 db
-        return $ Just (buf, guids)
-  case mBufGuids of
+            infoHash = torrentInfoHash torrent
+        guids <- Model.torrentGuids infoHash db
+        return $ Just (buf, infoHash, guids)
+  case mInfo of
     Nothing ->
       notFound
-    Just (buf, guids) -> do
-      let mBuf = updateTorrent guids buf
+    Just (buf, infoHash, guids) -> do
+      seedUrl <- T.append "https://bitlove.org" <$>
+                 ($ WebSeedR (HexInfoHash infoHash)) <$>
+                 getUrlRender
+      let mBuf = updateTorrent [seedUrl] guids buf
       case mBuf of
         Just buf' ->
           return $ RepTorrent $ toContent buf'
@@ -59,8 +63,8 @@ getTorrentFileR user slug (TorrentName name) = do
 -- * `announce` (BEP 3)
 -- * `announce-list` (BEP 12)
 -- * `url-list` (BEP 19)
-updateTorrent :: [Text] -> BC.ByteString -> Maybe Builder
-updateTorrent guids buf = do
+updateTorrent :: [Text] -> [Text] -> BC.ByteString -> Maybe Builder
+updateTorrent seedUrls guids buf = do
   BDict dict <- parseBenc buf
   let
     getList :: LBC.ByteString -> [BValue]
@@ -87,6 +91,7 @@ updateTorrent guids buf = do
       BString url <- getList "url-list"
       return url
     urlList' =
+      map (convert . encodeUtf8) seedUrls ++
       myUrls ++
       urlList
     dict' =

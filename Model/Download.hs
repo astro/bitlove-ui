@@ -1,10 +1,9 @@
 {-# LANGUAGE FlexibleInstances, DeriveDataTypeable #-}
 module Model.Download where
 
+import Prelude
 import Data.Convertible
 import Data.Hashable (Hashable)
-import Prelude
-import Prelude
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime)
@@ -18,7 +17,7 @@ import Model.Query
 import Model.User
 
 newtype InfoHash = InfoHash { unInfoHash :: ByteString }
-                 deriving (Eq, Ord, Hashable)
+                 deriving (Read, Eq, Ord, Hashable)
 
 instance Show InfoHash where
   show = T.unpack . toHex . unInfoHash

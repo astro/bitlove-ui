@@ -6,10 +6,13 @@ import Prelude
 import Yesod (PathPiece (..))
 import qualified Data.Text as T
 import Data.Char
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
 
 import Utils
 import Model.User
 import Model.Token
+import Model.Download
 
 data Period = PeriodDays Int
             | PeriodAll
@@ -122,3 +125,20 @@ instance PathPiece DirectoryPage where
               Nothing
     toPathPiece (DirectoryLetter c) = T.singleton c
     toPathPiece DirectoryDigit = "0-9"
+
+
+newtype HexInfoHash = HexInfoHash { unHexInfoHash :: InfoHash }
+  deriving (Show, Read, Eq, Ord)
+
+instance PathPiece HexInfoHash where
+  fromPathPiece =
+    Just .
+    HexInfoHash .
+    InfoHash .
+    B.concat . LB.toChunks .
+    fromHex .
+    T.unpack
+  toPathPiece =
+    toHex .
+    unInfoHash .
+    unHexInfoHash
