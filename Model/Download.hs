@@ -144,3 +144,15 @@ searchDownloads :: Text -> QueryPage -> Query Download
 searchDownloads needle page =
   query "SELECT * FROM search_feed_items(?, ?, ?)" $
   convert page ++ [convert needle]
+
+newtype EnclosureURL = EnclosureURL { unEnclosureURL :: Text }
+
+instance Convertible [SqlValue] EnclosureURL where
+  safeConvert [guid] = EnclosureURL <$> safeConvert guid
+  safeConvert vals = convError "EnclosureURL" vals
+
+torrentEnclosures :: InfoHash -> Query Text
+torrentEnclosures infoHash =
+  (map unEnclosureURL <$>) .
+  query "SELECT url FROM enclosure_torrents WHERE info_hash=?"
+  [convert infoHash]
