@@ -1,4 +1,6 @@
 (function() {
+    if (!WebTorrent.WEBRTC_SUPPORT) return;
+
     var testEl = document.createElement('video');
     function testType(mime) {
         return !! testEl.canPlayType(mime);
@@ -9,7 +11,7 @@
     var torrentOpts = {
         announce: [proto + "://" + document.location.host + "/webtorrent-announce"]
     };
-    
+
     var webTorrent = null;
     function addTorrent(torrentId, cb) {
         if (webTorrent === null) {
@@ -17,7 +19,7 @@
         }
         webTorrent.add(torrentId, torrentOpts, cb);
     }
-    
+
 $('.torrent').each(function() {
     var el = $(this);
     var a = el.find('a');
