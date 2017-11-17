@@ -1,4 +1,9 @@
 (function() {
+    var testEl = document.createElement('video');
+    function testType(mime) {
+        return !! testEl.canPlayType(mime);
+    }
+
     var proto = document.location.protocol == "https:" ?
         "wss" : "ws";
     var torrentOpts = {
@@ -15,6 +20,14 @@
     
 $('.torrent').each(function() {
     var el = $(this);
+    var a = el.find('a');
+    var mimeType = a.attr('type');
+    if (!testType(mimeType)) {
+        /* No playback support */
+        console.log("No playback support for:", mimeType);
+        return;
+    }
+
     var playButton = $("<span class='webtorrent-play'>⯈</span>");
 
     playButton.click(function() {
@@ -24,7 +37,7 @@ $('.torrent').each(function() {
         container.insertBefore(el.parent())
 
         var torrentId = (document.location.origin || document.location.host) +
-            el.find('a').attr('href');
+            a.attr('href');
         addTorrent(torrentId, function(torrent) {
             torrent.files[0].appendTo(container.get(0));
         });
