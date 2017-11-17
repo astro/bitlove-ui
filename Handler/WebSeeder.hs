@@ -61,12 +61,14 @@ getWebSeedR (HexInfoHash infoHash) = do
                   liftResourceT $
                   unwrapResumable $
                   responseBody res
+                liftResourceT $ void $ register $
+                  runResourceT srcFinalizer
                 let src' = src =$= proxy
                     proxy = do
                       mBuf <- await
                       case mBuf of
                         Nothing ->
-                          liftResourceT srcFinalizer
+                          return ()
                         Just buf -> do
                           yield $ Chunk $
                             fromByteString buf
