@@ -149,8 +149,8 @@ library
                  , hashable
                  , attoparsec                    >= 0.13.2.0
                  , network-uri                   >= 2.6
-                 , binary >= 0.8.3.0
-
+                 , binary                        >= 0.8.3.0
+                 , case-insensitive              >= 1.2.0.10
 executable         ui
     if flag(library-only)
         Buildable: False
