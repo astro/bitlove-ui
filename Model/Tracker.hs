@@ -4,11 +4,9 @@ module Model.Tracker where
 import Prelude
 import Control.Monad (void)
 import Data.Convertible
-import Data.Hashable (Hashable)
 import Data.Data (Typeable)
 import Data.Text (Text)
 import qualified Data.ByteString.Char8 as BC
-import qualified Data.ByteString.Lazy.Char8 as LBC
 import Database.PostgreSQL.LibPQ (Connection)
 
 import Model.SqlValue
@@ -39,7 +37,7 @@ scrape infoHash =
 
 
 newtype PeerId = PeerId { unPeerId :: BC.ByteString }
-               deriving (Show, Typeable, Eq, Hashable)
+               deriving (Show, Typeable)
 
 instance Convertible SqlValue PeerId where
     safeConvert = (PeerId <$>) . safeConvert
@@ -84,30 +82,8 @@ getPeers infoHash onlyLeechers =
             then "tracker_leechers"
             else "tracker"
            ) ++
-           " WHERE \"info_hash\"=? AND \"offers\" IS NULL LIMIT 40")
+           " WHERE \"info_hash\"=? LIMIT 40")
               [convert infoHash]
-
-data TrackedWebPeer = TrackedWebPeer !PeerId LBC.ByteString
-                   deriving (Show, Typeable)
-
-instance Convertible [SqlValue] TrackedWebPeer where
-    safeConvert [peerId, offers] =
-        TrackedWebPeer <$>
-        safeConvert peerId <*>
-        safeConvert offers
-    safeConvert vals =
-        convError "TrackedWebPeer" vals
-
-getWebPeers :: InfoHash -> Bool -> Query TrackedWebPeer
-getWebPeers infoHash onlyLeechers =
-    query ("SELECT \"peer_id\", \"offers\" FROM " ++
-           (if onlyLeechers
-            then "tracker_leechers"
-            else "tracker"
-           ) ++
-           " WHERE \"info_hash\"=? AND \"offers\" IS NOT NULL LIMIT 40")
-              [convert infoHash]
-
 
 data TrackerRequest = TrackerRequest {
       trInfoHash :: InfoHash,
@@ -118,8 +94,7 @@ data TrackerRequest = TrackerRequest {
       trDownloaded :: Integer,
       trLeft :: Integer,
       trEvent :: Maybe Text,
-      trCompact :: Bool,
-      trOffers :: Maybe LBC.ByteString
+      trCompact :: Bool
     } deriving (Show)
 
 announcePeer :: TrackerRequest -> Connection -> IO ()
@@ -133,10 +108,9 @@ announcePeer tr db =
           do let m :: Convertible a SqlValue => (TrackerRequest -> a) -> SqlValue
                  m = convert . ($ tr)
              void $
-                 query' "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                 query' "SELECT * FROM set_peer(?, ?, ?, ?, ?, ?, ?, ?)"
                  [m trInfoHash, m trHost, m trPort, m trPeerId,
-                  m trUploaded, m trDownloaded, m trLeft, m trEvent,
-                  m trOffers]
+                  m trUploaded, m trDownloaded, m trLeft, m trEvent]
                  db
 
 updateScraped :: InfoHash -> Connection -> IO ()

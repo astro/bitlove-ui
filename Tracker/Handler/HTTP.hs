@@ -65,8 +65,7 @@ getAnnounceR = do
             qi "downloaded" <*>
             pure (fromMaybe 1 $ qi "left") <*>
             pure (decodeUtf8 <$> q "event") <*>
-            pure (maybe False (const True) $ q "compact") <*>
-            pure Nothing
+            pure (maybe False (const True) $ q "compact")
 
   case mTr of
     Nothing ->
