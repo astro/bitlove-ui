@@ -25,7 +25,7 @@ function Filterable(el) {
     (l !== undefined) && this.langs.push.apply(this.langs, l.split(','));
 
     var types = [];
-    el.find('.torrent a').each(function() {
+    el.find('.torrent .button').each(function() {
 	types.push($(this).attr('type'));
     });
     var t = el.data('types');
