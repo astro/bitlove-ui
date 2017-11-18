@@ -1237,3 +1237,17 @@ pre {
   color: black;
   text-decoration: none;
 }
+
+.webtorrent-container {
+  margin: 0 0;
+}
+.webtorrent-container audio, .webtorrent-container video {
+  width: 100%;
+}
+
+.webtorrent-stats {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 80%;
+  color: #666;
+}

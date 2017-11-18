@@ -35,16 +35,40 @@ $('.torrent').each(function() {
     playButton.click(function() {
         playButton.remove();
 
-        var container = $('<div></div>');
+        var container = $("<div class='webtorrent-container'></div>");
         container.insertBefore(el.parent())
 
         var torrentId = (document.location.origin || document.location.host) +
             a.attr('href');
         addTorrent(torrentId, function(torrent) {
             torrent.files[0].appendTo(container.get(0));
+
+            var statsEl = $("<p class='webtorrent-stats'></p>");
+            statsEl.insertBefore(el.parent())
+
+            setInterval(function() {
+                statsEl.text(
+                    torrent.progress < 1 ?
+                        "Downloaded " + Math.round(100 * torrent.progress) + "% at " + formatSize(torrent.downloadSpeed) + "/s" :
+                        "Finished, uploading at " + formatSize(torrent.uploadSpeed) + "/s"
+                );
+            }, 1000);
         });
     });
     el.append(playButton);
 });
+
+function formatSize(size) {
+    var units = ["G", "M", "K"];
+    var unit = "";
+    while(size > 1024 && units.length > 0) {
+        unit = units.pop();
+        size /= 1024;
+    }
+    return (size < 8 ?
+            Math.round(size) :
+            Math.round(10 * size) / 10) +
+        " " + unit + "B";
+}
 
 })();
