@@ -151,6 +151,8 @@ library
                  , network-uri                   >= 2.6
                  , binary                        >= 0.8.3.0
                  , case-insensitive              >= 1.2.0.10
+                 , systemd                       >= 1.1.2
+
 executable         ui
     if flag(library-only)
         Buildable: False

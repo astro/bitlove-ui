@@ -25,6 +25,7 @@ import Prelude
 import System.IO (stderr, hPrint)
 import Yesod
 import Yesod.Static
+import Control.Monad
 import Control.Monad.Trans.Resource
 --import Yesod.Auth
 import Yesod.Default.Config
@@ -45,6 +46,7 @@ import Data.ByteString.Char8 (isInfixOf)
 import qualified Data.ByteString.Lazy as LB
 import qualified Crypto.Hash.SHA1 as SHA1
 import Database.PostgreSQL.LibPQ (Connection)
+import System.Systemd.Daemon (notifyWatchdog)
 
 import Utils
 import PathPieces
@@ -254,4 +256,9 @@ withDBPool pool f = liftIO $ do
              E.throw e
       Right a ->
           do putResource localPool db
+
+             -- A successfully finished transaction is our heartbeat
+             -- for systemd watchdog functionality
+             void $ liftIO notifyWatchdog
+
              return a
