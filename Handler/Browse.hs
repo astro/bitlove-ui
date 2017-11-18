@@ -443,7 +443,8 @@ renderItem item showOrigin = do
     $forall d <- itemDownloads item
       <ul .download>
         <li .torrent>
-          <a href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
+          <a .button
+             href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              type="#{downloadType d}">

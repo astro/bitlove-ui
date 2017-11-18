@@ -584,7 +584,7 @@ h3 a:hover { color: #464646; }
    *   https://github.com/samcollins/css-social-buttons/blob/master/css/zocial.css
    * by Sam Collins (@smcllns) of www.eventasaur.us
    ***/
-.torrent a {
+.torrent .button {
   border: 1px solid #777;
   border-color: rgba(0,0,0,0.2);
   border-bottom-color: #333;
@@ -613,7 +613,7 @@ h3 a:hover { color: #464646; }
   border-radius: .3em;
   background-color: #60af00;
 }
-.torrent a:before {
+.torrent .button:before {
   font-family: FontAwesome;
   font-weight: normal;
   font-style: none;
@@ -637,10 +637,10 @@ h3 a:hover { color: #464646; }
 
   -webkit-font-smoothing: antialiased;
 }
-.torrent a:active {
+.torrent .button:active {
   outline: none; /* outline is visible on :focus */
 }
-.torrent a {
+.torrent .button {
   background-image: -moz-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
   background-image: -ms-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
   background-image: -o-linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
@@ -649,7 +649,7 @@ h3 a:hover { color: #464646; }
   background-image: linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.05) 49%, rgba(0,0,0,.05) 51%, rgba(0,0,0,.1));
 }
 
-.torrent a:hover, .torrent a:focus {
+.torrent .button:hover, .torrent .button:focus {
   background-image: -moz-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
   background-image: -ms-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
   background-image: -o-linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
@@ -658,7 +658,7 @@ h3 a:hover { color: #464646; }
   background-image: linear-gradient(rgba(255,255,255,.15) 49%, rgba(0,0,0,.1) 51%, rgba(0,0,0,.15));
 }
 
-.torrent a:active {
+.torrent .button:active {
   background-image: -moz-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
   background-image: -ms-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
   background-image: -o-linear-gradient(bottom, rgba(255,255,255,.1), rgba(255,255,255,0) 30%, transparent 50%, rgba(0,0,0,.1));
@@ -1216,4 +1216,24 @@ pre {
   margin-left: 0.9em;
   margin-right: 0.9em;
   background: white;
+}
+
+/***************************************************************************
+ *        WEBTORRENT INTEGRATION
+ ***************************************************************************/
+
+.webtorrent-play {
+  cursor: pointer;
+  display: inline-block;
+  font: bold 95%/1.8 "Lucida Grande", Tahoma, sans-serif;
+  padding: 0 .95em;
+  line-height: 2em;
+  vertical-align: middle;
+  text-align: center;
+  text-decoration: none;
+  color: #555;
+}
+.webtorrent-play:hover {
+  color: black;
+  text-decoration: none;
 }

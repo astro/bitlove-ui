@@ -30,7 +30,7 @@ $('.torrent').each(function() {
         return;
     }
 
-    var playButton = $("<span class='webtorrent-play'>⯈</span>");
+    var playButton = $("<a class='webtorrent-play' title='Play with WebTorrent'>⯈</a>");
 
     playButton.click(function() {
         playButton.remove();
