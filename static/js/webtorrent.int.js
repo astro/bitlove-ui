@@ -49,8 +49,10 @@ $('.torrent').each(function() {
             setInterval(function() {
                 statsEl.text(
                     torrent.progress < 1 ?
-                        "Downloaded " + Math.round(100 * torrent.progress) + "% at " + formatSize(torrent.downloadSpeed) + "/s" :
-                        "Finished, uploading at " + formatSize(torrent.uploadSpeed) + "/s"
+                        "Downloaded " + Math.round(100 * torrent.progress) + "% from " + torrent.numPeers + " peers at " + formatSize(torrent.downloadSpeed) + "/s" :
+                        torrent.uploadSpeed > 0 ?
+                        "Finished, uploading to " + torrent.numPeers + " peers at " + formatSize(torrent.uploadSpeed) + "/s" :
+                        "Finished"
                 );
             }, 1000);
         });
