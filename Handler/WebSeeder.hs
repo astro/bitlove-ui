@@ -7,6 +7,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BC
 import Yesod
 import Data.Conduit
 import Network.HTTP.Conduit hiding (proxy)
@@ -19,6 +20,7 @@ import Prelude
 import Foundation
 import PathPieces
 import Model.Download (torrentEnclosures)
+import Model.Stats (addCounter)
 
 
 getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
@@ -56,6 +58,14 @@ getWebSeedR (HexInfoHash infoHash) = do
                 forwardHeader hContentLength
                 forwardHeader hContentRange
                 addHeader "Access-Control-Allow-Origin" corsOrigins
+
+                case reads <$>
+                     BC.unpack <$>
+                     hContentLength `lookup` responseHeaders res of
+                  Just [(contentLength, "")] ->
+                    withDB $ addCounter "up_seeder_web" infoHash contentLength
+                  _ ->
+                    return ()
 
                 (src, srcFinalizer) <-
                   liftResourceT $
