@@ -47,11 +47,19 @@ $('.torrent').each(function() {
             statsEl.insertBefore(el.parent())
 
             setInterval(function() {
+                var nonWebSeedWires = 0;
+                for(var i = 0; i < torrent.wires.length; i++) {
+                    var wire = torrent.wires[i];
+                    if (wire['type'] !== 'webSeed') {
+                        nonWebSeedWires += 1;
+                    }
+                }
+
                 statsEl.text(
                     torrent.progress < 1 ?
-                        "Downloaded " + Math.round(100 * torrent.progress) + "% from " + torrent.numPeers + " peers at " + formatSize(torrent.downloadSpeed) + "/s" :
+                        "Downloaded " + Math.round(100 * torrent.progress) + "% from " + nonWebSeedWires + " peers at " + formatSize(torrent.downloadSpeed) + "/s" :
                         torrent.uploadSpeed > 0 ?
-                        "Finished, uploading to " + torrent.numPeers + " peers at " + formatSize(torrent.uploadSpeed) + "/s" :
+                        "Finished, uploading to " + nonWebSeedWires + " peers at " + formatSize(torrent.uploadSpeed) + "/s" :
                         "Finished"
                 );
             }, 1000);
@@ -68,8 +76,8 @@ function formatSize(size) {
         size /= 1024;
     }
     return (size < 8 ?
-            Math.round(size) :
-            Math.round(10 * size) / 10) +
+            Math.round(10 * size) / 10 :
+            Math.round(size)) +
         " " + unit + "B";
 }
 
