@@ -63,7 +63,7 @@ getWebSeedR (HexInfoHash infoHash) = do
                      BC.unpack <$>
                      hContentLength `lookup` responseHeaders res of
                   Just [(contentLength, "")] ->
-                    withDB $ addCounter "up_seeder_web" infoHash contentLength
+                    withDB $ addCounter "up_seeder_w" infoHash contentLength
                   _ ->
                     return ()
 

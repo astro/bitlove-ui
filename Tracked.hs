@@ -57,6 +57,25 @@ newData =
   TrackedData { dataPeers = HM.empty
               }
 
+-- TODO: diff bt/webtorrent
+dataLeechers :: TrackedData -> Int
+dataLeechers =
+  HM.foldl' (\leechers peer ->
+               leechers +
+               if pLeft peer == 0
+               then 0
+               else 1
+            ) 0 . dataPeers
+
+-- TODO: diff bt/webtorrent
+dataSeeders :: TrackedData -> Int
+dataSeeders =
+  HM.foldl' (\seeders peer ->
+               seeders +
+               if pLeft peer == 0
+               then 1
+               else 0
+            ) 0 . dataPeers
 
 newtype Tracked = Tracked (TVar (HM.HashMap InfoHash (TVar TrackedData)))
 
@@ -121,14 +140,23 @@ data TrackedAnnounce
                     , aEvent :: Maybe Text
                     }
 
+data TrackedAnnounced
+  = TrackedAnnounced { adPeers :: [(PeerId, TrackedPeer)]
+                     , adCompleted :: Bool
+                     , adUploaded :: Int
+                     , adDownloaded :: Int
+                     , adSeeders :: Int
+                     , adLeechers :: Int
+                     }
+
 -- TODO: must return counter events
-announce :: Tracked -> TrackedAnnounce -> IO [(PeerId, TrackedPeer)]
+announce :: Tracked -> TrackedAnnounce -> IO TrackedAnnounced
 announce tracked announce
   | aEvent announce == Just "stopped" = do
       trackedModifyData tracked (aInfoHash announce) $
         updateData $
         HM.delete $ aPeerId announce
-      return []
+      return $ TrackedAnnounced [] False 0 0 0 0
 
 announce tracked announce@(TrackedAnnounce {}) = do
   now <- getNow
@@ -154,6 +182,8 @@ announce tracked announce@(TrackedAnnounce {}) = do
             False
   trackedModifyData' tracked (aInfoHash announce) $ \data' ->
     let
+      oldPeer =
+        aPeerId announce `HM.lookup` dataPeers data'
       data'' =
         updateData
         (HM.alter
@@ -186,10 +216,34 @@ announce tracked announce@(TrackedAnnounce {}) = do
               else peers
         )
         [] (dataPeers data'')
-    in (peers, data'')
+      completed =
+        aEvent announce == Just "completed"
+      uploaded =
+        max 0 $
+        fromMaybe 0 $ do
+        oldPeer' <- oldPeer
+        return $ pUploaded newPeer - pUploaded oldPeer'
+      downloaded =
+        max 0 $
+        fromMaybe 0 $ do
+        oldPeer' <- oldPeer
+        return $ pDownloaded newPeer - pDownloaded oldPeer'
+      seeders =
+        dataSeeders data''
+      leechers =
+        dataLeechers data''
+      ad =
+        TrackedAnnounced { adPeers = peers
+                         , adCompleted = completed
+                         , adUploaded = uploaded
+                         , adDownloaded = downloaded
+                         , adSeeders = seeders
+                         , adLeechers = leechers
+                         }
+    in (ad, data'')
 
 -- TODO
-announce _ _ = undefined
+announce _ _ = error "announce not implemented yet"
 
 
 data ScrapeInfo = ScrapeInfo { scrapeLeechers :: Int

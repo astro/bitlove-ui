@@ -18,6 +18,7 @@ module Model (
   getDownloadCounter,
   addCounter,
   getGauge,
+  setGauge,
   -- Model.Download
   InfoHash (..),
   infoHashToHex,

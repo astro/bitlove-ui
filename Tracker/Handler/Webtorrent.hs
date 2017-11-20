@@ -220,10 +220,9 @@ recvLoop session chan = do
           -- Announce
           tracked <- lift $ trackerTracked <$> getYesod
 
-          (peers, scraped) <- liftIO $ do
-            (,)
-            <$> announce tracked ann
-            <*> scrape tracked infoHash
+          ad <- liftIO $ announce tracked ann
+          let peers = adPeers ad
+          scraped <- liftIO $ scrape tracked infoHash
 
           -- Send response
           interval <- liftIO $ randomRIO (1620, 1800)
@@ -248,6 +247,15 @@ recvLoop session chan = do
                      writeTChan chan peerOffer
                 _ ->
                   return ()
+
+          -- Time critical stuff done, track stats
+          lift $ withDB $ \db -> do
+            when (adCompleted ad) $
+              addCounter "complete_w" infoHash 1 db
+            addCounter "up_w" infoHash (fromIntegral $ adUploaded ad) db
+            addCounter "down_w" infoHash (fromIntegral $ adDownloaded ad) db
+            setGauge "seeders_w" infoHash (fromIntegral $ adSeeders ad) db
+            setGauge "leechers_w" infoHash (fromIntegral $ adLeechers ad) db
 
       -- Loop
       recvLoop session chan
