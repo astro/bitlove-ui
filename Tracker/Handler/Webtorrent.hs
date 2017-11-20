@@ -254,8 +254,8 @@ recvLoop session chan = do
               addCounter "complete_w" infoHash 1 db
             addCounter "up_w" infoHash (fromIntegral $ adUploaded ad) db
             addCounter "down_w" infoHash (fromIntegral $ adDownloaded ad) db
-            setGauge "seeders_w" infoHash (fromIntegral $ adSeeders ad) db
-            setGauge "leechers_w" infoHash (fromIntegral $ adLeechers ad) db
+            setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scraped) db
+            setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scraped) db
 
       -- Loop
       recvLoop session chan
@@ -282,6 +282,10 @@ sessionClear :: Session -> WebSocketsT Handler ()
 sessionClear session = do
   tracked <- lift $ trackerTracked <$> getYesod
   session' <- liftIO $ readIORef session
-  liftIO $
-    forM_ (Set.toList session') $ \(infoHash, peerId) ->
-    clearPeer tracked infoHash peerId
+  forM_ (Set.toList session') $ \(infoHash, peerId) -> do
+    liftIO $ clearPeer tracked infoHash peerId
+
+    scraped <- liftIO $ scrape tracked infoHash
+    lift $ withDB $ \db -> do
+      setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scraped) db
+      setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scraped) db

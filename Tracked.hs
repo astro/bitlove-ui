@@ -57,26 +57,6 @@ newData =
   TrackedData { dataPeers = HM.empty
               }
 
--- TODO: diff bt/webtorrent
-dataLeechers :: TrackedData -> Int
-dataLeechers =
-  HM.foldl' (\leechers peer ->
-               leechers +
-               if pLeft peer == 0
-               then 0
-               else 1
-            ) 0 . dataPeers
-
--- TODO: diff bt/webtorrent
-dataSeeders :: TrackedData -> Int
-dataSeeders =
-  HM.foldl' (\seeders peer ->
-               seeders +
-               if pLeft peer == 0
-               then 1
-               else 0
-            ) 0 . dataPeers
-
 newtype Tracked = Tracked (TVar (HM.HashMap InfoHash (TVar TrackedData)))
 
 -- TODO: start clean loop
@@ -145,8 +125,6 @@ data TrackedAnnounced
                      , adCompleted :: Bool
                      , adUploaded :: Int
                      , adDownloaded :: Int
-                     , adSeeders :: Int
-                     , adLeechers :: Int
                      }
 
 -- TODO: must return counter events
@@ -156,7 +134,7 @@ announce tracked announce
       trackedModifyData tracked (aInfoHash announce) $
         updateData $
         HM.delete $ aPeerId announce
-      return $ TrackedAnnounced [] False 0 0 0 0
+      return $ TrackedAnnounced [] False 0 0
 
 announce tracked announce@(TrackedAnnounce {}) = do
   now <- getNow
@@ -228,17 +206,11 @@ announce tracked announce@(TrackedAnnounce {}) = do
         fromMaybe 0 $ do
         oldPeer' <- oldPeer
         return $ pDownloaded newPeer - pDownloaded oldPeer'
-      seeders =
-        dataSeeders data''
-      leechers =
-        dataLeechers data''
       ad =
         TrackedAnnounced { adPeers = peers
                          , adCompleted = completed
                          , adUploaded = uploaded
                          , adDownloaded = downloaded
-                         , adSeeders = seeders
-                         , adLeechers = leechers
                          }
     in (ad, data'')
 
@@ -253,6 +225,8 @@ data ScrapeInfo = ScrapeInfo { scrapeLeechers :: Int
                              , scrapeDownloaded :: Int
                              } deriving (Show, Typeable)
 
+
+-- TODO: diff bt/webtorrent
 scrape :: Tracked -> InfoHash -> IO ScrapeInfo
 scrape tracked infoHash =
   HM.foldl' add newScrape <$>
