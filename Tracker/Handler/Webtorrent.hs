@@ -39,12 +39,13 @@ instance FromJSON Offer where
     <*> o .: "offer"
 
 data Message = AnnounceMessage {
+  msgAction :: Maybe Text,
   msgInfoHash :: Maybe Text,
   msgPeerId :: Maybe Text,
   msgDownloaded :: Maybe Int,
   msgUploaded :: Maybe Int,
   msgLeft :: Maybe Int,
-  msgAction :: Maybe Text,
+  msgEvent :: Maybe Text,
   msgNumWant :: Maybe Int,
   msgOffers :: Maybe [Offer],
   msgOfferId :: Maybe Text,
@@ -58,12 +59,13 @@ instance FromJSON Message where
     case action :: Text of
       "announce" ->
         AnnounceMessage
-        <$> o .: "info_hash"
-        <*> o .: "peer_id"
+        <$> o .:? "action"
+        <*> o .:? "info_hash"
+        <*> o .:? "peer_id"
         <*> o .:? "downloaded"
         <*> o .:? "uploaded"
         <*> o .:? "left"
-        <*> o .: "action"
+        <*> o .:? "event"
         <*> o .:? "numwant"
         <*> o .:? "offers"
         <*> o .:? "offer_id"
@@ -82,7 +84,7 @@ messageToAnnounce msg@(AnnounceMessage {}) chan =
   <*> msgUploaded msg
   <*> msgDownloaded msg
   <*> msgLeft msg
-  <*> pure (msgAction msg)
+  <*> pure (msgEvent msg)
 
 data TrackerError = TrackerError Text
 
