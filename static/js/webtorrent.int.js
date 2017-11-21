@@ -6,18 +6,12 @@
         return !! testEl.canPlayType(mime);
     }
 
-    var proto = document.location.protocol == "https:" ?
-        "wss" : "ws";
-    var torrentOpts = {
-        announce: [proto + "://" + document.location.host + "/webtorrent-announce"]
-    };
-
     var webTorrent = null;
     function addTorrent(torrentId, cb) {
         if (webTorrent === null) {
             webTorrent = new WebTorrent();
         }
-        webTorrent.add(torrentId, torrentOpts, cb);
+        webTorrent.add(torrentId, {}, cb);
     }
 
 $('.torrent').each(function() {
