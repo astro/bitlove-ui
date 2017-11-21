@@ -40,6 +40,7 @@ getWebSeedR (HexInfoHash infoHash) = do
       tryUrl (url:urls') = do
         req <- parseRequest $ T.unpack url
         let reqHeaders =
+              (hUserAgent, userAgent) :
               case mRange of
                 Just range -> [(hRange, range)]
                 Nothing -> []
@@ -95,4 +96,5 @@ getWebSeedR (HexInfoHash infoHash) = do
   tryUrl urls
 
   where
+    userAgent = "Bitlove/0.0 (WebSeeder for WebTorrent support; http://bitlove.org/)"
     corsOrigins = "http://bitlove.org http://www.bitlove.org https://bitlove.org https://www.bitlove.org"
