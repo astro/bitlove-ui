@@ -3,6 +3,7 @@ module Handler.WebSeeder where
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Resource
+import Data.String (IsString)
 import Data.List (nub)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -22,6 +23,43 @@ import Foundation
 import PathPieces
 import Model.Download (torrentEnclosures)
 import Model.Stats (addCounter)
+
+
+hAccessControlAllowOrigin :: IsString s => s
+hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
+
+corsOrigins :: [Text]
+corsOrigins =
+  map T.toCaseFold
+  ["http://bitlove.org",
+    "http://www.bitlove.org",
+    "https://bitlove.org",
+    "https://www.bitlove.org"
+  ]
+
+isOriginAllowed :: Text -> Bool
+isOriginAllowed =
+  (`elem` corsOrigins) .
+  T.toCaseFold
+
+
+optionsWebSeedR :: HexInfoHash -> Handler () --ContentType, Content)
+optionsWebSeedR _ = do
+  mMethod <- lookupHeader "Access-Control-Request-Method"
+  when (mMethod /= Just "GET") $
+    badMethod
+
+  mOrigin <- (decodeUtf8 <$>) <$>
+             lookupHeader hOrigin
+
+  case mOrigin of
+    Just origin
+      | isOriginAllowed origin ->
+          addHeader hAccessControlAllowOrigin origin
+    Just _ ->
+      invalidArgs ["Invalid Origin: header"]
+    Nothing ->
+      invalidArgs ["Missing Origin: header"]
 
 
 getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
@@ -66,8 +104,6 @@ getWebSeedR (HexInfoHash infoHash) = do
                 -- Set `Access-Control-Allow-Origin:` response header
                 -- if the `Origin:` request header is among the
                 -- allowed values
-                liftIO $ putStrLn $
-                  "Origin: " ++ show mOrigin
                 case mOrigin of
                   Just origin
                     | isOriginAllowed origin ->
@@ -114,14 +150,3 @@ getWebSeedR (HexInfoHash infoHash) = do
 
   where
     userAgent = "Bitlove/0.0 (WebSeeder for WebTorrent support; http://bitlove.org/)"
-    hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
-    corsOrigins =
-      map T.toCaseFold
-      ["http://bitlove.org",
-       "http://www.bitlove.org",
-       "https://bitlove.org",
-       "https://www.bitlove.org"
-      ]
-    isOriginAllowed =
-      (`elem` corsOrigins) .
-      T.toCaseFold
