@@ -62,7 +62,7 @@ optionsWebSeedR _ = do
       invalidArgs ["Missing Origin: header"]
 
   addHeader "Access-Control-Allow-Headers" "Range"
-
+  addHeader "Access-Control-Max-Age" "86400"
 
 getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
 getWebSeedR (HexInfoHash infoHash) = do
@@ -109,8 +109,10 @@ getWebSeedR (HexInfoHash infoHash) = do
                 -- allowed values
                 case mOrigin of
                   Just origin
-                    | isOriginAllowed origin ->
+                    | isOriginAllowed origin -> do
                       addHeader hAccessControlAllowOrigin origin
+                      -- Cacheable for 1 day
+                      addHeader "Access-Control-Max-Age" "86400"
                   _ ->
                     return ()
 
