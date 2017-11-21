@@ -518,7 +518,7 @@ article:first-child {
 .feedslist a:before {
   font-family: FontAwesome;
   font-weight: normal;
-  font-style: none;
+  font-style: normal;
   content: "\f09e";
   margin-right: 0.2em;
 }
@@ -616,14 +616,13 @@ h3 a:hover { color: #464646; }
 .torrent .button:before {
   font-family: FontAwesome;
   font-weight: normal;
-  font-style: none;
+  font-style: normal;
   content: "\f019";
   width: 1em;
   border-right: 0.075em solid rgba(0,0,0,0.1);
   float: left;
   font-size: 115%;
   line-height: 1.6em;
-  font-style: normal;
   font-weight: normal;
   margin: 0 0.5em 0 0;
   padding: 0 0.5em;
