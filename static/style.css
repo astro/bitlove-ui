@@ -1225,7 +1225,7 @@ pre {
 .webtorrent-play {
   cursor: pointer;
   display: inline-block;
-  font: bold 95%/1.8 "Lucida Grande", Tahoma, sans-serif;
+  font: bold 95%/1.8 sans-serif;
   padding: 0 .95em;
   line-height: 2em;
   vertical-align: middle;
