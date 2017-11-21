@@ -61,6 +61,8 @@ optionsWebSeedR _ = do
     Nothing ->
       invalidArgs ["Missing Origin: header"]
 
+  addHeader "Access-Control-Allow-Headers" "Range"
+
 
 getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
 getWebSeedR (HexInfoHash infoHash) = do
