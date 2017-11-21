@@ -1222,9 +1222,13 @@ pre {
  ***************************************************************************/
 
 .webtorrent-play {
+  font-family: FontAwesome;
+  font-weight: normal;
+  font-style: normal;
+  content: "\f04b";
+  width: 1em;
   cursor: pointer;
   display: inline-block;
-  font: bold 95%/1.8 sans-serif;
   padding: 0 .95em;
   line-height: 2em;
   vertical-align: middle;
