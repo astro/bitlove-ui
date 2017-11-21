@@ -28,6 +28,10 @@ instance ToTypedContent RepTorrent where
         TypedContent "application/x-bittorrent" .
         toContent
 
+-- |Does the same but is on different routes for stats.
+getTorrentFileForWebtorrentR :: UserName -> Text -> TorrentName -> Handler RepTorrent
+getTorrentFileForWebtorrentR = getTorrentFileR
+
 getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
 getTorrentFileR user slug (TorrentName name) = do
   mInfo <- withDB $ \db -> do

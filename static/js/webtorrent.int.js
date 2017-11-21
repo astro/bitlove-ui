@@ -39,7 +39,8 @@ $('.torrent').each(function() {
         container.insertBefore(el.parent())
 
         var torrentId = (document.location.origin || document.location.host) +
-            a.attr('href');
+            a.attr('href') +
+            "/for/webtorrent";
         addTorrent(torrentId, function(torrent) {
             torrent.files[0].appendTo(container.get(0));
 
