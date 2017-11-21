@@ -97,7 +97,13 @@ Graph.prototype.setData = function(response) {
     var data = [];
     var type = this.type;
     var interval = response.interval * 1000;
-    ["torrent", "downloads", "down", "up_seeder", "up", "leechers", "seeders"].forEach(function(name) {
+    ["torrent", "downloads",
+     "down", "up_seeder", "up",
+     "leechers", "seeders",
+     "torrent_w", "downloads_w",
+     "down_w", "up_seeder_w", "up_w",
+     "leechers_w", "seeders_w"
+    ].forEach(function(name) {
 	if (!response.hasOwnProperty(name))
 	    return;
 
@@ -110,7 +116,8 @@ Graph.prototype.setData = function(response) {
 	var series = {
 	    label: name,
 	    legend: {
-		show: true
+		show: true,
+                position: 'sw'
 	    },
 	    data: d
 	};
@@ -126,9 +133,17 @@ Graph.prototype.setData = function(response) {
 			series.label = "Seeders";
 			series.color = '#4faf1f';
 			break;
+		    case 'seeders_w':
+			series.label = "WebTorrent Seeders";
+			series.color = '#6fcf3f';
+			break;
 		    case 'leechers':
 			series.label = "Leechers";
 			series.color = '#1f4faf';
+			break;
+		    case 'leechers_w':
+			series.label = "Leechers";
+			series.color = '#3f6fcf';
 			break;
 		}
 		break;
@@ -142,15 +157,30 @@ Graph.prototype.setData = function(response) {
 			series.color = '#1f4faf';
 			series.bars.fillColor = '#3fafef';
 			break;
+		    case 'down_w':
+			series.label = "Leeched by WebTorrent";
+			series.color = '#3f6fcf';
+			series.bars.fillColor = '#5fcfff';
+			break;
 		    case 'up':
 			series.label = "Seeded by peers";
 			series.color = '#4faf1f';
 			series.bars.fillColor = '#afef3f';
 			break;
+		    case 'up_w':
+			series.label = "Seeded by WebTorrent";
+			series.color = '#6fcf3f';
+			series.bars.fillColor = '#cfff5f';
+			break;
 		    case 'up_seeder':
 			series.label = "Webseeded by Bitlove";
 			series.color = '#afaf1f';
 			series.bars.fillColor = '#efef3f';
+			break;
+		    case 'up_seeder_w':
+			series.label = "Webseeded to WebTorrent";
+			series.color = '#cfcf3f';
+			series.bars.fillColor = '#ffff5f';
 			break;
 		}
 		break;
@@ -164,11 +194,21 @@ Graph.prototype.setData = function(response) {
 			series.color = '#5faf1f';
 			series.bars.fillColor = '#afef3f';
 			break;
+		    case 'downloads_w':
+			series.label = "WebTorrent complete";
+			series.color = '#7fcf3f';
+			series.bars.fillColor = '#cfff5f';
+			break;
 		    case 'torrent':
 		    	series.label = ".torrent files";
 		    	series.color = '#1f5faf';
 		    	series.bars.fillColor = '#3fafef';
 		    	break;
+		    case 'torrent_w':
+		        series.label = "WebTorrent .torrent";
+		        series.color = '#3f5fcf';
+		        series.bars.fillColor = '#5fcfff';
+		        break;
 		}
 		break;
 	}
