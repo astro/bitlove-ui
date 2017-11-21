@@ -3,6 +3,7 @@ module Handler.WebSeeder where
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Resource
+import Data.List (nub)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
@@ -25,7 +26,8 @@ import Model.Stats (addCounter)
 
 getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
 getWebSeedR (HexInfoHash infoHash) = do
-  urls <- withDB $ torrentEnclosures infoHash
+  urls <- nub <$>
+          withDB (torrentEnclosures infoHash)
   liftIO $ putStrLn $
     "Seeding " ++ show infoHash ++
     " with URLs: " ++
