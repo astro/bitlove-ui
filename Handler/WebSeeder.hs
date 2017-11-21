@@ -35,15 +35,13 @@ getWebSeedR (HexInfoHash infoHash) = do
                  "\n" ++ T.unpack url
               ) urls
 
-  mRange <- lookupHeader hRange
-
   manager <- httpManager <$> getYesod
   let tryUrl :: [Text] -> Handler (ContentType, Content)
       tryUrl (url:urls') = do
         req <- parseRequest $ T.unpack url
         let reqHeaders =
               (hUserAgent, userAgent) :
-              case mRange of
+              case hRange `lookup` requestHeaders req of
                 Just range -> [(hRange, range)]
                 Nothing -> []
         res <- liftResourceT $
@@ -60,7 +58,13 @@ getWebSeedR (HexInfoHash infoHash) = do
                       name `lookup` responseHeaders res
                 forwardHeader hContentLength
                 forwardHeader hContentRange
-                addHeader "Access-Control-Allow-Origin" corsOrigins
+                case decodeUtf8 <$>
+                     hOrigin `lookup` responseHeaders res of
+                  Just origin
+                    | isOriginAllowed origin ->
+                      addHeader hAccessControlAllowOrigin origin
+                  _ ->
+                    return ()
 
                 case reads <$>
                      BC.unpack <$>
@@ -99,4 +103,14 @@ getWebSeedR (HexInfoHash infoHash) = do
 
   where
     userAgent = "Bitlove/0.0 (WebSeeder for WebTorrent support; http://bitlove.org/)"
-    corsOrigins = "http://bitlove.org http://www.bitlove.org https://bitlove.org https://www.bitlove.org"
+    hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
+    corsOrigins =
+      map T.toCaseFold
+      ["http://bitlove.org",
+       "http://www.bitlove.org",
+       "https://bitlove.org",
+       "https://www.bitlove.org"
+      ]
+    isOriginAllowed =
+      (`elem` corsOrigins) .
+      T.toCaseFold
