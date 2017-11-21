@@ -2,9 +2,7 @@
   <h1>
     <a href="@{FrontR}">Bitlove
   <p id="slogan">Peer-to-Peer Love for Your Podcast Downloads.
-  <p id="siteflattr">
-    <a class="FlattrButton" style="display:none;" href="https://bitlove.org/" rev="flattr;button:large;">
-      <img src="https://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0"/>
+
 <nav>
   <div id="top-nav">
     <div class="content-wrapper">
