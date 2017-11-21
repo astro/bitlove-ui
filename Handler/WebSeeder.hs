@@ -35,6 +35,8 @@ getWebSeedR (HexInfoHash infoHash) = do
                  "\n" ++ T.unpack url
               ) urls
 
+  mOrigin <- (decodeUtf8 <$>) <$>
+             lookupHeader hOrigin
   manager <- httpManager <$> getYesod
   let tryUrl :: [Text] -> Handler (ContentType, Content)
       tryUrl (url:urls') = do
@@ -52,20 +54,29 @@ getWebSeedR (HexInfoHash infoHash) = do
                 let contentType =
                       fromMaybe "application/octet-stream" $
                       hContentType `lookup` responseHeaders res
+
+                    -- |Forward response header
                     forwardHeader name =
                       maybe (return ())
                       (addHeader (decodeUtf8 $ CI.original name) . decodeUtf8) $
                       name `lookup` responseHeaders res
                 forwardHeader hContentLength
                 forwardHeader hContentRange
-                case decodeUtf8 <$>
-                     hOrigin `lookup` responseHeaders res of
+
+                -- Set `Access-Control-Allow-Origin:` response header
+                -- if the `Origin:` request header is among the
+                -- allowed values
+                liftIO $ putStrLn $
+                  "Origin: " ++ show mOrigin
+                case mOrigin of
                   Just origin
                     | isOriginAllowed origin ->
                       addHeader hAccessControlAllowOrigin origin
                   _ ->
                     return ()
 
+                -- Must add statistics upfront before relinquishing
+                -- control with `sendResponseStatus`
                 case reads <$>
                      BC.unpack <$>
                      hContentLength `lookup` responseHeaders res of
