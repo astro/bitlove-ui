@@ -77,13 +77,14 @@ getWebSeedR (HexInfoHash infoHash) = do
 
   mOrigin <- (decodeUtf8 <$>) <$>
              lookupHeader hOrigin
+  mRange <- lookupHeader hRange
   manager <- httpManager <$> getYesod
   let tryUrl :: [Text] -> Handler (ContentType, Content)
       tryUrl (url:urls') = do
         req <- parseRequest $ T.unpack url
         let reqHeaders =
               (hUserAgent, userAgent) :
-              case hRange `lookup` requestHeaders req of
+              case mRange of
                 Just range -> [(hRange, range)]
                 Nothing -> []
         res <- liftResourceT $
