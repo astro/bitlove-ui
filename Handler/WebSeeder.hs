@@ -65,7 +65,7 @@ optionsWebSeedR _ _ = do
   addHeader "Access-Control-Max-Age" "86400"
 
 -- |The _fileName parameter is here just for URL cosmetics.
-getWebSeedR :: HexInfoHash -> Text -> Handler (ContentType, Content)
+getWebSeedR :: HexInfoHash -> Text -> Handler ()
 getWebSeedR (HexInfoHash infoHash) _fileName = do
   urls <- nub <$>
           withDB (torrentEnclosures infoHash)
@@ -80,7 +80,7 @@ getWebSeedR (HexInfoHash infoHash) _fileName = do
              lookupHeader hOrigin
   mRange <- lookupHeader hRange
   manager <- httpManager <$> getYesod
-  let tryUrl :: [Text] -> Handler (ContentType, Content)
+  let tryUrl :: [Text] -> Handler ()
       tryUrl (url:urls') = do
         req <- parseRequest $ T.unpack url
         let reqHeaders =
@@ -94,7 +94,7 @@ getWebSeedR (HexInfoHash infoHash) _fileName = do
         case res of
           _ | resStatus `elem` [ok200, partialContent206] -> do
                 let contentType =
-                      fromMaybe "application/octet-stream" $
+                      fromMaybe defaultContentType $
                       hContentType `lookup` responseHeaders res
 
                     -- |Forward response header
@@ -150,9 +150,13 @@ getWebSeedR (HexInfoHash infoHash) _fileName = do
             -- Try next URL
             tryUrl urls'
       tryUrl [] =
-        notFound
+        -- Don't respond with an HTTP error on upstream failure
+        -- because in that case WebTorrent won't retry.
+        sendResponseStatus noContent204 (defaultContentType, ContentSource $ return ())
 
   tryUrl urls
 
   where
     userAgent = "Bitlove/0.0 (WebSeeder for WebTorrent support; http://bitlove.org/)"
+    defaultContentType :: ContentType
+    defaultContentType = "application/octet-stream"
