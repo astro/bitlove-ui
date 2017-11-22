@@ -72,6 +72,40 @@ Graph.prototype.loadGraph = function() {
 	   });
 };
 
+function stackData(response, keys) {
+    var ts = [].concat.apply([], keys.map(function(key) {
+        return Object.keys(response[key] || {});
+    }));
+    ts.sort();
+    ts = ts.reduce(function(ts, t) {
+        if (ts.length == 0 || ts[ts.length - 1] !== t) {
+            ts.push(t);
+        }
+        return ts;
+    }, []);
+
+    ts.forEach(function(t) {
+        var k1 = keys[0];
+        var i = 1;
+        var k2 = keys[i];
+        var v1 = (response[k1] && response[k1][t]) || 0;
+        var v2 = v1;
+        while (k2) {
+            v2 += (response[k2] && response[k2][t]) || 0;
+            if (response[k2] && v1 !== v2) {
+                /*console.log("Stacking " + k2 + " atop " + k1 + " at " + t);*/
+                response[k2][t] = [v2, v1];
+            }
+
+            k1 = k2;
+            i += 1;
+            k2 = keys[i];
+            v1 = v2;
+        }
+    });
+    return response;
+}
+
 Graph.prototype.setData = function(response) {
     var placeholder = this.el.find('.placeholder');
 
@@ -81,16 +115,9 @@ Graph.prototype.setData = function(response) {
 	delete this.plot;
     }
 
-    if (response.up && response.up_seeder) {
-	/* Stack up on top of up_seeder */
-	for(var k in response.up) {
-	    var v = response.up[k];
-	    if (v) {
-		var base = response.up_seeder[k] || 0;
-		response.up[k] = [base + v, base];
-	    }
-	}
-    }
+    stackData(response, ['up', 'up_seeder', 'up_w', 'up_seeder_w']);
+    stackData(response, ['down', 'down_w']);
+    stackData(response, ['downloads', 'downloads_w']);
 
     /* Prepare data */
     var i;
