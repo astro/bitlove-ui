@@ -1214,7 +1214,12 @@ pre {
  *        WEBTORRENT INTEGRATION
  ***************************************************************************/
 
-.webtorrent-play {
+.webtorrent-play, .webtorrent-play:hover {
+  width: 0;
+  color: rgba(255, 255, 255, 0);
+  text-decoration: none;
+}
+.webtorrent-play:after {
   font-family: FontAwesome;
   font-weight: normal;
   font-style: normal;
@@ -1222,14 +1227,14 @@ pre {
   width: 1em;
   cursor: pointer;
   display: inline-block;
-  padding: 0 .95em;
+  padding: 0;
   line-height: 2em;
   vertical-align: middle;
   text-align: center;
   text-decoration: none;
   color: #555;
 }
-.webtorrent-play:hover {
+.webtorrent-play:hover:after {
   color: black;
   text-decoration: none;
 }
