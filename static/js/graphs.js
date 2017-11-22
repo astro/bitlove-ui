@@ -142,10 +142,6 @@ Graph.prototype.setData = function(response) {
 	var label = name;
 	var series = {
 	    label: name,
-	    legend: {
-		show: true,
-                position: 'sw'
-	    },
 	    data: d
 	};
 	switch(type) {
@@ -265,6 +261,10 @@ Graph.prototype.setData = function(response) {
 	},
 	grid: {
 	    hoverable: true
+	},
+	legend: {
+	    show: true,
+            position: 'sw'
 	}
     });
 
