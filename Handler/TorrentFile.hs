@@ -49,7 +49,7 @@ getTorrentFileR user slug (TorrentName name) = do
       notFound
     Just (buf, infoHash, guids) -> do
       seedUrl <- T.append "https://bitlove.org" <$>
-                 ($ WebSeedR (HexInfoHash infoHash)) <$>
+                 ($ WebSeedR (HexInfoHash infoHash) name) <$>
                  getUrlRender
       let mBuf = updateTorrent [seedUrl] guids buf
       case mBuf of

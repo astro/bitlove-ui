@@ -43,8 +43,8 @@ isOriginAllowed =
   T.toCaseFold
 
 
-optionsWebSeedR :: HexInfoHash -> Handler () --ContentType, Content)
-optionsWebSeedR _ = do
+optionsWebSeedR :: HexInfoHash -> Text -> Handler () --ContentType, Content)
+optionsWebSeedR _ _ = do
   mMethod <- lookupHeader "Access-Control-Request-Method"
   when (mMethod /= Just "GET") $
     badMethod
@@ -64,8 +64,9 @@ optionsWebSeedR _ = do
   addHeader "Access-Control-Allow-Headers" "Range"
   addHeader "Access-Control-Max-Age" "86400"
 
-getWebSeedR :: HexInfoHash -> Handler (ContentType, Content)
-getWebSeedR (HexInfoHash infoHash) = do
+-- |The _fileName parameter is here just for URL cosmetics.
+getWebSeedR :: HexInfoHash -> Text -> Handler (ContentType, Content)
+getWebSeedR (HexInfoHash infoHash) _fileName = do
   urls <- nub <$>
           withDB (torrentEnclosures infoHash)
   liftIO $ putStrLn $
