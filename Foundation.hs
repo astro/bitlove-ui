@@ -122,8 +122,9 @@ instance Yesod UIApp where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-          addScript $ StaticR js_jquery_1_7_1_min_js
+          addScript $ StaticR js_jquery_1_12_4_min_js
           addScript $ StaticR js_jquery_flot_js
+          addScript $ StaticR js_jquery_flot_time_js
           addScript $ StaticR js_graphs_js
           addScript $ StaticR js_webtorrent_min_js
           addScript $ StaticR js_webtorrent_int_js
