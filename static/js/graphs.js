@@ -118,6 +118,7 @@ Graph.prototype.setData = function(response) {
     stackData(response, ['up', 'up_seeder', 'up_w', 'up_seeder_w']);
     stackData(response, ['down', 'down_w']);
     stackData(response, ['downloads', 'downloads_w']);
+    stackData(response, ['torrent', 'torrent_w']);
 
     /* Prepare data */
     var i;
