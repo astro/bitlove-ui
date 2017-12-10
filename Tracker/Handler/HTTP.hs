@@ -13,7 +13,6 @@ import Data.Text.Encoding (decodeUtf8)
 
 import Foundation (HasDB (getDBPool), withDB, withDBPool)
 import qualified Model as Model
-import Model.Tracker
 import qualified Benc as Benc
 import qualified WorkQueue as WQ
 import Tracker.Foundation

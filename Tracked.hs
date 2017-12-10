@@ -59,11 +59,16 @@ newData =
 
 newtype Tracked = Tracked (TVar (HM.HashMap InfoHash (TVar TrackedData)))
 
--- TODO: start clean loop
 newTracked :: IO Tracked
-newTracked =
-  Tracked <$>
-  newTVarIO HM.empty
+newTracked = do
+  peers <- newTVarIO HM.empty
+
+  -- Assume a single instance, clear all gauges of a previous crash
+  -- TODO
+
+  -- TODO: forkIO clean loop
+
+  return $ Tracked peers
 
 trackedGetData :: Tracked -> InfoHash -> IO TrackedData
 trackedGetData (Tracked trackedRef) infoHash =

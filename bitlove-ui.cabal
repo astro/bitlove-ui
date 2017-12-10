@@ -34,7 +34,6 @@ library
                      Model.User
                      Model.Feed
                      Model.Token
-                     Model.Tracker
                      Model.Session
                      Model.Stats
                      Model.ImageCache
