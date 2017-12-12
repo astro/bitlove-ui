@@ -56,11 +56,11 @@ renderHelpPodcasterNavigation =
     toWidget [hamlet|$newline always
               <ul #podcaster-help-nav>
                 <li>
-                  <a href="@{HelpPodcasterR}">Getting started</a>
+                  <a href=@{HelpPodcasterR}>Getting started</a>
                 <li>
-                  <a href="@{HelpFeedsR}">Feeds</a>
+                  <a href=@{HelpFeedsR}>Feeds</a>
                 <li>
-                  <a href="@{HelpWidgetR}">Widgets</a>
+                  <a href=@{HelpWidgetR}>Widgets</a>
                 <li>
-                  <a href="@{HelpApiR}">API</a>
+                  <a href=@{HelpApiR}>API</a>
               |]

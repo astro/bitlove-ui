@@ -33,14 +33,14 @@ getDirectoryR = do
               [hamlet|$newline always
                <article .directory-page .filterable>
                  <p .letter>
-                   <a href="@{DirectoryPageR letter}">
+                   <a href=@{DirectoryPageR letter}>
                      #{show letter}
                  <ul .users>
                    $forall u <- users
                      <li .filterable
                          data-langs="#{Model.activeFeedLangs u}"
                          data-types="#{Model.activeFeedTypes u}">
-                       <a href="@{UserR $ Model.activeUser u}">
+                       <a href=@{UserR $ Model.activeUser u}>
                          #{T.unpack $ Model.userName $ Model.activeUser u}
                        <span .feedcount>
                          (#{Model.activeFeeds u})
@@ -78,16 +78,16 @@ getDirectoryPageR page = do
               [hamlet|$newline always
                <article .meta .filterable>
                  <img .logo
-                      src="@{UserThumbnailR (Model.dirUser $ head es) (Thumbnail 64)}">
+                      src=@{UserThumbnailR (Model.dirUser $ head es) (Thumbnail 64)}>
                  <div .title>
                    <h3>
-                     <a href="@{UserR $ Model.dirUser $ head es}">#{Model.dirUserTitle $ head es}
+                     <a href=@{UserR $ Model.dirUser $ head es}>#{Model.dirUserTitle $ head es}
                  <ul .feeds>
                    $forall e <- es
                      <li .filterable
                          xml:lang="#{Model.dirFeedLang e}"
                          data-types="#{Model.dirFeedTypes e}">
-                       <a href="@{UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}">
+                       <a href=@{UserFeedR (Model.dirUser e) (Model.dirFeedSlug e)}>
                          #{Model.dirFeedTitle e}
                |]
 

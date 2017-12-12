@@ -191,7 +191,7 @@ errorHandler' NotFound =
     toWidget [hamlet|$newline always
               <article>
                 <h2>Not Found
-                <img src="@{img}">
+                <img src=@{img}>
                 <p class="hint">Here's a kitten instead.
               |]
 errorHandler' (PermissionDenied _) =
@@ -208,7 +208,7 @@ errorHandler' e = do
        toWidget [hamlet|$newline always
                  <article>
                    <h2>Oops
-                   <img src="@{img}">
+                   <img src=@{img}>
                  |]
 
 generateETag :: MonadHandler m => LB.ByteString -> m ()

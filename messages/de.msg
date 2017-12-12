@@ -9,6 +9,7 @@ Logout: Logout
 Front: Über Bitlove
 New: Neue Folgen
 Top: Top-Folgen
+Contact: Kontakt
 For: Für
 Users: Nutzer
 Podcasters: Podcaster

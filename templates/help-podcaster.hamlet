@@ -12,7 +12,7 @@ $newline always
     <dd> to point to, to serve your user picture from, to provide more information for users.
   <h3>How do I sign up?
   <p>
-    <a href="@{SignupR}">You enter your desired username
+    <a href=@{SignupR}>You enter your desired username
     \ and your email address, in case we need to talk to you individually.</p>
   <img src="/static/activate-account.png">
   <p>

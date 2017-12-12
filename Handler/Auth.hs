@@ -117,7 +117,7 @@ Thanks for sharing
                                                   <h2>Error
                                                   <p>#{e}
                                                   <p>
-                                                    <a href="@{SignupR}">Retry
+                                                    <a href=@{SignupR}>Retry
                                                   |]
                                       ) >>= 
                         sendResponse

@@ -1,6 +1,6 @@
 <header>
   <h1>
-    <a href="@{FrontR}">Bitlove
+    <a href=@{FrontR}>Bitlove
   <p id="slogan">Peer-to-Peer Love for Your Podcast Downloads.
 
 <nav>
@@ -43,16 +43,16 @@
             <li>
               <a href=@{TopDownloadedR $ PeriodDays 1}>1
             <li>
-              <a href="@{TopDownloadedR $ PeriodDays 7}">7
+              <a href=@{TopDownloadedR $ PeriodDays 7}>7
             <li>
-              <a href="@{TopDownloadedR $ PeriodDays 30}">30
+              <a href=@{TopDownloadedR $ PeriodDays 30}>30
             <li>
-              <a href="@{TopDownloadedR PeriodAll}">∞
+              <a href=@{TopDownloadedR PeriodAll}>∞
             <li>_{MsgDays}
     <li>
-      <a href="@{DirectoryR}">_{MsgDirectory}
+      <a href=@{DirectoryR}>_{MsgDirectory}
     <li class="parent-menu">
-      <a href="@{HelpPodcasterR}">_{MsgGettingStarted}
+      <a href=@{HelpPodcasterR}>_{MsgGettingStarted}
       <div class="sub-menu">
         <div class="clickzone">
           <ul>
@@ -70,19 +70,18 @@
     <dl>
       <dt>Twitter:
       <dd><a href="https://twitter.com/bitlove_org">@bitlove_org</a>
-      <dt>Contact:
+      <dt>_{MsgContact}:
       <dd><a href="mailto:mail@bitlove.org">mail@bitlove.org</a>
       <dt>
         <a href=@{ImpressR}>_{MsgImpressTitle}
   <div>
     <p>
-      100% #
       <a href="https://github.com/astro/bitlove-ui">Open
       <a href="https://github.com/astro/prittorrent">Source
     <p>Bitlove.org is IPv6-ready!
   <div>
     <dl>
       <dt>Help:
-      <dd><a href="@{HelpPodcasterR}">Getting started</a>
-      <dd><a href="@{HelpWidgetR}">Widget</a>
-      <dd><a href="@{HelpApiR}">API</a>
+      <dd><a href=@{HelpPodcasterR}>Getting started</a>
+      <dd><a href=@{HelpWidgetR}>Widget</a>
+      <dd><a href=@{HelpApiR}>API</a>

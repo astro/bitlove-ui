@@ -9,6 +9,7 @@ Logout: Logout
 Front: About
 New: New
 Top: Top
+Contact: Contact
 For: For
 Users: Users
 Podcasters: Podcasters

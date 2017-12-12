@@ -86,9 +86,9 @@ getFrontR = do
        <ul>
          $forall (user, slug, title) <- previews
            <li>
-             <a href="@{UserFeedR user slug}"
+             <a href=@{UserFeedR user slug}
                 title="#{fromMaybe "Feed" title}">
-               <img src="@{UserFeedThumbnailR user slug (Thumbnail 64)}"
+               <img src=@{UserFeedThumbnailR user slug (Thumbnail 64)}
                     alt="#{fromMaybe "Feed logo" title}">
      |]
 
@@ -208,10 +208,10 @@ getUserR user = do
                      $forall feed <- feeds
                        <article class="feed">
                          <img class="logo"
-                              src="@{UserFeedThumbnailR user (feedSlug feed) (Thumbnail 64)}">
+                              src=@{UserFeedThumbnailR user (feedSlug feed) (Thumbnail 64)}>
                          <div>
                            <h3>
-                             <a href="@{UserFeedR user (feedSlug feed)}">#{feedTitle feed}
+                             <a href=@{UserFeedR user (feedSlug feed)}>#{feedTitle feed}
                            $if not (T.null $ feedHomepage feed)
                              <p class="homepage">
                                <a rel="me"
@@ -274,13 +274,13 @@ getUserFeedR user slug = do
                             <header class="feed">
                               <div class="meta">
                                 <img class="logo"
-                                     src="@{UserFeedThumbnailR user slug (Thumbnail 64)}">
+                                     src=@{UserFeedThumbnailR user slug (Thumbnail 64)}>
                                 <div class="title">
                                   <div>
                                     <h2>#{feedTitle feed}
                                     <p class="publisher">
                                       \ _{MsgBy} #
-                                      <a href="@{UserR user}">#{userName user}
+                                      <a href=@{UserR user}>#{userName user}
                                   $if canEdit'
                                     <p .note>#{feedUrl feed}
                                   $if not (T.null $ feedHomepage feed)
@@ -332,13 +332,13 @@ getSearchR needle = do
                    $forall feed <- feeds
                      <article class="feed">
                        <img class="logo"
-                            src="@{UserFeedThumbnailR (feedUser feed) (feedSlug feed) (Thumbnail 64)}">
+                            src=@{UserFeedThumbnailR (feedUser feed) (feedSlug feed) (Thumbnail 64)}>
                        <div>
                          <h3>
-                           <a href="@{UserFeedR (feedUser feed) (feedSlug feed)}">#{feedTitle feed}
+                           <a href=@{UserFeedR (feedUser feed) (feedSlug feed)}>#{feedTitle feed}
                          <p .feed>
                            \ _{MsgBy} #
-                           <a href="@{UserR (feedUser feed)}">#{userName $ feedUser feed}
+                           <a href=@{UserR (feedUser feed)}>#{userName $ feedUser feed}
                          $if not (T.null $ feedHomepage feed)
                            <p class="homepage">
                              <a rel="me"
@@ -421,7 +421,7 @@ renderItem item showOrigin = do
     <div>
       $if not (T.null $ itemImage item)
         <img class="logo"
-             src="@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}">
+             src=@{UserFeedItemThumbnailR (itemUser item) (itemSlug item) (itemId item) (Thumbnail 48)}>
       <div class="right">
         $if not (T.null $ itemPayment item)
           <div .payment>
@@ -430,13 +430,13 @@ renderItem item showOrigin = do
         <p class="published">#{date}
       <div class="title">
         <h3>
-          <a href="@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}">#{itemTitle item}
+          <a href=@{UserFeedR (itemUser item) (itemSlug item)}##{itemId item}>#{itemTitle item}
         $if showOrigin
           <p class="feed">
             \ _{MsgIn} #
-            <a href="@{UserFeedR (itemUser item) (itemSlug item)}">#{fromMaybe (itemSlug item) $ itemFeedTitle item}
+            <a href=@{UserFeedR (itemUser item) (itemSlug item)}>#{fromMaybe (itemSlug item) $ itemFeedTitle item}
             \ _{MsgBy} #
-            <a href="@{UserR $ itemUser item}">#{userName $ itemUser item}
+            <a href=@{UserR $ itemUser item}>#{userName $ itemUser item}
         $else
            <p class="homepage">
              <a href="#{itemHomepage item}">#{itemHomepage item}
@@ -444,7 +444,7 @@ renderItem item showOrigin = do
       <ul .download>
         <li .torrent>
           <a .button
-             href="@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}"
+             href=@{TorrentFileR (downloadUser d) (downloadSlug d) (TorrentName $ downloadName d)}
              title="_{MsgDownloadTorrent $ downloadName d}"
              rel="enclosure"
              type="#{downloadType d}">
@@ -479,7 +479,7 @@ addFeedsLinks lists = do
           [hamlet|$newline always
            <link rel="alternate"
                  type="#{linkType}"
-                 href="@{route}"
+                 href=@{route}
                  title="#{linkTitle}">
            |]
   toWidgetHead [hamlet|$newline always
