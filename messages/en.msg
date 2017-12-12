@@ -85,3 +85,6 @@ Ok: Ok
 Recommend1: We recommend
 Recommend2: for streaming playback
 Payment: Donate
+ImpressTitle: Impress
+Impress1: Bitlove.org is a service which demonstrates that bulk media data on the Internet does not always have to be downloaded from central servers. Peer-to-Peer is the future!
+Impress2: Please consider the environment: save paper by sending e-mail!

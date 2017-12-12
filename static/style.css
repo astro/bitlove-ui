@@ -1027,8 +1027,6 @@ footer dd {
   margin-left: .7em;
 }
 
-footer dt:after { content: ':'; }
-
 footer dd ~ dt {
   margin-top: .5em;
 }

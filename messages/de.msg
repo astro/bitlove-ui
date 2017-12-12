@@ -84,3 +84,6 @@ Ok: Okay
 Recommend1: Wir empfehlen
 Recommend2: für Streaming
 Payment: Spenden
+ImpressTitle: Impressum
+Impress1: Bitlove.org soll zeigen dass umfangreiche Medieninhalte im Internet nicht immer von zentralen Servern heruntergeladen werden müssen. Peer-to-Peer ist die Zukunft!
+Impress2: Bitte denken Sie an die Umwelt: E-Mails sparen Papier und Portokosten.

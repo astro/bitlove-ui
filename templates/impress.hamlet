@@ -1,0 +1,12 @@
+$newline always
+<section class="col">
+  <h2>_{MsgImpressTitle}
+
+  <p>
+    _{MsgImpress1}
+
+  <img src=@{StaticR impress_png}/>
+
+  <p>
+    _{MsgImpress2}
+    <a href="mailto:mail@bitlove.org">mail@bitlove.org</a>

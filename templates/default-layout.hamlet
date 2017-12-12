@@ -68,21 +68,21 @@
 <footer>
   <div>
     <dl>
-      <dt>Twitter
+      <dt>Twitter:
       <dd><a href="https://twitter.com/bitlove_org">@bitlove_org</a>
-      <dt>Contact
+      <dt>Contact:
       <dd><a href="mailto:mail@bitlove.org">mail@bitlove.org</a>
-  <div>
-    <dl>
-      <dt>Help
-      <dd><a href="@{HelpPodcasterR}">Getting started</a>
-      <dd><a href="@{HelpWidgetR}">Widget</a>
-      <dd><a href="@{HelpApiR}">API</a>
+      <dt>
+        <a href=@{ImpressR}>_{MsgImpressTitle}
   <div>
     <p>
       100% #
       <a href="https://github.com/astro/bitlove-ui">Open
       <a href="https://github.com/astro/prittorrent">Source
     <p>Bitlove.org is IPv6-ready!
-
-
+  <div>
+    <dl>
+      <dt>Help:
+      <dd><a href="@{HelpPodcasterR}">Getting started</a>
+      <dd><a href="@{HelpWidgetR}">Widget</a>
+      <dd><a href="@{HelpApiR}">API</a>

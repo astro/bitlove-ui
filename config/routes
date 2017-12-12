@@ -30,6 +30,7 @@
 /help/podcaster/feeds HelpFeedsR GET
 /help/podcaster/api HelpApiR GET
 /help/podcaster/widget HelpWidgetR GET
+/impress ImpressR GET
 
 /widget/base.js WidgetBaseR GET
 /widget/podpress.js WidgetPodpressR GET

@@ -47,6 +47,7 @@ import Handler.Help
 import Handler.Widget
 import Handler.Thumbnails
 import Handler.WebSeeder
+import Handler.Impress
 import Stats
 
 

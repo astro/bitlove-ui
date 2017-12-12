@@ -57,6 +57,7 @@ library
                      Handler.Widget
                      Handler.Thumbnails
                      Handler.WebSeeder
+                     Handler.Impress
                      Tracked
                      Tracker
                      Tracker.Foundation
