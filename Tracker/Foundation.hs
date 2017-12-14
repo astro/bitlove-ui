@@ -3,9 +3,7 @@ module Tracker.Foundation where
 
 import Prelude
 import Yesod
-import qualified WorkQueue as WQ
 import Model (InfoHash, infoHashExists)
-import Model.Tracker (ScrapeInfo(..), scrape)
 
 import Foundation (DBPool, HasDB(..), withDB, Transaction)
 import Cache
@@ -14,8 +12,6 @@ import Tracked (Tracked)
 data TrackerApp = TrackerApp
     { trackerDBPool :: DBPool
     , trackerCache :: Cache
-    , trackerAnnounceQueue :: WQ.Queue
-    , trackerScrapeQueue :: WQ.Queue
     , trackerTracked :: Tracked
     }
 
@@ -51,8 +47,3 @@ instance Yesod TrackerApp where
 
 instance HasDB TrackerApp where
     getDBPool = trackerDBPool <$> getYesod
-
-safeScrape :: Model.InfoHash -> Transaction ScrapeInfo
-safeScrape infoHash db =
-    (head . (++ [ScrapeInfo 0 0 0 0])) <$>
-    scrape infoHash db

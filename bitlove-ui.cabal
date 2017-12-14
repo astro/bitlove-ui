@@ -64,7 +64,6 @@ library
                      Tracker.Handler.HTTP
                      Tracker.Handler.Webtorrent
                      Benc
-                     WorkQueue
                      Cache
 
     if flag(dev) || flag(library-only)

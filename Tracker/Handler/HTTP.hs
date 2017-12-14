@@ -11,10 +11,10 @@ import System.Random (randomRIO)
 import Data.Maybe (fromMaybe)
 import Data.Text.Encoding (decodeUtf8)
 
-import Foundation (HasDB (getDBPool), withDB, withDBPool)
-import qualified Model as Model
+import Foundation (withDB)
+import qualified Model
 import qualified Benc as Benc
-import qualified WorkQueue as WQ
+import Tracked
 import Tracker.Foundation
 import Tracker.Utils
 
@@ -23,12 +23,12 @@ import Tracker.Utils
 ourPeerId :: PeerId
 ourPeerId = PeerId "-<30000-bitlove.org/"
 
-ourSeeders :: [TrackedPeer]
+ourSeeders :: [(PeerId, PeerAddress, Int)]
 ourSeeders = do
   addr <-  [ Peer4 "\94\130\10\164"
            , Peer6 "\x2a\x01\x04\xf8\x01\x0b\x0e\xdb\x00\x00\x00\x00\x00\x00\x00\x03"
            ]
-  return $ TrackedPeer ourPeerId addr 6881
+  return (ourPeerId, addr, 6881)
 
 
 newtype RepBenc = RepBenc Benc.BValue
@@ -55,26 +55,27 @@ getAnnounceR = do
                    case readsPrec 0 $ BC.unpack v of
                      [(r, "")] -> return r
                      _ -> Nothing
-      mTr = TrackerRequest <$>
-            Model.InfoHash <$> q "info_hash" <*>
-            (PeerId <$> q "peer_id") <*>
-            pure addr <*>
-            qi "port" <*>
-            qi "uploaded" <*>
-            qi "downloaded" <*>
-            pure (fromMaybe 1 $ qi "left") <*>
-            pure (decodeUtf8 <$> q "event") <*>
-            pure (maybe False (const True) $ q "compact")
+      compact = fromMaybe False $ qi "compact"
+      mAnn = TrackedAnnounce <$>
+             Model.InfoHash <$> q "info_hash" <*>
+             (PeerId <$> q "peer_id") <*>
+             (BittorrentInfo addr <$>
+              qi "port") <*>
+             qi "uploaded" <*>
+             qi "downloaded" <*>
+             pure (fromMaybe 1 $ qi "left") <*>
+             pure (decodeUtf8 <$> q "event")
 
-  case mTr of
+  case mAnn of
     Nothing ->
         return $ RepBenc $
         Benc.BDict [(Benc.BString "failure reason",
                      Benc.BString "Invalid tracker request"),
                     (Benc.BString "interval",
                      Benc.BInt 0xffff)]
-    Just tr -> do
-      exists <- checkExists $ trInfoHash tr
+    Just ann -> do
+      let infoHash = aInfoHash ann
+      exists <- checkExists infoHash
       case exists of
         False ->
             return $ RepBenc $
@@ -83,33 +84,36 @@ getAnnounceR = do
                         (Benc.BString "interval",
                          Benc.BInt 0xffff)]
         True ->
-            do let isSeeder = trLeft tr == 0
+            do tracked <- trackerTracked <$> getYesod
+               -- Announce!
+               ad <- liftIO $ announce tracked ann
+               scrape <- liftIO $ scrapeBittorrent tracked infoHash
 
-               -- Read first
-               (peers, scraped) <-
-                   withDB $ \db ->
-                       do peers <- (ourSeeders ++) <$> getPeers (trInfoHash tr) isSeeder db
-                          scraped <- safeScrape (trInfoHash tr) db
-                          return (peers, scraped)
+               -- Track stats
+               withDB $ \db -> do
+                 when (adCompleted ad) $
+                   Model.addCounter "complete_w" infoHash 1 db
+                 Model.addCounter "up_w" infoHash (fromIntegral $ adUploaded ad) db
+                 Model.addCounter "down_w" infoHash (fromIntegral $ adDownloaded ad) db
+                 Model.setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scrape) db
+                 Model.setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scrape) db
 
-               -- Write in background
-               aQ <- trackerAnnounceQueue <$> getYesod
-               sQ <- trackerScrapeQueue <$> getYesod
-               pool <- getDBPool
-               liftIO $ WQ.enqueue aQ $
-                      do withDBPool pool $ announcePeer tr
-                         liftIO $ WQ.enqueue sQ $
-                           withDBPool pool $ updateScraped $ trInfoHash tr
-
-               -- Assemble response
+              -- Assemble response
+               let peers =
+                     ourSeeders ++
+                     map (\(peerId, peer) ->
+                             let BittorrentInfo pAddr pPort =
+                                   pConnInfo peer
+                             in (peerId, pAddr, pPort)
+                         ) (adPeers ad)
                let (peers4, peers6)
-                       | trCompact tr =
+                       | compact =
                            ( Benc.BString $ LBC.fromChunks $ concat
                              [[addr', portToByteString port']
-                              | TrackedPeer _ (Peer4 addr') port' <- peers]
+                              | (_, Peer4 addr', port') <- peers]
                            , Benc.BString $ LBC.fromChunks $ concat
                              [[addr', portToByteString port']
-                              | TrackedPeer _ (Peer6 addr') port' <- peers]
+                              | (_, Peer6 addr', port') <- peers]
                            )
                        | otherwise =
                            let g peerId addr' port' =
@@ -118,19 +122,22 @@ getAnnounceR = do
                                                ("port", Benc.BInt $ fromIntegral port')]
                            in ( Benc.BList $
                                 [g peerId addr' port'
-                                 | TrackedPeer (PeerId peerId) (Peer4 addr') port' <- peers]
+                                 | (PeerId peerId, Peer4 addr', port') <- peers]
                               , Benc.BList $
                                 [g peerId addr' port'
-                                 | TrackedPeer (PeerId peerId) (Peer6 addr') port' <- peers]
+                                 | (PeerId peerId, Peer6 addr', port') <- peers]
                               )
                interval <- liftIO $ randomRIO (1620, 1800)
+               -- TODO: stats
                return $ RepBenc $
+                 -- TODO: "downloaded"
                       Benc.BDict [ ("peers", peers4)
                                  , ("peers6", peers6)
                                  , ("interval", Benc.BInt interval)
-                                 , ("complete", Benc.BInt $ scrapeSeeders scraped + 1)
-                                 , ("incomplete", Benc.BInt $ scrapeLeechers scraped)
-                                 , ("downloaded", Benc.BInt $ scrapeDownloaded scraped)
+                                 , ("complete", Benc.BInt $ fromIntegral $
+                                                scrapeSeeders scrape + 1)
+                                 , ("incomplete", Benc.BInt $ fromIntegral $
+                                                  scrapeLeechers scrape)
                                  ]
 
 getScrapeR :: Handler RepBenc
@@ -138,13 +145,17 @@ getScrapeR = do
   query <- getRawQuery
   let mInfoHash = Model.InfoHash <$>
                   (join $ "info_hash" `lookup` query)
-  (infoHash, scraped) <-
-      case mInfoHash of
-        Nothing ->
-            notFound
-        Just infoHash ->
-            (infoHash, ) <$>
-            withDB (safeScrape infoHash)
+  infoHash <- case mInfoHash of
+    Nothing ->
+      invalidArgs ["Missing info_hash"]
+    Just infoHash -> do
+      exists <- checkExists infoHash
+      when (not exists)
+        notFound
+      return infoHash
+
+  tracked <- trackerTracked <$> getYesod
+  scrape <- liftIO $ scrapeBittorrent tracked infoHash
 
   return $ RepBenc $
          Benc.BDict
@@ -152,9 +163,11 @@ getScrapeR = do
            Benc.BDict
            [(Benc.BString $ LBC.fromChunks [Model.unInfoHash infoHash],
              Benc.BDict
-             [("incomplete", Benc.BInt $ scrapeLeechers scraped),
-              ("complete", Benc.BInt $ scrapeSeeders scraped + 1),
-              ("downloaded", Benc.BInt $ scrapeDownloaded scraped)]
+             -- TODO: "downloaded"
+             [("incomplete", Benc.BInt $ fromIntegral $
+                             scrapeLeechers scrape),
+              ("complete", Benc.BInt $ fromIntegral $
+                           scrapeSeeders scrape + 1)]
             )]
           )]
 

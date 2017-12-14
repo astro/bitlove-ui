@@ -95,16 +95,16 @@ instance ToJSON TrackerError where
            , "interval" .= (0xffff :: Int)
            ]
 
-data TrackerResponse = TrackerResponse InfoHash ScrapeInfo Int
+data TrackerResponse = TrackerResponse InfoHash TrackedScrape Int
 
 instance ToJSON TrackerResponse where
-  toJSON (TrackerResponse infoHash scraped interval) =
+  toJSON (TrackerResponse infoHash scrape interval) =
     object [ "action" .= ("announce" :: Text)
            , "info_hash" .= decodeLatin1 (unInfoHash infoHash)
            , "interval" .= interval
-           , "complete" .= scrapeSeeders scraped
-           , "incomplete" .= scrapeLeechers scraped
-           , "downloaded" .= scrapeDownloaded scraped
+           , "complete" .= scrapeSeeders scrape
+           , "incomplete" .= scrapeLeechers scrape
+           , "downloaded" .= (0 :: Int)  -- TODO
            ]
 
 data PeerOffer = PeerOffer InfoHash PeerId Offer
@@ -224,11 +224,11 @@ recvLoop session chan = do
 
           ad <- liftIO $ announce tracked ann
           let peers = adPeers ad
-          scraped <- liftIO $ scrape tracked infoHash
+          scrape <- liftIO $ scrapeWebtorrent tracked infoHash
 
           -- Send response
           interval <- liftIO $ randomRIO (1620, 1800)
-          send $ TrackerResponse infoHash scraped interval
+          send $ TrackerResponse infoHash scrape interval
 
           -- Distribute offers
           let offers =
@@ -256,8 +256,8 @@ recvLoop session chan = do
               addCounter "complete_w" infoHash 1 db
             addCounter "up_w" infoHash (fromIntegral $ adUploaded ad) db
             addCounter "down_w" infoHash (fromIntegral $ adDownloaded ad) db
-            setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scraped) db
-            setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scraped) db
+            setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scrape) db
+            setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scrape) db
 
       -- Loop
       recvLoop session chan
@@ -287,7 +287,7 @@ sessionClear session = do
   forM_ (Set.toList session') $ \(infoHash, peerId) -> do
     liftIO $ clearPeer tracked infoHash peerId
 
-    scraped <- liftIO $ scrape tracked infoHash
+    scrape <- liftIO $ scrapeWebtorrent tracked infoHash
     lift $ withDB $ \db -> do
-      setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scraped) db
-      setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scraped) db
+      setGauge "seeders_w" infoHash (fromIntegral $ scrapeSeeders scrape) db
+      setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scrape) db
