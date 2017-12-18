@@ -49,6 +49,7 @@ import Handler.Thumbnails
 import Handler.WebSeeder
 import Handler.Impress
 import Stats
+import Tracked
 
 
 -- This line actually creates our YesodSite instance. It is the second half
@@ -69,9 +70,10 @@ makeApplication conf = do
               parseDBConf
     uiPool <- makeDBPool dbconf
     trackerPool <- makeDBPool dbconf
-    foundation <- makeUIFoundation conf uiPool
-    tracker <- ignoreAccept <$>
-               (makeTrackerApp trackerPool >>= toWaiAppPlain)
+    tracked <- newTracked
+    foundation <- makeUIFoundation conf uiPool tracked
+    tracker <- makeTrackerApp trackerPool tracked >>=
+               fmap ignoreAccept . toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
     ui <- enforceVhost . stats . gzip def . autohead . etagMiddleware . ignoreAccept <$>
           toWaiAppPlain foundation
@@ -198,11 +200,11 @@ getApplicationDev =
         { csParseExtra = parseExtra
         }
 
-makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> IO UIApp
-makeUIFoundation conf pool = do
+makeUIFoundation :: AppConfig BitloveEnv Extra -> DBPool -> Tracked -> IO UIApp
+makeUIFoundation conf pool tracked = do
     manager <- newManager tlsManagerSettings
     s <- staticSite
-    return $ UIApp conf s pool manager
+    return $ UIApp conf s pool manager tracked
 
 parseDBConf :: Monad m =>
                Value -> m [(String, String)]

@@ -1,11 +1,15 @@
 module Tracked where
 
 import Prelude
+import qualified Control.Exception as E
+import Control.Concurrent
+import Control.Monad
 import Data.Maybe (fromMaybe)
 import Data.Hashable (Hashable)
 import Data.Data (Typeable)
 import Data.Text (Text)
 import Control.Concurrent.STM
+import qualified Data.Map.Strict as Map
 import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Char8 as BC
 import Data.Aeson (Value)
@@ -31,6 +35,15 @@ data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pLeft :: !Int
                                , pLastRequest :: !Int
                                }
+
+data TrackedKind = Bittorrent | Webtorrent
+                 deriving (Eq, Show, Ord)
+
+pKind :: TrackedPeer -> TrackedKind
+pKind (TrackedPeer { pConnInfo = BittorrentInfo _ _ }) =
+  Bittorrent
+pKind (TrackedPeer { pConnInfo = WebtorrentInfo _ }) =
+  Webtorrent
 
 updatePeerDeltas :: TrackedPeer -> TrackedPeer -> TrackedPeer
 updatePeerDeltas oldPeer newPeer =
@@ -62,28 +75,30 @@ data TrackedData = TrackedData { dataPeers :: HM.HashMap PeerId TrackedPeer
 updateData :: (HM.HashMap PeerId TrackedPeer -> HM.HashMap PeerId TrackedPeer) -> TrackedData -> TrackedData
 updateData f (TrackedData { dataPeers = peers }) =
   let peers' = f peers
-      scrape = HM.foldl'
-               (\scrape peer ->
-                 let isSeeder =
-                       pLeft peer == 0
-                     scrape' =
-                       TrackedScrape
-                       { scrapeLeechers =
-                           if isSeeder
-                           then 0
-                           else 1
-                       , scrapeSeeders =
-                           if isSeeder
-                           then 1
-                           else 0
-                       , scrapeDownspeed =
-                           pDownspeed peer
-                       , scrapeUpspeed =
-                           pUploaded peer
-                       }
-                 in scrape `mappend` scrape'
-               ) mempty peers'
-  in TrackedData peers' scrape scrape
+      scrape kind =
+        HM.foldl'
+        (\scrape peer ->
+            let isSeeder =
+                  pLeft peer == 0
+            in if pKind peer == kind
+               then scrape `mappend`
+                    TrackedScrape
+                    { scrapeLeechers =
+                        if isSeeder
+                        then 0
+                        else 1
+                    , scrapeSeeders =
+                        if isSeeder
+                        then 1
+                        else 0
+                    , scrapeDownspeed =
+                        pDownspeed peer
+                    , scrapeUpspeed =
+                        pUploaded peer
+                    }
+               else scrape
+        ) mempty peers'
+  in TrackedData peers' (scrape Bittorrent) (scrape Webtorrent)
 
 newData :: TrackedData
 newData =
@@ -92,30 +107,91 @@ newData =
               , dataWebtorrentScrape = mempty
               }
 
-newtype Tracked = Tracked (TVar (HM.HashMap InfoHash (TVar TrackedData)))
+data Tracked = Tracked
+  { trackedTTracked :: TVar (HM.HashMap InfoHash (TVar TrackedData))
+  , trackedTPopular :: TVar [InfoHash]
+  }
+
+trackedPopular :: Tracked -> IO [InfoHash]
+trackedPopular = atomically . readTVar . trackedTPopular
 
 newTracked :: IO Tracked
 newTracked = do
-  peers <- newTVarIO HM.empty
+  tTracked <- newTVarIO HM.empty
+  tPopular <- newTVarIO []
+  let tracked = Tracked tTracked tPopular
+
+  let cleanAndStats = do
+        infoHashes <- atomically $
+                      HM.keys <$>
+                      readTVar tTracked
+        popular <-
+          (map snd . Map.toDescList) <$>
+          foldM (\popular infoHash -> do
+                    now <- getNow
+                    trackedModifyData' tracked infoHash $ \d ->
+                      let d' =
+                            -- Drop outdated peers
+                            updateData (HM.filter $
+                                        \peer ->
+                                          now >= pLastRequest peer + peerTimeout
+                                       ) d
+                          -- |Collect popular list
+                          scrape =
+                            dataBittorrentScrape d' `mappend`
+                            dataWebtorrentScrape d'
+                          popularity =
+                            (scrapeSeeders scrape +
+                             scrapeLeechers scrape,
+                             scrapeSeeders scrape,
+                             infoHash
+                            )
+                          popular' =
+                            Map.insert popularity infoHash popular
+                          popular''
+                            | Map.size popular <= popularTorrents =
+                                popular'
+                            | otherwise =
+                                let lowestPopularity =
+                                      fst $ head $
+                                      Map.toAscList popular'
+                                in Map.delete lowestPopularity popular'
+                      in (popular'', d')
+                ) Map.empty infoHashes
+        atomically $
+          writeTVar tPopular popular
+
+        -- Sleep 5s before next run
+        threadDelay 5000000
+
+      cleanAndStatsLoop =
+        forever $
+        E.catch cleanAndStats handleException
+
+      handleException :: E.SomeException -> IO ()
+      handleException = print
+  forkIO cleanAndStatsLoop
 
   -- Assume a single instance, clear all gauges of a previous crash
   -- TODO
 
-  -- TODO: forkIO clean loop
+  return tracked
 
-  return $ Tracked peers
+    where
+      peerTimeout = 3600
+      popularTorrents = 100
 
 trackedGetData :: Tracked -> InfoHash -> IO TrackedData
-trackedGetData (Tracked trackedRef) infoHash =
+trackedGetData (Tracked tTracked _) infoHash =
   atomically $
   HM.lookup infoHash <$>
-  readTVar trackedRef >>=
+  readTVar tTracked >>=
   maybe (return newData) readTVar
 
 trackedModifyData' :: Tracked -> InfoHash -> (TrackedData -> (a, TrackedData)) -> IO a
-trackedModifyData' (Tracked trackedRef) infoHash f =
+trackedModifyData' (Tracked tTracked _) infoHash f =
   atomically $ do
-  tracked <- readTVar trackedRef
+  tracked <- readTVar tTracked
   let mDataRef = HM.lookup infoHash tracked
   d <- maybe (return newData) readTVar mDataRef
 
@@ -126,7 +202,7 @@ trackedModifyData' (Tracked trackedRef) infoHash f =
       case mDataRef of
         -- infoHash was there before but has no more peers now
         Just _ ->
-          writeTVar trackedRef $
+          writeTVar tTracked $
           HM.delete infoHash tracked
         -- infoHash wasn't there before and has no peers now
         Nothing ->
@@ -136,7 +212,7 @@ trackedModifyData' (Tracked trackedRef) infoHash f =
         -- infoHash wasn't there before and has peers now
         Nothing -> do
           dataRef <- newTVar d'
-          writeTVar trackedRef $
+          writeTVar tTracked $
             HM.insert infoHash dataRef tracked
         -- infoHash was there before but has no more peers now
         Just dataRef ->

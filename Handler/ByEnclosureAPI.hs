@@ -12,6 +12,7 @@ import Data.Maybe (catMaybes)
 import System.IO.Unsafe
 
 import Import
+import Tracked
 
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do
@@ -48,13 +49,18 @@ getByEnclosureJson = do
 
     where downloadToJson downloads@(d:_) = do
                        sources <- mapM sourceToJson downloads
+                       (scrapeBt, scrapeWt) <- scrapeTorrent $ downloadInfoHash d
                        return $
                         object [ "info_hash" .= infoHashToHex (downloadInfoHash d)
                                , "size" .= downloadSize d
-                               , "seeders" .= (downloadSeeders d + 1)
-                               , "leechers" .= downloadLeechers d
-                               , "upspeed" .= downloadUpspeed d
-                               , "downspeed" .= downloadDownspeed d
+                               , "seeders" .= (scrapeSeeders scrapeBt + 1)
+                               , "leechers" .= scrapeLeechers scrapeBt
+                               , "upspeed" .= scrapeUpspeed scrapeBt
+                               , "downspeed" .= scrapeDownspeed scrapeBt
+                               , "seeders_webtorrent" .= scrapeSeeders scrapeWt
+                               , "leechers_webtorrent" .= scrapeLeechers scrapeWt
+                               , "upspeed_webtorrent" .= scrapeUpspeed scrapeWt
+                               , "downspeed_webtorrent" .= scrapeDownspeed scrapeWt
                                , "downloaded" .= downloadDownloaded d
                                , "sources" .= sources
                                ]

@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 module Handler.DownloadFeeds where
 
+import Control.Monad
 import qualified Data.Text as T
 import Data.Maybe
 import Data.Time (getCurrentTimeZone)
@@ -170,13 +171,22 @@ getNewAtomR :: Handler RepAtom
 getNewAtomR = getNew
 
 getTop :: RepFeed a => Handler a
-getTop = withDB (Model.popularDownloads def) >>=
-         renderFeed' Parameters {
-                           pTitle = "Bitlove: Top",
-                           pLink = TopR,
-                           pImage = ""
-                         }
-         
+getTop = do
+  popular <- getPopularInfoHashes
+  downloads <- withDB $ \db ->
+    concat <$>
+    forM popular
+    (\infoHash ->
+        Model.torrentDownloads infoHash db
+    )
+  let params =
+        Parameters
+        { pTitle = "Bitlove: Top"
+        , pLink = TopR
+        , pImage = ""
+        }
+  renderFeed' params downloads
+
 getTopRssR :: Handler RepRss
 getTopRssR = getTop
 

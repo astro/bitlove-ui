@@ -24,12 +24,12 @@ module Model (
   infoHashToHex,
   Download (..),
   recentDownloads,
-  popularDownloads,
   mostDownloaded,
   userDownloads,
   enclosureDownloads,
   guidDownloads,
   torrentGuids,
+  torrentDownloads,
   feedDownloads,
   searchDownloads,
   -- Model.Item

@@ -13,8 +13,7 @@ import Tracked
 
 mkYesodDispatch "TrackerApp" resourcesTrackerApp
 
-makeTrackerApp :: DBPool -> IO TrackerApp
-makeTrackerApp pool =
+makeTrackerApp :: DBPool -> Tracked -> IO TrackerApp
+makeTrackerApp pool tracked =
     do cache <- newCache "localhost" 11211
-       tracked <- newTracked
        return $ TrackerApp pool cache tracked
