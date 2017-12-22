@@ -341,9 +341,6 @@ announce tracked announce@(TrackedAnnounce {}) = do
                          }
     in (ad, data'')
 
--- TODO
-announce _ _ = error "announce not implemented yet"
-
 scrapeWebtorrent :: Tracked -> InfoHash -> IO TrackedScrape
 scrapeWebtorrent tracked infoHash =
   dataWebtorrentScrape <$>
