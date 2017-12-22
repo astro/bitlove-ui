@@ -54,8 +54,8 @@ $('.torrent').each(function() {
                     torrent.progress < 1 ?
                         "Downloaded " + Math.round(100 * torrent.progress) + "% from " + nonWebSeedWires + " peers at " + formatSize(torrent.downloadSpeed) + "/s" :
                         torrent.uploadSpeed > 0 ?
-                        "Finished, uploading to " + nonWebSeedWires + " peers at " + formatSize(torrent.uploadSpeed) + "/s" :
-                        "Finished"
+                        "Seeding, uploading to " + nonWebSeedWires + " peers at " + formatSize(torrent.uploadSpeed) + "/s" :
+                        "Seeding"
                 );
             }, 1000);
         });
