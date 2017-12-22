@@ -23,7 +23,7 @@ import BitloveAuth
 data Page = Page { pageNumber :: Int
                  , pagePrevious :: Maybe Text
                  , pageNext :: Maybe Text
-                 }
+                 } deriving (Show)
 
 pageSize :: Int
 pageSize = 20

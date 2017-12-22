@@ -4,6 +4,7 @@ import Prelude
 import qualified Control.Exception as E
 import Control.Concurrent
 import Control.Monad
+import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 import Data.Hashable (Hashable)
 import Data.Data (Typeable)
@@ -11,6 +12,7 @@ import Data.Text (Text)
 import Control.Concurrent.STM
 import qualified Data.Map.Strict as Map
 import qualified Data.HashMap.Strict as HM
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import Data.Aeson (Value)
 
@@ -22,10 +24,21 @@ newtype PeerId = PeerId { unPeerId :: BC.ByteString }
 
 data PeerAddress = Peer4 !BC.ByteString
                  | Peer6 !BC.ByteString
-                   deriving (Show, Read, Typeable, Eq, Ord)
+                   deriving (Read, Typeable, Eq, Ord)
+
+instance Show PeerAddress where
+  show (Peer4 bs) =
+    intercalate "." $
+    map show $
+    B.unpack bs
+  show (Peer6 _) = "I:P:v:6"
 
 data ConnInfo = BittorrentInfo !PeerAddress !Int
               | WebtorrentInfo (TChan Value)
+
+instance Show ConnInfo where
+  show (BittorrentInfo addr port) = show addr ++ ":" ++ show port
+  show (WebtorrentInfo _) = "<WS>"
 
 data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pUploaded :: !Int
@@ -34,7 +47,7 @@ data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pDownspeed :: !Int
                                , pLeft :: !Int
                                , pLastRequest :: !Int
-                               }
+                               } deriving (Show)
 
 data TrackedKind = Bittorrent | Webtorrent
                  deriving (Eq, Show, Ord)
@@ -234,14 +247,14 @@ data TrackedAnnounce
                     , aDownloaded :: !Int
                     , aLeft :: !Int
                     , aEvent :: Maybe Text
-                    }
+                    } deriving (Show)
 
 data TrackedAnnounced
   = TrackedAnnounced { adPeers :: [(PeerId, TrackedPeer)]
                      , adCompleted :: Bool
                      , adUploaded :: Int
                      , adDownloaded :: Int
-                     }
+                     } deriving (Show)
 
 -- TODO: must return counter events
 announce :: Tracked -> TrackedAnnounce -> IO TrackedAnnounced
