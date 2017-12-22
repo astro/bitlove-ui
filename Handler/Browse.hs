@@ -118,9 +118,10 @@ getTopR = do
     popular <- getPopularInfoHashes
     (page, downloads) <- paginate $ \page db ->
       concat <$>
-      mapM (flip Model.torrentDownloads db)
-      (drop (pageOffset page) $
-       take (pageLimit page)
+      mapM ((take 1 <$>) .
+            flip Model.torrentDownloads db)
+      (take (pageLimit page) $
+       drop (pageOffset page)
        popular)
     defaultLayout $ do
         setTitleI MsgTitleTop
