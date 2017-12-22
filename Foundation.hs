@@ -13,6 +13,8 @@ module Foundation
     , generateETag
     , addFilterScript
     , withDB, withDBPool, DBPool, HasDB (..), Transaction
+    , getPopularInfoHashes
+    , scrapeTorrent
     , Period (..)
     --, maybeAuth
     --, requireAuth
@@ -52,6 +54,7 @@ import Utils
 import PathPieces
 import BitloveAuth
 import Model.Query
+import Tracked
 
 
 type Database = Connection
@@ -67,6 +70,7 @@ data UIApp = UIApp
     , getStatic :: Static -- ^ Settings for static file serving.
     , uiDBPool :: DBPool -- ^ Database connection pool.
     , httpManager :: Manager
+    , tracked :: Tracked
     }
 
 -- Set up i18n messages. See the message folder.
@@ -263,3 +267,14 @@ withDBPool pool f = liftIO $ do
              void $ liftIO notifyWatchdog
 
              return a
+
+getPopularInfoHashes :: HandlerT UIApp IO [InfoHash]
+getPopularInfoHashes =
+  getYesod >>=
+  liftIO . trackedPopular . tracked
+
+scrapeTorrent :: InfoHash -> HandlerT UIApp IO (TrackedScrape, TrackedScrape)
+scrapeTorrent infoHash = do
+  tracked <- tracked <$> getYesod
+  d <- liftIO $ trackedGetData tracked infoHash
+  return (dataBittorrentScrape d, dataWebtorrentScrape d)

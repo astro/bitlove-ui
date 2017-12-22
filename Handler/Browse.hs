@@ -23,7 +23,7 @@ import BitloveAuth
 data Page = Page { pageNumber :: Int
                  , pagePrevious :: Maybe Text
                  , pageNext :: Maybe Text
-                 }
+                 } deriving (Show)
 
 pageSize :: Int
 pageSize = 20
@@ -115,8 +115,13 @@ getNewR = do
 
 getTopR :: Handler Html
 getTopR = do
-    (page, downloads) <- paginate
-                         Model.popularDownloads
+    popular <- getPopularInfoHashes
+    (page, downloads) <- paginate $ \page db ->
+      concat <$>
+      mapM (flip Model.torrentDownloads db)
+      (drop (pageOffset page) $
+       take (pageLimit page)
+       popular)
     defaultLayout $ do
         setTitleI MsgTitleTop
         addFilterScript
@@ -383,6 +388,11 @@ renderDownloads downloads showOrigin =
 
 renderItem :: Item -> Bool -> WidgetT UIApp IO ()
 renderItem item showOrigin = do
+  downloadsAndScrapes <- liftHandlerT $
+    forM (itemDownloads item) $ \d -> do
+    (scrapeBt, scrapeWt) <- scrapeTorrent $ downloadInfoHash d
+    return (d, scrapeBt `mappend` scrapeWt)
+
   let date = formatTime defaultTimeLocale (iso8601DateFormat Nothing ++ "\n%H:%M") $
              itemPublished item
       --isOnlyDownload = length (itemDownloads item) == 1
@@ -397,20 +407,20 @@ renderItem item showOrigin = do
                          $else
                            #{t}s
                    |]
-      bandwidth d
-          | downloadDownspeed d < 100 * 1024 =
+      bandwidth scrape
+          | scrapeDownspeed scrape < 100 * 1024 =
               Nothing
           | otherwise =
               Just $
               let (n, unit) = humanSize' $ fromIntegral $
-                              downloadDownspeed d
+                              scrapeDownspeed scrape
                   n' :: String
                   n' | n < 10 = 
                          show (fromIntegral (truncate $ n * 10 :: Integer) / 10 :: Double)
                      | otherwise = 
                          show $ (truncate n :: Integer)
               in (n', unit ++ "B/s")
-      seeders = (+ 1) . downloadSeeders
+      seeders = (+ 1) . scrapeSeeders
       types = map downloadType $ itemDownloads item
       countType t = length $ filter (== t) types
       isOnlyType = (== 1) . countType
@@ -440,7 +450,7 @@ renderItem item showOrigin = do
         $else
            <p class="homepage">
              <a href="#{itemHomepage item}">#{itemHomepage item}
-    $forall d <- itemDownloads item
+    $forall (d, scrape) <- downloadsAndScrapes
       <ul .download>
         <li .torrent>
           <a .button
@@ -456,15 +466,15 @@ renderItem item showOrigin = do
             <span class="size" title="_{MsgDownloadSize}">
               #{humanSize (downloadSize d)}
         <li class="stats">
-          $maybe (speed, unit) <- bandwidth d
+          $maybe (speed, unit) <- bandwidth scrape
               <dl>
                 <dt>
                   #{speed}
                   <span class="unit"> #{unit}
                 <dd>Download speed
                   
-          ^{stats "seeders" "Seeder" $ seeders d}
-          ^{stats "leechers" "Leecher" $ downloadLeechers d}
+          ^{stats "seeders" "Seeder" $ fromIntegral $ seeders scrape}
+          ^{stats "leechers" "Leecher" $ fromIntegral $ scrapeLeechers scrape}
           ^{stats "downloads" "Download" $ downloadDownloaded d}
 |]
   where payment = itemPayment item

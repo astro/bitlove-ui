@@ -12,7 +12,7 @@ import Network.Socket (SockAddr (..), HostName, getAddrInfo, addrAddress, tupleT
 import Data.Word (Word32)
 import Data.Bits
 
-import Model.Tracker (PeerAddress(..))
+import Tracked (PeerAddress(..))
 
 
 encodeLatin1 :: Text -> BC.ByteString

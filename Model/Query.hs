@@ -93,7 +93,7 @@ query1 sql args conn =
                           
 data QueryPage = QueryPage { pageLimit :: Int
                            , pageOffset :: Int
-                           }
+                           } deriving (Show)
                  
 instance Default QueryPage where
     def = QueryPage 25 0

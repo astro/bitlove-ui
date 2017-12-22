@@ -37,6 +37,11 @@ Now point your browser to `http://localhost:8081/`.
 
 ## TODO
 
+tracked: reset gauges on startup
+tracked cleaner loop
+port Tracker.Handler.HTTP to Tracked
+
+
 PBKDF2 auth
 404 → search
 

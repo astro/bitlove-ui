@@ -34,7 +34,6 @@ library
                      Model.User
                      Model.Feed
                      Model.Token
-                     Model.Tracker
                      Model.Session
                      Model.Stats
                      Model.ImageCache
@@ -65,12 +64,11 @@ library
                      Tracker.Handler.HTTP
                      Tracker.Handler.Webtorrent
                      Benc
-                     WorkQueue
                      Cache
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
-        ghc-options:   -Wall -O0
+        ghc-options:   -Wall -O0 -Wno-name-shadowing
     else
         ghc-options:   -Wall -O2
 

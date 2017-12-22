@@ -2,6 +2,7 @@ module Import
     ( module Prelude
     , module Yesod
     , module Foundation
+    , module Tracked
     , module Settings.StaticFiles
     , module Settings.Development
     , module Data.Monoid
@@ -18,6 +19,7 @@ module Import
 import Prelude hiding (writeFile, readFile, head, tail, init, last)
 import Yesod   hiding (Route(..))
 import Foundation
+import Tracked (TrackedScrape (..))
 import Data.Monoid (Monoid (mappend, mempty, mconcat))
 import Control.Applicative ((<$>), (<*>), pure)
 import Data.Text (Text)
