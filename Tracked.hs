@@ -188,15 +188,15 @@ newTracked = do
           show (truncate $ (t3 `diffUTCTime` t2) * 1000 :: Int) ++ "+" ++
           show (truncate $ (t4 `diffUTCTime` t3) * 1000 :: Int) ++ "ms"
 
+      handleException :: E.SomeException -> IO ()
+      handleException = print
+
+      cleanAndStatsLoop =
+        forever $ do
+        E.catch cleanAndStats handleException
         -- Sleep 10s before next run
         threadDelay 10000000
 
-      cleanAndStatsLoop =
-        forever $
-        E.catch cleanAndStats handleException
-
-      handleException :: E.SomeException -> IO ()
-      handleException = print
   forkIO cleanAndStatsLoop
 
   -- Assume a single instance, clear all gauges of a previous crash
