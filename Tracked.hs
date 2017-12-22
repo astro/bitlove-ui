@@ -258,14 +258,21 @@ data TrackedAnnounced
                      , adDownloaded :: Int
                      } deriving (Show)
 
--- TODO: must return counter events
 announce :: Tracked -> TrackedAnnounce -> IO TrackedAnnounced
 announce tracked announce
   | aEvent announce == Just "stopped" = do
-      trackedModifyData tracked (aInfoHash announce) $
-        updateData $
-        HM.delete $ aPeerId announce
-      return $ TrackedAnnounced [] False 0 0
+      let peerId = aPeerId announce
+      (uploaded, downloaded) <- trackedModifyData' tracked (aInfoHash announce) $ \d ->
+        case HM.lookup peerId (dataPeers d) of
+          Nothing ->
+            ((0, 0), d)
+          Just peer ->
+            let uploaded = aUploaded announce - pUploaded peer
+                downloaded = aDownloaded announce - pDownloaded peer
+                d' = updateData (HM.delete peerId) d
+            in ((uploaded, downloaded), d')
+
+      return $ TrackedAnnounced [] False uploaded downloaded
 
 announce tracked announce@(TrackedAnnounce {}) = do
   now <- getNow
