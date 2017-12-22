@@ -61,7 +61,7 @@ data Download = Download {
 
 instance Convertible [SqlValue] Download where
   safeConvert [user, slug, feed, item, enclosure,
-               feed_title, _feed_public,
+               feed_title,
                info_hash, name, size, type_,
                title, lang, summary, published,
                homepage, payment, image,
@@ -89,7 +89,7 @@ instance Convertible [SqlValue] Download where
 
 downloadFields :: String
 downloadFields =
-  "\"user\", \"slug\", \"feed\", \"item\", \"enclosure\", \"info_hash\", \"name\", \"size\", \"type\", \"feed_title\", \"title\", \"lang\", \"summary\", \"published\", \"homepage\", \"payment\", \"image\", \"downloaded\""
+  "\"user\", \"slug\", \"feed\", \"item\", \"enclosure\", \"feed_title\", \"info_hash\", \"name\", \"size\", \"type\", \"title\", \"lang\", \"summary\", \"published\", \"homepage\", \"payment\", \"image\", \"downloaded\""
 
 recentDownloads :: QueryPage -> Query Download
 recentDownloads page =
