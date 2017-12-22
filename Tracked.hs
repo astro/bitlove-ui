@@ -343,7 +343,10 @@ announce tracked announce@(TrackedAnnounce {}) = do
         )
         [] (dataPeers data'')
       completed =
-        aEvent announce == Just "completed"
+        -- Count event=completed
+        aEvent announce == Just "completed" ||
+        -- Or when left=0 and it previously wasn't
+        (aLeft announce == 0 && fromMaybe 0 (pLeft <$> oldPeer) > 0)
       uploaded =
         max 0 $
         fromMaybe 0 $ do
