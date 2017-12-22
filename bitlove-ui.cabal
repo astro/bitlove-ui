@@ -70,7 +70,7 @@ library
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -O0 -Wno-name-shadowing
     else
-        ghc-options:   -Wall -O2
+        ghc-options:   -Wall -O2 -Wno-name-shadowing
 
     extensions: TemplateHaskell
                 QuasiQuotes
