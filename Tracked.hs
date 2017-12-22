@@ -15,6 +15,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import Data.Aeson (Value)
+import Data.Time.Clock (getCurrentTime, diffUTCTime)
 
 import Utils (getNow)
 import Model (InfoHash)
@@ -135,9 +136,11 @@ newTracked = do
   let tracked = Tracked tTracked tPopular
 
   let cleanAndStats = do
+        t1 <- getCurrentTime
         infoHashes <- atomically $
                       HM.keys <$>
                       readTVar tTracked
+        t2 <- getCurrentTime
         popular <-
           (map snd . Map.toDescList) <$>
           foldM (\popular infoHash -> do
@@ -173,11 +176,20 @@ newTracked = do
                                 in Map.delete lowestPopularity popular'
                       in (popular'', d')
                 ) Map.empty infoHashes
+        t3 <- getCurrentTime
         atomically $
           writeTVar tPopular popular
 
-        -- Sleep 5s before next run
-        threadDelay 5000000
+        t4 <- getCurrentTime
+        putStrLn $ "Found " ++
+          show (length popular) ++ " popular torrents from " ++
+          show (length infoHashes) ++ " info_hashes in " ++
+          show (truncate $ (t2 `diffUTCTime` t1) * 1000 :: Int) ++ "+" ++
+          show (truncate $ (t3 `diffUTCTime` t2) * 1000 :: Int) ++ "+" ++
+          show (truncate $ (t4 `diffUTCTime` t3) * 1000 :: Int) ++ "ms"
+
+        -- Sleep 10s before next run
+        threadDelay 10000000
 
       cleanAndStatsLoop =
         forever $
