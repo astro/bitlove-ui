@@ -147,7 +147,7 @@ newTracked = do
                             -- Drop outdated peers
                             updateData (HM.filter $
                                         \peer ->
-                                          now >= pLastRequest peer + peerTimeout
+                                          now <= pLastRequest peer + peerTimeout
                                        ) d
                           -- |Collect popular list
                           scrape =
@@ -163,8 +163,10 @@ newTracked = do
                             Map.insert popularity infoHash popular
                           popular''
                             | Map.size popular <= popularTorrents =
+                                -- Need more popularTorrents
                                 popular'
                             | otherwise =
+                                -- Drop one off
                                 let lowestPopularity =
                                       fst $ head $
                                       Map.toAscList popular'
