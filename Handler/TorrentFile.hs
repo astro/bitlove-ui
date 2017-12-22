@@ -1,6 +1,6 @@
 module Handler.TorrentFile where
 
-import Prelude
+import Prelude (head)
 import Data.Convertible (convert)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)

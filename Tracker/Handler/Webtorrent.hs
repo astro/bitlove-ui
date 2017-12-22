@@ -1,6 +1,5 @@
 module Tracker.Handler.Webtorrent (getWebTorrentAnnounce) where
 
-import Prelude
 import Data.Maybe (fromMaybe)
 import Control.Monad
 import Control.Concurrent (threadDelay)
