@@ -55,7 +55,9 @@ getAnnounceR = do
                    case readsPrec 0 $ BC.unpack v of
                      [(r, "")] -> return r
                      _ -> Nothing
-      compact = fromMaybe False $ qi "compact"
+      compact = fromMaybe False $
+                ("1" ==) <$>
+                q "compact"
       mAnn = TrackedAnnounce <$>
              Model.InfoHash <$> q "info_hash" <*>
              (PeerId <$> q "peer_id") <*>
