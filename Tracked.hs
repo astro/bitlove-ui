@@ -165,7 +165,7 @@ newTracked = do
                           popular' =
                             Map.insert popularity infoHash popular
                           popular''
-                            | Map.size popular <= popularTorrents =
+                            | Map.size popular < popularTorrents =
                                 -- Need more popularTorrents
                                 popular'
                             | otherwise =
