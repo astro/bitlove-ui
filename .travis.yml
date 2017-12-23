@@ -1,8 +1,5 @@
 language: haskell
 ghc:
-  - 8.0
-  - 8.2
-  - 8.2.0
   - 8.2.1
 install:
   - cabal install happy alex
