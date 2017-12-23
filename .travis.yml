@@ -1,6 +1,9 @@
 language: haskell
 ghc:
-  - 7.8
+  - 8.0
+  - 8.2
+  - 8.2.0
+  - 8.2.1
 install:
   - cabal install happy alex
   - PATH=~/.cabal/bin:$PATH cabal install --only-dependencies --enable-tests
