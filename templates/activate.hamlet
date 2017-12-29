@@ -12,6 +12,6 @@ $newline always
     <p id="progress">
     <input id="activate" type="submit" value="_{MsgActivate}"
     	   data-token="#{hexToken}" data-salt="#{hexSalt}">
-  <script src="/static/js/jquery-1.7.1.min.js" type="text/javascript">
+  <script src=@{StaticR js_jquery_1_12_4_min_js} type="text/javascript">
   <script src="/static/js/jsSHA.js" type="text/javascript">
   <script src="/static/js/activate.js" type="text/javascript">
