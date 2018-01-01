@@ -166,7 +166,7 @@ Graph.prototype.setData = function(response) {
 			series.color = '#1f4faf';
 			break;
 		    case 'leechers_w':
-			series.label = "Leechers";
+			series.label = "WebTorrent Leechers";
 			series.color = '#3f6fcf';
 			break;
 		}
