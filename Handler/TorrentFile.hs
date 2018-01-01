@@ -45,12 +45,11 @@ getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
       (torrent:_) -> do
         let buf = torrentTorrent torrent
             infoHash = torrentInfoHash torrent
-        guids <- Model.torrentGuids infoHash db
-        return $ Just (buf, infoHash, guids)
+        return $ Just (buf, infoHash)
   case mInfo of
     Nothing ->
       notFound
-    Just (buf, infoHash, guids) -> do
+    Just (buf, infoHash) -> do
       seedUrl <- T.append "https://bitlove.org" <$>
                  ($ WebSeedR (HexInfoHash infoHash) name) <$>
                  getUrlRender
@@ -73,8 +72,8 @@ getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
 -- * `announce` (BEP 3)
 -- * `announce-list` (BEP 12)
 -- * `url-list` (BEP 19)
-updateTorrent :: [Text] -> [Text] -> BC.ByteString -> Maybe Builder
-updateTorrent seedUrls guids buf = do
+updateTorrent :: [Text] -> BC.ByteString -> Maybe Builder
+updateTorrent seedUrls buf = do
   BDict dict <- parseBenc buf
   let
     getList :: LBC.ByteString -> [BValue]
@@ -102,7 +101,6 @@ updateTorrent seedUrls guids buf = do
       return url
     urlList' =
       map (convert . encodeUtf8) seedUrls ++
-      myUrls ++
       urlList
     dict' =
         ("announce", BString $ head myTrackers) :
@@ -121,19 +119,3 @@ updateTorrent seedUrls guids buf = do
       myTrackers =
         [ "http://t.bitlove.org/announce"
         , "wss://t.bitlove.org/webtorrent-announce" ]
-      myUrls = do
-        guid <- guids
-        return $
-          LBC.fromChunks
-          [encodeUtf8 $
-           webseed1FromGuid guid
-          ]
-
-webseed1FromGuid :: Text -> Text
-webseed1FromGuid =
-  ("https://cdn.streamoff.de/content/" `T.append`) .
-  T.pack .
-  escapeURIString isUnescapedInURIComponent .
-  map (\x -> if x == '/' then '_' else x) .
-  T.unpack {- .
-  head . tail . T.splitOn "#" -}
