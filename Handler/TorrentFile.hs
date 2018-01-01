@@ -30,10 +30,13 @@ instance ToTypedContent RepTorrent where
 
 -- |Does the same but is on different routes for stats.
 getTorrentFileForWebtorrentR :: UserName -> Text -> TorrentName -> Handler RepTorrent
-getTorrentFileForWebtorrentR = getTorrentFileR
+getTorrentFileForWebtorrentR = getTorrentFile False
 
 getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
-getTorrentFileR user slug (TorrentName name) = do
+getTorrentFileR = getTorrentFile True
+
+getTorrentFile :: Bool -> UserName -> Text -> TorrentName -> Handler RepTorrent
+getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
   mInfo <- withDB $ \db -> do
     torrents <- Model.torrentByName user slug name db
     case torrents of
@@ -51,7 +54,10 @@ getTorrentFileR user slug (TorrentName name) = do
       seedUrl <- T.append "https://bitlove.org" <$>
                  ($ WebSeedR (HexInfoHash infoHash) name) <$>
                  getUrlRender
-      let mBuf = updateTorrent [seedUrl] guids buf
+      let seedUrls
+            | includeOtherWebseeds = [seedUrl]
+            | otherwise = []
+          mBuf = updateTorrent seedUrls buf
       case mBuf of
         Just buf' ->
           return $ RepTorrent $ toContent buf'
