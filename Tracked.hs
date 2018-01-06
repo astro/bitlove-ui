@@ -35,11 +35,17 @@ instance Show PeerAddress where
   show (Peer6 _) = "I:P:v:6"
 
 data ConnInfo = BittorrentInfo !PeerAddress !Int
-              | WebtorrentInfo (TChan Value)
+              | WebtorrentInfo !PeerAddress (TChan Value)
 
 instance Show ConnInfo where
   show (BittorrentInfo addr port) = show addr ++ ":" ++ show port
-  show (WebtorrentInfo _) = "<WS>"
+  show (WebtorrentInfo addr _) = "<WS " ++ show addr ++ ">"
+
+cKind :: ConnInfo -> TrackedKind
+cKind (BittorrentInfo _ _ ) =
+  Bittorrent
+cKind (WebtorrentInfo _ _ ) =
+  Webtorrent
 
 data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pUploaded :: !Int
@@ -54,10 +60,8 @@ data TrackedKind = Bittorrent | Webtorrent
                  deriving (Eq, Show, Ord)
 
 pKind :: TrackedPeer -> TrackedKind
-pKind (TrackedPeer { pConnInfo = BittorrentInfo _ _ }) =
-  Bittorrent
-pKind (TrackedPeer { pConnInfo = WebtorrentInfo _ }) =
-  Webtorrent
+pKind (TrackedPeer { pConnInfo = c }) =
+  cKind c
 
 updatePeerDeltas :: TrackedPeer -> TrackedPeer -> TrackedPeer
 updatePeerDeltas oldPeer newPeer =
@@ -301,13 +305,7 @@ announce tracked announce@(TrackedAnnounce {}) = do
       -- | For filtering result peers
       isEqInfo :: TrackedPeer -> Bool
       isEqInfo peer =
-        case (aConnInfo announce, pConnInfo peer) of
-          (BittorrentInfo {}, BittorrentInfo {}) ->
-            True
-          (WebtorrentInfo {}, WebtorrentInfo {}) ->
-            True
-          _ ->
-            False
+        pKind peer == cKind (aConnInfo announce)
   trackedModifyData' tracked (aInfoHash announce) $ \data' ->
     let
       oldPeer =

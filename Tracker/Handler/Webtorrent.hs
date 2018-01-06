@@ -74,12 +74,12 @@ instance FromJSON Message where
         fail $ "No supported action: " ++ show action
   parseJSON _ = fail "Not an object"
 
-messageToAnnounce :: Message -> TChan Value -> Maybe TrackedAnnounce
-messageToAnnounce msg@(AnnounceMessage {}) chan =
+messageToAnnounce :: Message -> PeerAddress -> TChan Value -> Maybe TrackedAnnounce
+messageToAnnounce msg@(AnnounceMessage {}) addr chan =
   TrackedAnnounce
   <$> Model.InfoHash <$> encodeLatin1 <$> msgInfoHash msg
   <*> (PeerId <$> encodeLatin1 <$> msgPeerId msg)
-  <*> pure (WebtorrentInfo chan)
+  <*> pure (WebtorrentInfo addr chan)
   <*> msgUploaded msg
   <*> msgDownloaded msg
   <*> msgLeft msg
@@ -159,8 +159,9 @@ runWebsocket = do
   liftIO $ putStrLn $ "WebSocket connected."
   session <- liftIO $ newIORef Set.empty
   chan <- liftIO newTChanIO
+  addr <- lift getRemoteAddr
   r <- tryAny $
-    race (recvLoop session chan) (forwardFromHub chan)
+    race (recvLoop session addr chan) (forwardFromHub chan)
   sessionClear session
   case r of
     Left e ->
@@ -191,15 +192,15 @@ forwardFromHub chan = loop 0
               liftIO $ threadDelay 1000000
               loop $ idleSeconds + 1
 
-recvLoop :: Session -> TChan Value -> WebSocketsT Handler ()
-recvLoop session chan = do
+recvLoop :: Session -> PeerAddress -> TChan Value -> WebSocketsT Handler ()
+recvLoop session addr chan = do
   m <- receiveData
   let mJson :: Maybe Message
       mJson = decode m
       mMsgAnn = do
         msg <- mJson
         (msg, ) <$>
-          messageToAnnounce msg chan
+          messageToAnnounce msg addr chan
       mMsgAns =
         mJson >>= messageToAnswer
   case (mMsgAnn, mMsgAns) of
@@ -237,7 +238,7 @@ recvLoop session chan = do
             forM_ (zip peers offers) $
             \((peerId, peer), offer) ->
               case pConnInfo peer of
-                WebtorrentInfo chan ->
+                WebtorrentInfo _ chan ->
                   let peerOffer =
                         toJSON $
                         PeerOffer
@@ -259,13 +260,13 @@ recvLoop session chan = do
             setGauge "leechers_w" infoHash (fromIntegral $ scrapeLeechers scrape) db
 
       -- Loop
-      recvLoop session chan
+      recvLoop session addr chan
     (_, Just ans) -> do
       tracked <- lift $ trackerTracked <$> getYesod
       mToPeer <- liftIO $
         getPeer tracked (ansInfoHash ans) (ansToPeerId ans)
       case pConnInfo <$> mToPeer of
-        Just (WebtorrentInfo chan) ->
+        Just (WebtorrentInfo _ chan) ->
           let peerAnswer =
                 toJSON ans
           in liftIO $
