@@ -18,6 +18,8 @@ import Data.Aeson (Value)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
+import Numeric (showHex)
+import Data.Bits (shiftL, (.|.))
 
 import Utils (getNow)
 import Model (InfoHash)
@@ -34,7 +36,23 @@ instance Show PeerAddress where
     intercalate "." $
     map show $
     B.unpack bs
-  show (Peer6 _) = "I:P:v:6"
+  show (Peer6 bs) =
+    let groupAt :: Int -> [a] -> [[a]]
+        groupAt n xs
+          | length xs <= n =
+              [xs]
+          | otherwise =
+              take n xs : groupAt n (drop n xs)
+
+        words = groupAt 2 $ B.unpack bs
+
+    in if length words == 8
+       then intercalate ":" $
+            map (\[b1, b2] ->
+                   showHex ((b1 `shiftL` 8) .|. b2) ""
+                ) words
+       else "::"  -- ^invalid
+
 
 instance Hashable PeerAddress where
   hashWithSalt salt (Peer4 bs) = hashWithSalt salt bs
