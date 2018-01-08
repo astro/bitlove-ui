@@ -6,7 +6,7 @@ import Control.Concurrent
 import Control.Monad
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
-import Data.Hashable (Hashable)
+import Data.Hashable (Hashable, hashWithSalt)
 import Data.Data (Typeable)
 import Data.Text (Text)
 import Control.Concurrent.STM
@@ -16,6 +16,8 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import Data.Aeson (Value)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
 
 import Utils (getNow)
 import Model (InfoHash)
@@ -34,6 +36,10 @@ instance Show PeerAddress where
     B.unpack bs
   show (Peer6 _) = "I:P:v:6"
 
+instance Hashable PeerAddress where
+  hashWithSalt salt (Peer4 bs) = hashWithSalt salt bs
+  hashWithSalt salt (Peer6 bs) = hashWithSalt salt bs
+
 data ConnInfo = BittorrentInfo !PeerAddress !Int
               | WebtorrentInfo !PeerAddress (TChan Value)
 
@@ -42,10 +48,14 @@ instance Show ConnInfo where
   show (WebtorrentInfo addr _) = "<WS " ++ show addr ++ ">"
 
 cKind :: ConnInfo -> TrackedKind
-cKind (BittorrentInfo _ _ ) =
+cKind (BittorrentInfo _ _) =
   Bittorrent
-cKind (WebtorrentInfo _ _ ) =
+cKind (WebtorrentInfo _ _) =
   Webtorrent
+
+cAddr :: ConnInfo -> PeerAddress
+cAddr (BittorrentInfo addr _) = addr
+cAddr (WebtorrentInfo addr _) = addr
 
 data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pUploaded :: !Int
@@ -62,6 +72,10 @@ data TrackedKind = Bittorrent | Webtorrent
 pKind :: TrackedPeer -> TrackedKind
 pKind (TrackedPeer { pConnInfo = c }) =
   cKind c
+
+pAddr :: TrackedPeer -> PeerAddress
+pAddr (TrackedPeer { pConnInfo = c }) =
+  cAddr c
 
 updatePeerDeltas :: TrackedPeer -> TrackedPeer -> TrackedPeer
 updatePeerDeltas oldPeer newPeer =
@@ -384,3 +398,31 @@ clearPeer tracked infoHash peerId =
   trackedModifyData tracked infoHash $
   updateData $
   HM.delete $ peerId
+
+getChangedAddrs :: Tracked -> HashSet PeerAddress -> IO (HashSet PeerAddress, HashSet PeerAddress, HashSet PeerAddress)
+getChangedAddrs tracked known =
+  atomically $ do
+  tracked' <- readTVar (trackedTTracked tracked)
+  current <-
+    foldM
+    (\current tData ->
+        foldl
+        (\current peer ->
+           HashSet.insert (pAddr peer) current
+        ) current <$>
+        dataPeers <$>
+        readTVar tData
+    ) HashSet.empty (HM.elems tracked')
+
+  let
+    -- | removed means it was known but is not current
+    removed = known `HashSet.difference` current
+    -- | added means it is there currently but was not known before
+    added = current `HashSet.difference` known
+
+  case (HashSet.null removed, HashSet.null added) of
+    (True, True) ->
+      -- No changes
+      retry
+    _ ->
+      return (current, removed, added)

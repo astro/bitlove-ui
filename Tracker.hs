@@ -9,6 +9,7 @@ import Cache
 import Tracker.Foundation
 import Tracker.Handler.HTTP
 import Tracker.Handler.Webtorrent
+import Tracker.Handler.ExportStream
 import Tracked
 
 mkYesodDispatch "TrackerApp" resourcesTrackerApp

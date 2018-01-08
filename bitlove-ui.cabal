@@ -63,6 +63,7 @@ library
                      Tracker.Utils
                      Tracker.Handler.HTTP
                      Tracker.Handler.Webtorrent
+                     Tracker.Handler.ExportStream
                      Benc
                      Cache
 

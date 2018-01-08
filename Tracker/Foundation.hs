@@ -40,6 +40,7 @@ mkYesodData "TrackerApp"
     /announce AnnounceR GET
     /scrape ScrapeR GET
     /webtorrent-announce WebTorrentAnnounce GET
+    /announce/export ExportStream GET
   |]
 
 instance Yesod TrackerApp where
