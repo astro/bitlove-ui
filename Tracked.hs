@@ -20,6 +20,7 @@ import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
 import Numeric (showHex)
 import Data.Bits (shiftL, (.|.))
+import Data.Word (Word8)
 
 import Utils (getNow)
 import Model (InfoHash)
@@ -44,7 +45,9 @@ instance Show PeerAddress where
           | otherwise =
               take n xs : groupAt n (drop n xs)
 
-        words = groupAt 2 $ B.unpack bs
+        words = groupAt 2 $
+                map (fromIntegral :: Word8 -> Int) $
+                B.unpack bs
 
     in if length words == 8
        then intercalate ":" $
