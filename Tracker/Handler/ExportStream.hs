@@ -46,4 +46,11 @@ exportStream tracked = do
       stream known'
 
     motd =
-      "# Hello\r\n"
+      BC.concat
+      [ "# Hello\r\n"
+      , "# \r\n"
+      , "# This service shall 0-rate our content with Internet Service Providers.\r\n"
+      , "# \r\n"
+      , "# Persistent storage of the data obtained via this method is prohibited.\r\n"
+      , "# \r\n"
+      ]
