@@ -5,11 +5,9 @@ import qualified Data.Text as T
 import Data.Maybe
 import Data.Foldable (Foldable)
 import Data.Time.Format
-import Network.HTTP.Types (parseQueryText)
 import Text.Blaze
 import Text.Blaze.Internal (MarkupM)
 import Text.Blaze.Html5 hiding (div, details, map, title)
-import Text.Blaze.Html5.Attributes hiding (item, min, max, id, title)
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad
 import Settings.StaticFiles
@@ -450,7 +448,7 @@ renderItem item showOrigin = do
             <a href=@{UserR $ itemUser item}>#{userName $ itemUser item}
         $else
            <p class="homepage">
-             <a href="#{itemHomepage item}">#{itemHomepage item}
+             <a href="#{homepage}">#{homepage}
     $forall (d, scrape) <- downloadsAndScrapes
       <ul .download>
         <li .torrent>

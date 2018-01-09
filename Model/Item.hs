@@ -1,15 +1,12 @@
 module Model.Item where
 
 import Prelude hiding (id)
-import Data.Maybe (fromMaybe)
-import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Data.List (partition)
 import Data.Convertible
 
 import Utils
-import Model.SqlValue
 import Model.Query
 import Model.Download
 import Model.User

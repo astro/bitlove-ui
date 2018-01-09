@@ -34,14 +34,9 @@ getTorrentStatsR user slug name statsPeriod stats = do
           baseJson = ["start" .= iso8601 zonedStart,
                       "stop" .= iso8601 zonedStop,
                       "interval" .= interval]
-          withStats :: (LocalTime -> LocalTime -> Int -> Transaction a)
-                     -> Handler a
-          -- |Can run one query
-          withStats f = withDB $
-                        f localStart localStop interval
           -- |Supplies `q` for multiple queries
-          withStats' :: (((LocalTime -> LocalTime -> Int -> Transaction a) -> IO a) -> IO b) -> Handler b
-          withStats' f = withDB $ \db ->
+          withStats :: (((LocalTime -> LocalTime -> Int -> Transaction a) -> IO a) -> IO b) -> Handler b
+          withStats f = withDB $ \db ->
                          f $ \f' ->
                          f' localStart localStop interval db
 
@@ -57,7 +52,7 @@ getTorrentStatsR user slug name statsPeriod stats = do
           canEdit' <- canEdit user
           urlRender <- getUrlRender
 
-          withStats' $ \q -> do
+          withStats $ \q -> do
             json <- mapM (\(key, name) ->
                             (key .=) <$>
                             counterToValue q name
@@ -81,12 +76,12 @@ getTorrentStatsR user slug name statsPeriod stats = do
               else return []
             return $ json ++ ownerJson ++ baseJson
         StatsTraffic ->
-          withStats' $ \q -> do
+          withStats $ \q -> do
           (++ baseJson) <$>
             mapM (counterToPair q)
             ["down", "up", "up_seeder", "down_w", "up_w", "up_seeder_w"]
         StatsSwarm ->
-          withStats' $ \q ->
+          withStats $ \q ->
           do let completeGauge vs =
                      completeGauge' $
                      case vs of

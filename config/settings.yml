@@ -3,9 +3,26 @@ Default: &defaults
   port: 8081
   approot: ""
   copyright: APL2
+  served_vhosts:
+    - bitlove.org
+    - api.bitlove.org
+  tracker_urls:
+    - http://t.bitlove.org/announce
+    - wss://t.bitlove.org/webtorrent-announce
+  contact_mail: "mail@bitlove.org"
+  export_auth:
+    - "test:test"
+    - "bigtelco:i-am-evil"
 
 Development:
   approot: "http://localhost:8081"
+  served_vhosts:
+    - localhost
+    - bitlove.org
+    - api.bitlove.org
+  tracker_urls:
+    - http://localhost:8081/announce
+    - ws://localhost:8081/webtorrent-announce
   <<: *defaults
 
 Production4:

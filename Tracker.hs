@@ -3,17 +3,19 @@ module Tracker where
 
 import Prelude
 import Yesod
+import Yesod.Default.Config
 
-import Foundation (DBPool)
+import Foundation (DBPool, BitloveEnv, Extra)
 import Cache
 import Tracker.Foundation
 import Tracker.Handler.HTTP
 import Tracker.Handler.Webtorrent
+import Tracker.Handler.ExportStream
 import Tracked
 
 mkYesodDispatch "TrackerApp" resourcesTrackerApp
 
-makeTrackerApp :: DBPool -> Tracked -> IO TrackerApp
-makeTrackerApp pool tracked =
+makeTrackerApp :: AppConfig BitloveEnv Extra -> DBPool -> Tracked -> IO TrackerApp
+makeTrackerApp conf pool tracked =
     do cache <- newCache "localhost" 11211
-       return $ TrackerApp pool cache tracked
+       return $ TrackerApp conf pool cache tracked

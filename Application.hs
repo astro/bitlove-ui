@@ -64,6 +64,7 @@ mkYesodDispatch "UIApp" resourcesUIApp
 -- migrations handled by Yesod.
 makeApplication :: AppConfig BitloveEnv Extra -> IO Application
 makeApplication conf = do
+    let servedVhosts = extraServedVhosts $ appExtra conf
     dbconf <- withYamlEnvironment
               "config/postgresql.yml"
               (appEnv conf)
@@ -72,10 +73,10 @@ makeApplication conf = do
     trackerPool <- makeDBPool dbconf
     tracked <- newTracked
     foundation <- makeUIFoundation conf uiPool tracked
-    tracker <- makeTrackerApp trackerPool tracked >>=
+    tracker <- makeTrackerApp conf trackerPool tracked >>=
                fmap ignoreAccept . toWaiAppPlain
     stats <- statsMiddleware (appEnv conf) trackerPool
-    ui <- enforceVhost . stats . gzip def . autohead . etagMiddleware . ignoreAccept <$>
+    ui <- enforceVhost servedVhosts . stats . gzip def . autohead . etagMiddleware . ignoreAccept <$>
           toWaiAppPlain foundation
     return $ measureDuration $ anyApp [tracker, ui]
   where
@@ -100,8 +101,8 @@ makeApplication conf = do
     anyApp [] =
         \_req respond ->
             respond $ ResponseBuilder (Status 404 "Not found") [] mempty
-    enforceVhost :: Middleware
-    enforceVhost app req respond =
+    enforceVhost :: [BC.ByteString] -> Middleware
+    enforceVhost servedVhosts app req respond =
         let proceed = app req respond
             getRedirectResponse location = respond $
                                 ResponseBuilder (Status 301 "Wrong vhost")
@@ -111,11 +112,12 @@ makeApplication conf = do
              Nothing ->
                  proceed
              Just vhost
-                 | any (`BC.isPrefixOf` vhost) ["localhost", "bitlove.org", "api.bitlove.org"] ->
+                 | any (`BC.isPrefixOf` vhost) servedVhosts ->
                      proceed
              Just _ ->
                  getRedirectResponse $
-                 "https://bitlove.org" `BC.append` rawPathInfo req
+                 let approot = encodeUtf8 $ appRoot conf
+                 in approot `BC.append` rawPathInfo req
     measureDuration :: Middleware
     measureDuration app req respond =
         do cpu1 <- getCPUTime

@@ -1,6 +1,7 @@
 module Benc (BValue(..), toBuilder, parseBenc) where
 
 import Prelude hiding (take, takeWhile)
+import Control.Monad (void)
 import Data.List (sort)
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
@@ -51,31 +52,32 @@ toBuilder (BDict xs) =
 bencoding :: Parser BValue
 bencoding =
     integer <|> string <|> list <|> dict
-    where integer =
-              do char 'i'
+    where char_ = void . char
+          integer =
+              do char_ 'i'
                  sign <- takeWhile (== '-')
                  digits <- takeWhile1 isDigit
-                 char 'e'
+                 char_ 'e'
                  return $
                    BInt $ read $
                    (BC.unpack sign) ++ (BC.unpack digits)
           string =
               do len <- read <$> BC.unpack <$> takeWhile1 isDigit
-                 char ':'
+                 char_ ':'
                  BString <$>
                    LBC.fromChunks <$>
                    (: []) <$>
                    take len
           list =
-              do char 'l'
-                 BList <$> manyTill bencoding (char 'e')
+              do char_ 'l'
+                 BList <$> manyTill bencoding (char_ 'e')
           dict =
-              do char 'd'
+              do char_ 'd'
                  map <- manyTill (do
                                    k <- bencoding
                                    v <- bencoding
                                    return (k, v)
-                                 ) (char 'e')
+                                 ) (char_ 'e')
                  map `seq`
                      return $ BDict map
 

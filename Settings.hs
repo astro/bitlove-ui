@@ -18,10 +18,12 @@ import Language.Haskell.TH.Syntax
 import Yesod.Default.Config
 import Yesod.Default.Util
 import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Yaml
 import Settings.Development
 import Data.Default (def)
 import Text.Hamlet
+import qualified Data.ByteString.Char8 as BC
 
 
 data BitloveEnv = Development
@@ -76,6 +78,10 @@ data Extra = Extra
     { extraCopyright :: Text
     , extraCert :: Maybe String
     , extraKey :: Maybe String
+    , extraContactMail :: Text
+    , extraServedVhosts :: [BC.ByteString]
+    , extraTrackerURLs :: [BC.ByteString]
+    , extraExportAuth :: [Text]
     } deriving Show
 
 parseExtra :: BitloveEnv -> Object -> Parser Extra
@@ -83,3 +89,7 @@ parseExtra _ o = Extra
     <$> o .:  "copyright"
     <*> o .:? "cert"
     <*> o .:? "key"
+    <*> o .: "contact_mail"
+    <*> (map encodeUtf8 <$> o .: "served_vhosts")
+    <*> (map encodeUtf8 <$> o .: "tracker_urls")
+    <*> o .: "export_auth"

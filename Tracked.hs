@@ -6,7 +6,7 @@ import Control.Concurrent
 import Control.Monad
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
-import Data.Hashable (Hashable)
+import Data.Hashable (Hashable, hashWithSalt)
 import Data.Data (Typeable)
 import Data.Text (Text)
 import Control.Concurrent.STM
@@ -16,6 +16,11 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import Data.Aeson (Value)
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Numeric (showHex)
+import Data.Bits (shiftL, (.|.))
+import Data.Word (Word8)
 
 import Utils (getNow)
 import Model (InfoHash)
@@ -32,14 +37,46 @@ instance Show PeerAddress where
     intercalate "." $
     map show $
     B.unpack bs
-  show (Peer6 _) = "I:P:v:6"
+  show (Peer6 bs) =
+    let groupAt :: Int -> [a] -> [[a]]
+        groupAt n xs
+          | length xs <= n =
+              [xs]
+          | otherwise =
+              take n xs : groupAt n (drop n xs)
+
+        words = groupAt 2 $
+                map (fromIntegral :: Word8 -> Int) $
+                B.unpack bs
+
+    in if length words == 8
+       then intercalate ":" $
+            map (\[b1, b2] ->
+                   showHex ((b1 `shiftL` 8) .|. b2) ""
+                ) words
+       else "::"  -- ^invalid
+
+
+instance Hashable PeerAddress where
+  hashWithSalt salt (Peer4 bs) = hashWithSalt salt bs
+  hashWithSalt salt (Peer6 bs) = hashWithSalt salt bs
 
 data ConnInfo = BittorrentInfo !PeerAddress !Int
-              | WebtorrentInfo (TChan Value)
+              | WebtorrentInfo !PeerAddress (TChan Value)
 
 instance Show ConnInfo where
   show (BittorrentInfo addr port) = show addr ++ ":" ++ show port
-  show (WebtorrentInfo _) = "<WS>"
+  show (WebtorrentInfo addr _) = "<WS " ++ show addr ++ ">"
+
+cKind :: ConnInfo -> TrackedKind
+cKind (BittorrentInfo _ _) =
+  Bittorrent
+cKind (WebtorrentInfo _ _) =
+  Webtorrent
+
+cAddr :: ConnInfo -> PeerAddress
+cAddr (BittorrentInfo addr _) = addr
+cAddr (WebtorrentInfo addr _) = addr
 
 data TrackedPeer = TrackedPeer { pConnInfo :: !ConnInfo
                                , pUploaded :: !Int
@@ -54,10 +91,12 @@ data TrackedKind = Bittorrent | Webtorrent
                  deriving (Eq, Show, Ord)
 
 pKind :: TrackedPeer -> TrackedKind
-pKind (TrackedPeer { pConnInfo = BittorrentInfo _ _ }) =
-  Bittorrent
-pKind (TrackedPeer { pConnInfo = WebtorrentInfo _ }) =
-  Webtorrent
+pKind (TrackedPeer { pConnInfo = c }) =
+  cKind c
+
+pAddr :: TrackedPeer -> PeerAddress
+pAddr (TrackedPeer { pConnInfo = c }) =
+  cAddr c
 
 updatePeerDeltas :: TrackedPeer -> TrackedPeer -> TrackedPeer
 updatePeerDeltas oldPeer newPeer =
@@ -197,7 +236,7 @@ newTracked = do
         -- Sleep 10s before next run
         threadDelay 10000000
 
-  forkIO cleanAndStatsLoop
+  void $ forkIO cleanAndStatsLoop
 
   -- Assume a single instance, clear all gauges of a previous crash
   -- TODO
@@ -301,13 +340,7 @@ announce tracked announce@(TrackedAnnounce {}) = do
       -- | For filtering result peers
       isEqInfo :: TrackedPeer -> Bool
       isEqInfo peer =
-        case (aConnInfo announce, pConnInfo peer) of
-          (BittorrentInfo {}, BittorrentInfo {}) ->
-            True
-          (WebtorrentInfo {}, WebtorrentInfo {}) ->
-            True
-          _ ->
-            False
+        pKind peer == cKind (aConnInfo announce)
   trackedModifyData' tracked (aInfoHash announce) $ \data' ->
     let
       oldPeer =
@@ -386,3 +419,31 @@ clearPeer tracked infoHash peerId =
   trackedModifyData tracked infoHash $
   updateData $
   HM.delete $ peerId
+
+getChangedAddrs :: Tracked -> HashSet PeerAddress -> IO (HashSet PeerAddress, HashSet PeerAddress, HashSet PeerAddress)
+getChangedAddrs tracked known =
+  atomically $ do
+  tracked' <- readTVar (trackedTTracked tracked)
+  current <-
+    foldM
+    (\current tData ->
+        foldl
+        (\current peer ->
+           HashSet.insert (pAddr peer) current
+        ) current <$>
+        dataPeers <$>
+        readTVar tData
+    ) HashSet.empty (HM.elems tracked')
+
+  let
+    -- | removed means it was known but is not current
+    removed = known `HashSet.difference` current
+    -- | added means it is there currently but was not known before
+    added = current `HashSet.difference` known
+
+  case (HashSet.null removed, HashSet.null added) of
+    (True, True) ->
+      -- No changes
+      retry
+    _ ->
+      return (current, removed, added)
