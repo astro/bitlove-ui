@@ -3,6 +3,7 @@ module Handler.Auth where
 
 import Prelude
 import Yesod hiding (returnJson)
+import Yesod.Default.Config (appExtra)
 import Crypto.HMAC
 import Crypto.Hash.CryptoAPI (SHA1)
 import Data.ByteString (ByteString)
@@ -72,9 +73,8 @@ postSignupR = do
         Left e ->
             sendError e
         Right token ->
-            do activateLink <- ("https://bitlove.org" `T.append`) `fmap`
-                               ($ ActivateR token) `fmap`
-                               getUrlRender
+            do activateLink <- ($ ActivateR token) <$>
+                               getFullUrlRender
                sendMail username email "Welcome to Bitlove" $
                         TLE.encodeUtf8 [stext|
 Welcome to Bitlove!
@@ -85,6 +85,11 @@ To complete signup visit the following link:
 Thanks for sharing
     The Bitlove Team
     |]
+
+  contactMail <- extraContactMail .
+                 appExtra .
+                 settings <$>
+                 getYesod
 
   case sent of
     True ->
@@ -101,7 +106,7 @@ Thanks for sharing
               toWidget [hamlet|$newline always
                         <h2>Sorry
                         <p>Sending mail failed. Please #
-                          <a href="mailto:mail@bitlove.org">contact support!
+                          <a href="mailto:#{contactMail}">contact support!
                         |]
     where validateUsername :: Text -> Bool
           validateUsername name = T.length name >= 3 &&
@@ -261,9 +266,8 @@ postReactivateR = do
                        False ->
                            return False
                        True  ->
-                           do activateLink <- ("https://bitlove.org" `T.append`) `fmap`
-                                              ($ ActivateR token) `fmap`
-                                              getUrlRender
+                           do activateLink <- ($ ActivateR token) <$>
+                                              getFullUrlRender
                               sendMail user email "Reactivate your Bitlove account" $
                                        TLE.encodeUtf8 [stext|
 Welcome back to Bitlove!
@@ -275,7 +279,12 @@ Thanks for sharing
     The Bitlove Team
     |]
                 ) True userTokens
-  
+
+  contactMail <- extraContactMail .
+                 appExtra .
+                 settings <$>
+                 getYesod
+
   defaultLayout $ do
     setTitleI MsgTitleReactivate
     case sent of
@@ -288,7 +297,7 @@ Thanks for sharing
           toWidget [hamlet|$newline always
                     <h2>Sorry
                     <p>Sending mail failed. Please #
-                      <a href="mailto:mail@bitlove.org">contact support!
+                      <a href="mailto:#{contactMail}">contact support!
                     |]
       True ->
           toWidget [hamlet|$newline always
@@ -306,26 +315,30 @@ getLogoutR =
 
 -- returns whether this was successful
 sendMail :: UserName -> Text -> Text -> LBC.ByteString -> Handler Bool
-sendMail toUser toEmail subject body =
-    liftIO $
+sendMail toUser toEmail subject body = do
+  contactMail <- extraContactMail .
+                 appExtra .
+                 settings <$>
+                 getYesod
+
+  let send =
+        renderSendMail
+        Mail { mailFrom = Address (Just "Bitlove") contactMail
+             , mailTo = [Address (Just $ userName toUser) toEmail]
+             , mailCc = []
+             , mailBcc = []
+             , mailHeaders = [("Subject", subject)]
+             , mailParts = [
+                 [Part { partType = "text/plain"
+                       , partEncoding = None
+                       , partFilename = Nothing
+                       , partHeaders = []
+                       , partContent = body
+                       }]]
+             }
+  liftIO $
     E.catch (send >> return True) $
     \(E.ErrorCall _) -> return False
-  where send =
-            renderSendMail
-            Mail {
-              mailFrom = Address (Just "Bitlove.org") "mail@bitlove.org",
-              mailTo = [Address (Just $ userName toUser) toEmail],
-              mailCc = [],
-              mailBcc = [],
-              mailHeaders = [("Subject", subject)],
-              mailParts = [[Part {
-                              partType = "text/plain",
-                              partEncoding = None,
-                              partFilename = Nothing,
-                              partHeaders = [],
-                              partContent = body
-                            }]]
-            }
 
 returnJson :: (Monad m, a ~ Value) =>
               [(Text, a)] -> m RepJson

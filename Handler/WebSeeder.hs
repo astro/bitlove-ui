@@ -11,6 +11,7 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
 import Yesod
+import Yesod.Default.Config (appExtra)
 import Data.Conduit
 import Network.HTTP.Conduit hiding (proxy)
 import Network.HTTP.Types.Status
@@ -28,20 +29,16 @@ import Model.Stats (addCounter)
 hAccessControlAllowOrigin :: IsString s => s
 hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
-corsOrigins :: [Text]
-corsOrigins =
-  map T.toCaseFold
-  ["http://bitlove.org",
-    "http://www.bitlove.org",
-    "https://bitlove.org",
-    "https://www.bitlove.org"
-  ]
+checkOrigin :: Handler (Maybe (Bool, Text))
+checkOrigin = do
+  allowedOrigins <- extraServedVhosts . appExtra . settings <$> getYesod
+  let isOriginAllowed =
+        (`elem` allowedOrigins)
 
-isOriginAllowed :: Text -> Bool
-isOriginAllowed =
-  (`elem` corsOrigins) .
-  T.toCaseFold
-
+  mOrigin <- lookupHeader hOrigin
+  return $ do
+    origin <- mOrigin
+    return (isOriginAllowed origin, decodeUtf8 origin)
 
 optionsWebSeedR :: HexInfoHash -> Text -> Handler () --ContentType, Content)
 optionsWebSeedR _ _ = do
@@ -49,14 +46,11 @@ optionsWebSeedR _ _ = do
   when (mMethod /= Just "GET") $
     badMethod
 
-  mOrigin <- (decodeUtf8 <$>) <$>
-             lookupHeader hOrigin
-
-  case mOrigin of
-    Just origin
-      | isOriginAllowed origin ->
+  mIsOriginAllowed <- checkOrigin
+  case mIsOriginAllowed of
+    Just (True, origin) ->
           addHeader hAccessControlAllowOrigin origin
-    Just _ ->
+    Just (False, _) ->
       invalidArgs ["Invalid Origin: header"]
     Nothing ->
       invalidArgs ["Missing Origin: header"]
@@ -76,8 +70,7 @@ getWebSeedR (HexInfoHash infoHash) _fileName = do
                  "\n" ++ T.unpack url
               ) urls
 
-  mOrigin <- (decodeUtf8 <$>) <$>
-             lookupHeader hOrigin
+  mIsOriginAllowed <- checkOrigin
   mRange <- lookupHeader hRange
   manager <- httpManager <$> getYesod
   let tryUrl :: [Text] -> Handler ()
@@ -108,9 +101,8 @@ getWebSeedR (HexInfoHash infoHash) _fileName = do
                 -- Set `Access-Control-Allow-Origin:` response header
                 -- if the `Origin:` request header is among the
                 -- allowed values
-                case mOrigin of
-                  Just origin
-                    | isOriginAllowed origin -> do
+                case mIsOriginAllowed of
+                  Just (True, origin) -> do
                       addHeader hAccessControlAllowOrigin origin
                       -- Cacheable for 1 day
                       addHeader "Access-Control-Max-Age" "86400"

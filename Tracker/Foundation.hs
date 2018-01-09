@@ -3,14 +3,16 @@ module Tracker.Foundation where
 
 import Prelude
 import Yesod
-import Model (InfoHash, infoHashExists)
+import Yesod.Default.Config
 
-import Foundation (DBPool, HasDB(..), withDB)
+import Model (InfoHash, infoHashExists)
+import Foundation (DBPool, HasDB(..), withDB, BitloveEnv, Extra)
 import Cache
 import Tracked (Tracked)
 
 data TrackerApp = TrackerApp
-    { trackerDBPool :: DBPool
+    { settings :: AppConfig BitloveEnv Extra
+    , trackerDBPool :: DBPool
     , trackerCache :: Cache
     , trackerTracked :: Tracked
     }

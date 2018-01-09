@@ -114,7 +114,7 @@ getDirectoryOpmlR = do
   return $ RepOpml $ toContent $
              [xhamlet|$newline always
 <opml version="2.0">
-  <head title="Bitlove.org directory"
+  <head title="Bitlove directory"
         ownerId="#{url DirectoryR}">
   <body>
     $forall es <- dir

@@ -4,10 +4,10 @@ import Prelude (head)
 import Data.Convertible (convert)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
-import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Yesod
+import Yesod.Default.Config (appExtra)
 import Blaze.ByteString.Builder
 
 import Import
@@ -49,13 +49,16 @@ getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
     Nothing ->
       notFound
     Just (buf, infoHash) -> do
-      seedUrl <- T.append "https://bitlove.org" <$>
-                 ($ WebSeedR (HexInfoHash infoHash) name) <$>
-                 getUrlRender
+      seedUrl <- ($ WebSeedR (HexInfoHash infoHash) name) <$>
+                 getFullUrlRender
       let seedUrls
             | includeOtherWebseeds = [seedUrl]
             | otherwise = []
-          mBuf = updateTorrent seedUrls buf
+      myTrackers <- map convert .
+                    extraTrackerURLs .
+                    appExtra . settings <$>
+                    getYesod
+      let mBuf = updateTorrent myTrackers seedUrls buf
       case mBuf of
         Just buf' ->
           return $ RepTorrent $ toContent buf'
@@ -71,8 +74,8 @@ getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
 -- * `announce` (BEP 3)
 -- * `announce-list` (BEP 12)
 -- * `url-list` (BEP 19)
-updateTorrent :: [Text] -> BC.ByteString -> Maybe Builder
-updateTorrent seedUrls buf = do
+updateTorrent :: [LBC.ByteString] -> [Text] -> BC.ByteString -> Maybe Builder
+updateTorrent myTrackers seedUrls buf = do
   BDict dict <- parseBenc buf
   let
     getList :: LBC.ByteString -> [BValue]
@@ -113,8 +116,3 @@ updateTorrent seedUrls buf = do
 
   return $ toBuilder $
     BDict dict'
-
-    where
-      myTrackers =
-        [ "http://t.bitlove.org/announce"
-        , "wss://t.bitlove.org/webtorrent-announce" ]
