@@ -42,9 +42,6 @@ exportStream tracked = do
         BC.concat ["+ ", BC.pack $ show addr, "\r\n"]
       yield Flush
 
-      let known' =
-            HashSet.union added $
-            HashSet.difference known removed
       -- Loop:
       stream known'
 
