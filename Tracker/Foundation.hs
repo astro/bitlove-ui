@@ -5,7 +5,7 @@ import Prelude
 import Yesod
 import Model (InfoHash, infoHashExists)
 
-import Foundation (DBPool, HasDB(..), withDB, Transaction)
+import Foundation (DBPool, HasDB(..), withDB)
 import Cache
 import Tracked (Tracked)
 

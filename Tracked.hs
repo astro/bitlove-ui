@@ -233,7 +233,7 @@ newTracked = do
         -- Sleep 10s before next run
         threadDelay 10000000
 
-  forkIO cleanAndStatsLoop
+  void $ forkIO cleanAndStatsLoop
 
   -- Assume a single instance, clear all gauges of a previous crash
   -- TODO

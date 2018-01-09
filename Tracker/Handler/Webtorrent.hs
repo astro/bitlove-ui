@@ -4,12 +4,10 @@ import Data.Maybe (fromMaybe)
 import Control.Monad
 import Control.Concurrent (threadDelay)
 import Control.Exception.Enclosed
-import System.Random (randomIO, randomRIO)
+import System.Random (randomRIO)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.ByteString.Char8 as BC
-import qualified Data.ByteString.Lazy.Char8 as LBC
-import qualified Data.Text as T
 import Yesod.WebSockets
 import Data.Aeson
 import Data.IORef
@@ -36,16 +34,17 @@ instance FromJSON Offer where
     Offer
     <$> o .: "offer_id"
     <*> o .: "offer"
+  parseJSON _ = fail "Not an object"
 
 data Message = AnnounceMessage {
-  msgAction :: Maybe Text,
+  _msgAction :: Maybe Text,
   msgInfoHash :: Maybe Text,
   msgPeerId :: Maybe Text,
   msgDownloaded :: Maybe Int,
   msgUploaded :: Maybe Int,
   msgLeft :: Maybe Int,
   msgEvent :: Maybe Text,
-  msgNumWant :: Maybe Int,
+  _msgNumWant :: Maybe Int,
   msgOffers :: Maybe [Offer],
   msgOfferId :: Maybe Text,
   msgToPeerId :: Maybe Text,
@@ -217,8 +216,6 @@ recvLoop session addr chan = do
             modifyIORef session $
             Set.insert (infoHash, aPeerId ann)
 
-          let isSeeder = aLeft ann == 0
-
           -- Announce
           tracked <- lift $ trackerTracked <$> getYesod
 
@@ -236,7 +233,7 @@ recvLoop session addr chan = do
           liftIO $ putStrLn $ "Distribute " ++ show (length offers) ++ " offers to " ++ show (length peers) ++ " peers"
           liftIO $
             forM_ (zip peers offers) $
-            \((peerId, peer), offer) ->
+            \((_peerId, peer), offer) ->
               case pConnInfo peer of
                 WebtorrentInfo _ chan ->
                   let peerOffer =

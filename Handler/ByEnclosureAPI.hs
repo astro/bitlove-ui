@@ -12,7 +12,6 @@ import Data.Maybe (catMaybes)
 import System.IO.Unsafe
 
 import Import
-import Tracked
 
 getByEnclosureJson :: Handler RepJson
 getByEnclosureJson = do

@@ -1,6 +1,5 @@
 module Tracker.Handler.ExportStream where
 
-import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
 import Control.Monad
 import Control.Monad.Trans.Resource

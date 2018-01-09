@@ -9,7 +9,6 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy.Char8 as LBC
 import Yesod
 import Blaze.ByteString.Builder
-import Network.URI (escapeURIString, isUnescapedInURIComponent)
 
 import Import
 import qualified Model as Model
@@ -106,10 +105,10 @@ updateTorrent seedUrls buf = do
         ("announce", BString $ head myTrackers) :
         ("announce-list", BList $ map (BList . map BString) trackerList') :
         ("url-list", BList $ map BString urlList') :
-        filter (\(name, val) ->
-                  name /= "announce" &&
-                 name /= "announce-list" &&
-                 name /= "url-list"
+        filter (\(name, _val) ->
+                   name /= "announce" &&
+                   name /= "announce-list" &&
+                   name /= "url-list"
                ) dict
 
   return $ toBuilder $
