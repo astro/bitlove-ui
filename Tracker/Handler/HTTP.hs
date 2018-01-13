@@ -129,7 +129,7 @@ getAnnounceR = do
                                 [g peerId addr' port'
                                  | (PeerId peerId, Peer6 addr', port') <- peers]
                               )
-               interval <- liftIO $ randomRIO (1620, 1800)
+               interval <- liftIO $ randomRIO (300, 600)
                -- TODO: stats
                return $ RepBenc $
                  -- TODO: "downloaded"

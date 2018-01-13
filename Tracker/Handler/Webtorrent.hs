@@ -224,7 +224,7 @@ recvLoop session addr chan = do
           scrape <- liftIO $ scrapeWebtorrent tracked infoHash
 
           -- Send response
-          interval <- liftIO $ randomRIO (1620, 1800)
+          interval <- liftIO $ randomRIO (180, 300)
           send $ TrackerResponse infoHash scrape interval
 
           -- Distribute offers
