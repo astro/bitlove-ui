@@ -29,13 +29,13 @@ instance ToTypedContent RepTorrent where
 
 -- |Does the same but is on different routes for stats.
 getTorrentFileForWebtorrentR :: UserName -> Text -> TorrentName -> Handler RepTorrent
-getTorrentFileForWebtorrentR = getTorrentFile False
+getTorrentFileForWebtorrentR = getTorrentFile True
 
 getTorrentFileR :: UserName -> Text -> TorrentName -> Handler RepTorrent
-getTorrentFileR = getTorrentFile True
+getTorrentFileR = getTorrentFile False
 
 getTorrentFile :: Bool -> UserName -> Text -> TorrentName -> Handler RepTorrent
-getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
+getTorrentFile includeLocalWebseeder user slug (TorrentName name) = do
   mInfo <- withDB $ \db -> do
     torrents <- Model.torrentByName user slug name db
     case torrents of
@@ -52,7 +52,7 @@ getTorrentFile includeOtherWebseeds user slug (TorrentName name) = do
       seedUrl <- ($ WebSeedR (HexInfoHash infoHash) name) <$>
                  getFullUrlRender
       let seedUrls
-            | includeOtherWebseeds = [seedUrl]
+            | includeLocalWebseeder = [seedUrl]
             | otherwise = []
       myTrackers <- map convert .
                     extraTrackerURLs .
