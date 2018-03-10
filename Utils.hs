@@ -26,11 +26,11 @@ iso8601 time =
                      "Z"
 
 rfc822 :: ZonedTime -> String
-rfc822 = formatTime defaultTimeLocale rfc822DateFormat'
-
-  where rfc822DateFormat' = map forceNumericTimezone rfc822DateFormat
-        forceNumericTimezone 'Z' = 'z'
-        forceNumericTimezone chr = chr
+rfc822 = formatTime defaultTimeLocale rfc822DateFormat
+  -- Changes from Date.Time.Format:
+  -- - 0-padded day (%d)
+  -- - numeric timezone (%z)
+  where rfc822DateFormat = "%a, %d %b %Y %H:%M:%S %z"
 
 localTimeToZonedTime :: TimeZone -> LocalTime -> ZonedTime
 localTimeToZonedTime tz =
