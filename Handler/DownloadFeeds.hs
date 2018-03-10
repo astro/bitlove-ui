@@ -4,7 +4,7 @@ module Handler.DownloadFeeds where
 import Control.Monad
 import qualified Data.Text as T
 import Data.Maybe
-import Data.Time (getCurrentTimeZone)
+import Data.Time (getCurrentTimeZone, ZonedTime(ZonedTime))
 import Data.Default (def)
 import Blaze.ByteString.Builder
 import qualified Data.ByteString.Lazy as LB
@@ -60,6 +60,8 @@ instance ToTypedContent RepRss where
       
 instance RepFeed RepRss where
   renderFeed params items = do
+    tz <- liftIO getCurrentTimeZone
+    let localTimeToZonedTime = flip ZonedTime tz
     url <- getFullUrlRender
     let image = pImage params
     return $ RepRss $ toContent $ 
@@ -81,7 +83,7 @@ instance RepFeed RepRss where
         $maybe summary <- itemSummary item
           <description>#{summary}
         <guid isPermaLink="true">#{itemLink url item}
-        <pubDate>#{rfc822 (itemPublished item)}
+        <pubDate>#{rfc822 $ localTimeToZonedTime $ itemPublished item}
         $if not (T.null $ itemImage item)
             <image>
               <url>#{itemImage item}

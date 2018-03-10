@@ -25,7 +25,7 @@ iso8601 time =
                    _ ->
                      "Z"
 
-rfc822 :: LocalTime -> String
+rfc822 :: ZonedTime -> String
 rfc822 = formatTime defaultTimeLocale rfc822DateFormat
 
 localTimeToZonedTime :: TimeZone -> LocalTime -> ZonedTime
