@@ -135,8 +135,9 @@ instance Yesod UIApp where
           $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
-    urlRenderOverride y s =
-        Just $ uncurry (joinPath y "") $ renderRoute s
+    urlParamRenderOverride y route qs =
+      let (path, qs') = renderRoute route
+      in Just $ joinPath y "" path $ qs' ++ qs
 
 
     errorHandler = errorHandler'

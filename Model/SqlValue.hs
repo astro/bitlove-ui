@@ -9,24 +9,26 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as T
 import Database.PostgreSQL.LibPQ (Oid(Oid))
-import qualified PostgreSQL.Binary.Decoder as PD
-import qualified PostgreSQL.Binary.Encoder as PE
+import qualified PostgreSQL.Binary.Decoding as PD
+import qualified PostgreSQL.Binary.Encoding as PE
+import qualified BinaryParser
+import BinaryParser (BinaryParser)
 import System.IO.Unsafe (unsafePerformIO)
 
 data SqlValue = SqlValue Oid B.ByteString
               | SqlNull
   deriving (Show, Eq)
 
-safeConvertSql :: (Typeable a) => B.ByteString -> PD.Decoder a -> ConvertResult a
+safeConvertSql :: (Typeable a) => B.ByteString -> BinaryParser a -> ConvertResult a
 safeConvertSql bytes parser =
-  case PD.run parser bytes of
+  case BinaryParser.run parser bytes of
     Right a ->
       Right a
     Left errorText ->
       let errorText' = T.unpack errorText
       in convError errorText' bytes
 
-sqlConverter :: (Typeable a) => [(Oid, PD.Decoder a)] -> SqlValue -> ConvertResult a
+sqlConverter :: (Typeable a) => [(Oid, BinaryParser a)] -> SqlValue -> ConvertResult a
 sqlConverter parsers (SqlValue oid bytes) =
   case oid `lookup` parsers of
     Just parser ->
@@ -52,7 +54,8 @@ instance Convertible SqlValue Bool where
 instance Convertible Bool SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 16) .
-                PE.run PE.bool
+                PE.encodingBytes .
+                PE.bool
 
 instance Convertible SqlValue T.Text where
   safeConvert = sqlConverter
@@ -65,7 +68,8 @@ instance Convertible SqlValue T.Text where
 instance Convertible T.Text SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 25) .
-                PE.run PE.text_strict
+                PE.encodingBytes .
+                PE.text_strict
 
 instance Convertible SqlValue B.ByteString where
   safeConvert = sqlConverter [(Oid 17, PD.bytea_strict)]
@@ -73,7 +77,8 @@ instance Convertible SqlValue B.ByteString where
 instance Convertible B.ByteString SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 17) .
-                PE.run PE.bytea_strict
+                PE.encodingBytes .
+                PE.bytea_strict
 
 instance Convertible SqlValue LB.ByteString where
   safeConvert = sqlConverter [(Oid 17, PD.bytea_lazy)]
@@ -81,7 +86,8 @@ instance Convertible SqlValue LB.ByteString where
 instance Convertible LB.ByteString SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 17) .
-                PE.run PE.bytea_lazy
+                PE.encodingBytes .
+                PE.bytea_lazy
 
 instance Convertible SqlValue Int where
   safeConvert = sqlConverter
@@ -93,7 +99,8 @@ instance Convertible SqlValue Int where
 instance Convertible Int SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 23) .
-                PE.run PE.int4_int32 .
+                PE.encodingBytes .
+                PE.int4_int32 .
                 convert
 
 instance Convertible SqlValue Integer where
@@ -106,7 +113,8 @@ instance Convertible SqlValue Integer where
 instance Convertible Integer SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 20) .
-                PE.run PE.int8_int64 .
+                PE.encodingBytes .
+                PE.int8_int64 .
                 convert
 
 instance Convertible SqlValue Float where
@@ -133,4 +141,5 @@ instance Convertible SqlValue LocalTime where
 instance Convertible LocalTime SqlValue where
   safeConvert = Right .
                 SqlValue (Oid 1114) .
-                PE.run PE.timestamp_int
+                PE.encodingBytes .
+                PE.timestamp_int

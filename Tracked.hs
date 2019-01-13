@@ -120,6 +120,10 @@ instance Monoid TrackedScrape where
   (TrackedScrape l1 s1 d1 u1) `mappend` (TrackedScrape l2 s2 d2 u2) =
     TrackedScrape (l1 + l2) (s1 + s2) (d1 + d2) (u1 + u2)
 
+instance Semigroup TrackedScrape where
+  (TrackedScrape l1 s1 d1 u1) <> (TrackedScrape l2 s2 d2 u2) =
+    TrackedScrape (l1 + l2) (s1 + s2) (d1 + d2) (u1 + u2)
+
 data TrackedData = TrackedData { dataPeers :: HM.HashMap PeerId TrackedPeer
                                , dataBittorrentScrape :: TrackedScrape
                                , dataWebtorrentScrape :: TrackedScrape

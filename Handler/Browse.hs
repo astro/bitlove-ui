@@ -387,7 +387,7 @@ renderDownloads downloads showOrigin =
 
 renderItem :: Item -> Bool -> WidgetT UIApp IO ()
 renderItem item showOrigin = do
-  downloadsAndScrapes <- liftHandlerT $
+  downloadsAndScrapes <- liftHandler $
     forM (itemDownloads item) $ \d -> do
     (scrapeBt, scrapeWt) <- scrapeTorrent $ downloadInfoHash d
     return (d, scrapeBt `mappend` scrapeWt)
