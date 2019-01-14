@@ -16,7 +16,7 @@
 mkDerivation {
   pname = "bitlove-ui";
   version = "0.0.1";
-  src = /home/stephan/bitlove-ui;
+  src = ./.;
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [

@@ -378,14 +378,14 @@ getSearchR needle = do
                    ^{renderFeeds}
                  |]
 
-renderDownloads :: [Download] -> Bool -> WidgetT UIApp IO () 
+renderDownloads :: [Download] -> Bool -> WidgetFor UIApp () 
 renderDownloads downloads showOrigin =
     [whamlet|$newline always
      $forall item <- Model.groupDownloads downloads
        ^{renderItem item showOrigin}
      |]
 
-renderItem :: Item -> Bool -> WidgetT UIApp IO ()
+renderItem :: Item -> Bool -> WidgetFor UIApp ()
 renderItem item showOrigin = do
   downloadsAndScrapes <- liftHandler $
     forM (itemDownloads item) $ \d -> do
@@ -498,7 +498,7 @@ addFeedsLinks lists = do
 
 renderFeedsList :: forall a (t :: * -> *) (t1 :: * -> *).
                    (Foldable t1, Foldable t, ToMarkup a) =>
-                   t1 (Text, t (Text, Route UIApp, a)) -> WidgetT UIApp IO ()
+                   t1 (Text, t (Text, Route UIApp, a)) -> WidgetFor UIApp ()
 renderFeedsList lists = do
   renderRoute <-
     isMiro >>= \isMiro' ->

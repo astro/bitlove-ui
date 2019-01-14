@@ -15,7 +15,7 @@ import Utils
 import Model.Session
 import Model.User
 
-login :: UserName -> HandlerT y IO ()
+login :: UserName -> HandlerFor y ()
 login = setSession "user" . userName
 
 sessionUser :: MonadHandler m => m (Maybe UserName)

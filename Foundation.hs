@@ -177,7 +177,7 @@ authorizeFor user = do
            else Unauthorized "Authorization denied"
 
 -- We want full http://host URLs only in a few cases (feeds, API)
-getFullUrlRender :: HandlerT UIApp IO (Route UIApp -> Text)
+getFullUrlRender :: HandlerFor UIApp (Route UIApp -> Text)
 getFullUrlRender =
     do approot' <- appRoot <$> settings <$> getYesod
        (T.append approot' .) <$> getUrlRender
@@ -188,7 +188,7 @@ isMiro = let
     in maybe False (isInfixOf "Miro/") <$> userAgent
     
 
-errorHandler' :: ErrorResponse -> HandlerT UIApp IO TypedContent
+errorHandler' :: ErrorResponse -> HandlerFor UIApp TypedContent
 errorHandler' NotFound =
   fmap toTypedContent $ defaultLayout $ do
     setTitle "Bitlove: Not found"
@@ -223,14 +223,14 @@ generateETag = addHeader "ETag" .
                SHA1.hashlazy
   where quote t = T.concat ["\"", t, "\""]
 
-addFilterScript :: WidgetT UIApp IO ()
+addFilterScript :: WidgetFor UIApp ()
 addFilterScript =
     addScript $ StaticR js_filter_js
 
 -- | Database interface
 
 class HasDB y where
-    getDBPool :: HandlerT y IO DBPool
+    getDBPool :: HandlerFor y DBPool
   
 instance HasDB UIApp where
     getDBPool = uiDBPool <$> getYesod
@@ -238,7 +238,7 @@ instance HasDB UIApp where
 type Transaction a = Connection -> IO a
     
 -- How to run database actions.
-withDB :: HasDB y => Transaction a -> HandlerT y IO a
+withDB :: HasDB y => Transaction a -> HandlerFor y a
 withDB f = do
     pool <- getDBPool
     liftIO $ runResourceT $ withDBPool pool f
@@ -269,12 +269,12 @@ withDBPool pool f = liftIO $ do
 
              return a
 
-getPopularInfoHashes :: HandlerT UIApp IO [InfoHash]
+getPopularInfoHashes :: HandlerFor UIApp [InfoHash]
 getPopularInfoHashes =
   getYesod >>=
   liftIO . trackedPopular . tracked
 
-scrapeTorrent :: InfoHash -> HandlerT UIApp IO (TrackedScrape, TrackedScrape)
+scrapeTorrent :: InfoHash -> HandlerFor UIApp (TrackedScrape, TrackedScrape)
 scrapeTorrent infoHash = do
   tracked <- tracked <$> getYesod
   d <- liftIO $ trackedGetData tracked infoHash

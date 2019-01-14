@@ -17,10 +17,10 @@ data TrackerApp = TrackerApp
     , trackerTracked :: Tracked
     }
 
-getCache :: HandlerT TrackerApp IO Cache
+getCache :: HandlerFor TrackerApp Cache
 getCache = trackerCache <$> getYesod
 
-checkExists :: InfoHash -> HandlerT TrackerApp IO Bool
+checkExists :: InfoHash -> HandlerFor TrackerApp Bool
 checkExists infoHash = do
   cachedExists <- getCache >>=
                   liftIO . getTorrentExists infoHash

@@ -7,7 +7,7 @@ import Blaze.ByteString.Builder (fromByteString, Builder)
 import Import
 
 
-cacheWidget :: HandlerT a IO ()
+cacheWidget :: HandlerFor a ()
 cacheWidget = cacheSeconds $ 60 * 60
 
 newtype RepJs = RepJs Content

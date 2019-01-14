@@ -21,7 +21,7 @@ encodeLatin1 = BC.pack . T.unpack
 decodeLatin1 :: BC.ByteString -> Text
 decodeLatin1 = T.pack . BC.unpack
 
-getRemoteAddr :: HandlerT a IO PeerAddress
+getRemoteAddr :: HandlerFor a PeerAddress
 getRemoteAddr = do
   req <- waiRequest
   let remote = normalize $ Wai.remoteHost req
